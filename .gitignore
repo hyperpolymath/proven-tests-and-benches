@@ -1,0 +1,39 @@
+# Ignore build artifacts
+build/
+*.ibc
+*.o
+*.exe
+*.bin
+
+# Ignore editor temporary files
+*.swp
+*.swo
+*~
+.TS_unfinished
+.TS_work
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore test output
+*.output
+*.result
+
+# Ignore Idris2 cache
+.idris2/
+
+# Ignore environment files
+.env
+.env.local
+.env.*.local
+
+# Ignore logs
+*.log
+logs/
+
+# Ignore node modules (if any benchmark requires it)
+node_modules/
+
+# Ignore template files from rsr-template-repo
+*.template

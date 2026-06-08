@@ -1,0 +1,21 @@
+package proven-tests
+
+version = "0.1.0"
+sourcedir = "src"
+
+modules = ProvenTests.Types,
+         ProvenTests.Classification,
+         ProvenTests.Taxonomy,
+         ProvenTests.Framework,
+         ProvenTests.Runners,
+         ProvenTests.Report,
+         ProvenTests.Main,
+         ProvenTests.TypeSafe.Tropical,
+         ProvenTests.TypeSafe.Epistemic,
+         ProvenTests.TypeSafe.Choreographic,
+         ProvenTests.TypeSafe.Dependent,
+         ProvenTests.TypeSafe.Effects,
+         ProvenTests.TypeSafe.Decorative,
+         ProvenTests.TypeSafe.Ceremonial,
+         ProvenTests.TypeSafe.Dyadic,
+         ProvenTests.TypeSafe.Bridge

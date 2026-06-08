@@ -1,0 +1,133 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-License-Identifier: MPL-2.0
+// Mozilla Post-Quantum License Provisions v1.0
+//
+// Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
+// Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+//
+= Proven-Tests: Type-Safe Testing Framework for Hyperpolymath
+
+:toc: left
+:toclevels: 4
+
+== Overview
+
+**Proven-Tests** is the canonical testing framework for the hyperpolymath ecosystem, implemented entirely in **Idris2**. It provides a three-tier classification system for test provenance and includes specialized support for testing type system properties.
+
+**Key Principles:**
+* All tests are written in Idris2 for maximum type safety
+* Three-tier classification: Actually-Proven, Provisionally-Proven, Unproven
+* Specialized category for testing type system properties
+* Integration with echo-types for advanced type theories
+* Designed to work with all hyperpolymath components
+
+== Classification System
+
+=== Tier 1: Actually-Proven
+
+Tests that have:
+* Full proof ladder for specific functionality
+* General design proven safe
+* Complete formal verification
+
+**Example:** A compositor operator with full Idris2 proof that it never produces invalid pixel values.
+
+=== Tier 2: Provisionally-Proven
+
+Tests that use:
+* Type-appropriate and type-safe framework
+* Specific test is type-safe
+* Framework itself has type safety guarantees
+
+**Example:** A test suite using the Proven-Tests framework with type-safe assertions.
+
+=== Tier 3: Unproven
+
+Regular tests without type safety guarantees.
+
+**Note:** The goal is to migrate all tests to at least Provisionally-Proven.
+
+== Type-Safe Testing Categories
+
+Specialized testing for advanced type systems:
+
+| Category | Description | Source |
+|----------|-------------|--------|
+| **Tropical** | Min-plus semiring resource bounds | typed-wasm extension |
+| **Epistemic** | Information-theoretic access control | typed-wasm extension |
+| **Choreographic** | Multi-party session types | TypeLL |
+| **Dependent** | Dependent type verification | Idris2 core |
+| **Effects** | Effect system properties | Idris2 core |
+| **Decorative** | Type-level annotations | Custom |
+| **Ceremonial** | Protocol/ritual types | Custom |
+| **Dyadic** | Binary relation types | Custom |
+| **Echo-Types** | Echo types integration | echo-types repo |
+
+== Repository Structure
+
+[source]
+----
+proven-tests/
+├── README.adoc
+├── Justfile
+├── ipkg.json
+├── src/
+│   ├── ProvenTests/
+│   │   ├── Classification.idr
+│   │   ├── Taxonomy.idr
+│   │   ├── Framework.idr
+│   │   ├── Runners.idr
+│   │   ├── Report.idr
+│   │   └── Types.idr
+│   └── TypeSafe/
+│       ├── Tropical.idr
+│       ├── Epistemic.idr
+│       ├── Choreographic.idr
+│       ├── Dependent.idr
+│       ├── Effects.idr
+│       ├── Decorative.idr
+│       ├── Ceremonial.idr
+│       └── Dyadic.idr
+├── tests/
+│   ├── ClassificationTests.idr
+│   ├── FrameworkTests.idr
+│   └── TypeSafeTests/
+├── benchmarks/
+├── echo-types-integration/
+├── docs/
+└── .gitignore
+----
+
+== Quick Start
+
+=== Prerequisites
+
+* Idris2 (>= 0.6.0)
+* GMP development libraries
+
+=== Installation
+
+```bash
+git clone https://github.com/JoshuaJewell/proven-tests
+cd proven-tests
+idris2 --install ipkg.json
+just build
+just test
+```
+
+== Using in Your Project
+
+1. Add as dependency in `ipkg.json`
+2. Import: `import ProvenTests.Framework`
+3. Write tests in Idris2
+
+== License
+
+Licensed under AGPL-3.0-or-later, CC-BY-SA-4.0, MPL-2.0 with Mozilla Post-Quantum License Provisions v1.0.
+
+== References
+
+* [Idris2](https://idris2.readthedocs.io)
+* [echo-types](https://github.com/hyperpolymath/echo-types)
+* [Standards](https://github.com/hyperpolymath/standards)

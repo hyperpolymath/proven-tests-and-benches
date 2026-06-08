@@ -1,0 +1,14 @@
+= LIFECYCLE Tests
+
+**Category:** Lifecycle
+**Source:** standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc
+**Directory:** 07-lifecycle/
+
+**Purpose:** See TESTING-TAXONOMY.adoc for detailed description
+
+**Files:** All tests in this directory are Idris2 implementations
+
+**To add a test:**
+1. Create a new file: 07-lifecycle/MyTest.idr
+2. Follow Idris2 test conventions
+3. Add to test runner

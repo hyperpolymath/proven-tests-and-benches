@@ -1,0 +1,161 @@
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- SPDX-License-Identifier: CC-BY-SA-4.0
+-- SPDX-License-Identifier: MPL-2.0
+-- Mozilla Post-Quantum License Provisions v1.0
+--
+-- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
+-- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+--
+
+module ProvenTests.Classification
+
+import ProvenTests.Types
+
+-- =============================================================================
+-- ACTUALLY-PROVEN CLASSIFICATION
+-- =============================================================================
+
+--/ Evidence for Actually-Proven classification
+public export
+record ActuallyProvenEvidence where
+  constructor MkActuallyProvenEvidence
+  proof_ladder      : List ProofStep
+  design_proof      : DesignSafetyProof
+  type_safety       : TypeSafetyCertificate
+  formal_verification : List String
+  coverage          : List String
+
+--/ Classifier for Actually-Proven tests
+public export
+isActuallyProven : TestMetadata -> Bool
+isActuallyProven (MkTestMetadata _ _ _ _ _ ActuallyProven) = True
+isActuallyProven _ = False
+
+--/ Create an Actually-Proven classification
+public export
+classifyActuallyProven : 
+     TestId -> String -> List ProofStep -> DesignSafetyProof -> 
+     TypeSafetyCertificate -> List String -> TestMetadata
+classifyActuallyProven test_id desc ladder design type_safe proofs =
+  MkTestMetadata test_id desc Nothing Nothing Nothing ActuallyProven
+
+-- =============================================================================
+-- PROVISIONALLY-PROVEN CLASSIFICATION
+-- =============================================================================
+
+--/ Evidence for Provisionally-Proven classification
+public export
+record ProvisionallyProvenEvidence where
+  constructor MkProvisionallyProvenEvidence
+  framework_safety  : FrameworkSafetyProof
+  test_safety        : TypeSafetyCertificate
+  type_appropriateness : List String
+
+--/ Classifier for Provisionally-Proven tests
+public export
+isProvisionallyProven : TestMetadata -> Bool
+isProvisionallyProven (MkTestMetadata _ _ _ _ _ ProvisionallyProven) = True
+isProvisionallyProven _ = False
+
+--/ Create a Provisionally-Proven classification
+public export
+classifyProvisionallyProven : 
+     TestId -> String -> FrameworkSafetyProof -> TypeSafetyCertificate -> TestMetadata
+classifyProvisionallyProven test_id desc framework test_safe =
+  MkTestMetadata test_id desc Nothing Nothing Nothing ProvisionallyProven
+
+-- =============================================================================
+-- UNPROVEN CLASSIFICATION
+-- =============================================================================
+
+--/ Classifier for Unproven tests
+public export
+isUnproven : TestMetadata -> Bool
+isUnproven (MkTestMetadata _ _ _ _ _ Unproven) = True
+isUnproven _ = False
+
+--/ Create an Unproven classification
+public export
+classifyUnproven : TestId -> String -> TestMetadata
+classifyUnproven test_id desc =
+  MkTestMetadata test_id desc Nothing Nothing Nothing Unproven
+
+-- =============================================================================
+-- CLASSIFICATION UTILITIES
+-- =============================================================================
+
+--/ Get the proven status
+public export
+getProvenStatus : TestMetadata -> ProvenStatus
+getProvenStatus (MkTestMetadata _ _ _ _ _ status) = status
+
+--/ Promote from Unproven to Provisionally-Proven
+public export
+promoteToProvisionallyProven : 
+     TestMetadata -> FrameworkSafetyProof -> TypeSafetyCertificate -> TestMetadata
+promoteToProvisionallyProven (MkTestMetadata tid desc cat asp tsc Unproven) fw ts =
+  MkTestMetadata tid desc cat asp tsc ProvisionallyProven
+promoteToProvisionallyProven _ _ _ = 
+  MkTestMetadata (MkTestId "" "" 0) "Cannot promote" Nothing Nothing Nothing ProvisionallyProven
+
+--/ Promote from Provisionally-Proven to Actually-Proven
+public export
+promoteToActuallyProven : 
+     TestMetadata -> List ProofStep -> DesignSafetyProof -> 
+     TypeSafetyCertificate -> List String -> TestMetadata
+promoteToActuallyProven (MkTestMetadata tid desc cat asp tsc ProvisionallyProven) 
+    ladder design ts proofs =
+  MkTestMetadata tid desc cat asp tsc ActuallyProven
+promoteToActuallyProven _ _ _ _ _ = 
+  MkTestMetadata (MkTestId "" "" 0) "Cannot promote" Nothing Nothing Nothing ActuallyProven
+
+-- =============================================================================
+-- CONSTRUCTORS
+-- =============================================================================
+
+public export
+emptyProofLadder : List ProofStep
+emptyProofLadder = []
+
+public export
+addProofStep : ProofStep -> List ProofStep -> List ProofStep
+addProofStep step ladder = ladder ++ [step]
+
+public export
+proofStep : String -> Maybe String -> Maybe Nat -> Maybe String -> ProofStep
+proofStep desc file line theorem = MkProofStep desc file line theorem
+
+public export
+designProof : String -> String -> List String -> List String -> DesignSafetyProof
+designProof desc technique coverage limitations = MkDesignSafetyProof desc technique coverage limitations
+
+public export
+typeSafetyCert : Nat -> String -> String -> List String -> TypeSafetyCertificate
+typeSafetyCert level type_system verified scope = MkTypeSafetyCertificate level type_system verified scope
+
+public export
+frameworkProof : String -> TypeSafetyCertificate -> TypeSafetyCertificate -> String -> FrameworkSafetyProof
+frameworkProof name type_safe test_safe docs = MkFrameworkSafetyProof name type_safe test_safe docs
+
+-- =============================================================================
+-- PROVEN-TESTS SELF-CLASSIFICATION
+-- =============================================================================
+
+--/ Proven-Tests framework's own safety proof
+public export
+provenTestsFrameworkProof : FrameworkSafetyProof
+provenTestsFrameworkProof =
+  let type_safe_cert = typeSafetyCert 6 "Dependent Types" "Idris2 type checker" 
+        ["Test framework", "Classification system"]
+      test_safe_cert = typeSafetyCert 6 "Dependent Types" "Idris2 type checker" 
+        ["Test execution", "Result reporting"]
+  in frameworkProof "Proven-Tests" type_safe_cert test_safe_cert "See docs/TAXONOMY.adoc"
+
+--/ Proven-Tests framework is Provisionally-Proven
+public export
+provenTestsMetadata : TestMetadata
+provenTestsMetadata =
+  let tid = MkTestId "ProvenTests" "Framework" 0
+      desc = "Proven-Tests framework self-classification"
+  in classifyProvisionallyProven tid desc provenTestsFrameworkProof 
+       (typeSafetyCert 6 "Dependent Types" "Idris2" ["Framework"])
