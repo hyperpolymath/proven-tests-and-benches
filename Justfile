@@ -183,3 +183,6 @@
     fi
     echo "Current CRG Grade: $GRADE"
     echo "Compliance check passed!"
+
+secret-scan-trufflehog:
+    @command -v trufflehog >/dev/null && trufflehog filesystem . --only-verified || true
