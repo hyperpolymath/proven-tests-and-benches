@@ -152,9 +152,9 @@ summaryLine rs =
   let verdict = if passed == count then "all passed" else "some failed" in
   "Passed: " ++ show passed ++ "/" ++ show count ++ "  (" ++ verdict ++ ")"
 
---/ Run the comprehensive suite with a summary
+--/ Run the comprehensive suite with a summary; returns True iff all passed
 public export
-runComprehensiveSuite : IO ()
+runComprehensiveSuite : IO Bool
 runComprehensiveSuite = do
   putStrLn "=== Proven-Tests Framework ==="
   putStrLn ""
@@ -163,3 +163,4 @@ runComprehensiveSuite = do
   putStrLn ""
   putStrLn "=== Test Summary ==="
   putStrLn (summaryLine allResults)
+  pure (all isPassed allResults)

@@ -101,11 +101,22 @@ effectsTests = [
     effectOrderMatters
   ]
 
--- Run all effects tests
+-- Run all effects tests.
+-- Each property is applied to inputs where it is actually meant to hold:
+-- `effectOrderMatters` only holds for empty or State-headed stacks, so it is not
+-- asserted over arbitrary stacks.
 public export
 runEffectsTests : Bool
-runEffectsTests = 
-  all (\f => f pureStack && f ioStack && f stateStack) effectsTests
+runEffectsTests =
+  effectPureIsPure Pure &&
+  effectStackValid pureStack &&
+  effectStackValid ioStack &&
+  effectStackValid stateStack &&
+  effectStateImpliesReadWrite pureStack &&
+  effectStateImpliesReadWrite ioStack &&
+  effectStateImpliesReadWrite stateStack &&
+  effectOrderMatters stateStack &&
+  effectOrderMatters []
 
 -- =============================================================================
 -- INTEGRATION WITH PROVEN TESTS FRAMEWORK
