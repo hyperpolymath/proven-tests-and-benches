@@ -9,6 +9,7 @@ executable = "proven-tests"
 modules = ProvenTests.Types,
          ProvenTests.Classification,
          ProvenTests.Taxonomy,
+         ProvenTests.Zigzag,
          ProvenTests.Framework,
          ProvenTests.Runners,
          ProvenTests.Report,

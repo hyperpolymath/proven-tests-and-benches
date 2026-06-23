@@ -12,6 +12,7 @@ module ProvenTests.Runners
 import ProvenTests.Types
 import ProvenTests.Classification
 import ProvenTests.Taxonomy
+import ProvenTests.Zigzag
 import ProvenTests.Framework
 import ProvenTests.TypeSafe.Tropical
 import ProvenTests.TypeSafe.Epistemic
@@ -157,6 +158,7 @@ public export
 runComprehensiveSuite : IO Bool
 runComprehensiveSuite = do
   putStrLn "=== Proven-Tests Framework ==="
+  putStrLn zigzagSummary
   putStrLn ""
   allResults <- runAllTests
   traverse_ printResult allResults
