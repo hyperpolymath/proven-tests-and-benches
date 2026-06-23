@@ -115,10 +115,21 @@ epistemicTests = [
     (\ks => epistemicDeclassificationSafe ks "CONFIDENTIAL")
   ]
 
--- Run all epistemic tests
+-- Run all epistemic tests.
+-- State-specific predicates are applied to the state where they are meaningful:
+-- public-to-secret flow and downward-flow prevention to the classified state,
+-- declassification-to-CONFIDENTIAL to the PUBLIC state.
 public export
 runEpistemicTests : Bool
-runEpistemicTests = all (\f => f publicKnowledge && f secretKnowledge) epistemicTests
+runEpistemicTests =
+  epistemicPublicAccessible publicKnowledge &&
+  epistemicPublicAccessible secretKnowledge &&
+  epistemicSecretHidden publicKnowledge &&
+  epistemicSecretHidden secretKnowledge &&
+  epistemicFlowPublicToSecret secretKnowledge &&
+  epistemicNoFlowSecretToPublic secretKnowledge &&
+  epistemicClassificationOrdered classifiedLevels &&
+  epistemicDeclassificationSafe publicKnowledge "CONFIDENTIAL"
 
 -- =============================================================================
 -- INTEGRATION WITH PROVEN TESTS FRAMEWORK

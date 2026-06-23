@@ -10,6 +10,7 @@
 module ProvenTests.Main
 
 import ProvenTests.Runners
+import System
 
 -- =============================================================================
 -- MAIN ENTRY POINT
@@ -18,6 +19,9 @@ import ProvenTests.Runners
 -- tests/TypeSafeTests and are not yet wired into a build target; run them via a
 -- dedicated test package once that exists (see docs/STATE-OF-THINGS.adoc).
 
---/ Main entry point for the Proven-Tests framework
+--/ Main entry point for the Proven-Tests framework.
+--/ Exits non-zero if any suite fails, so CI gates on the result.
 main : IO ()
-main = runComprehensiveSuite
+main = do
+  ok <- runComprehensiveSuite
+  if ok then pure () else exitFailure

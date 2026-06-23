@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: MPL-2.0
+# GitHub Actions mirror of the GitLab pipeline: actually compiles and runs the
+# Idris2 framework (the GitLab Cargo/mix-gated jobs skip on this repo).
+name: CI (Idris2)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  idris2:
+    name: Build, test & benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Idris2 toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.idris2
+          key: idris2-v0.7.0-${{ runner.os }}
+
+      - name: Install Idris2
+        run: bash scripts/install-idris2.sh
+
+      - name: Build, test & benchmark
+        run: bash scripts/ci-build.sh

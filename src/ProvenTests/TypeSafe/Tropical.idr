@@ -47,8 +47,10 @@ tropicalPlusCommutative (MkResourceBound _ p1 _) (MkResourceBound _ p2 _) =
 -- Test: Identity property for min
 public export
 tropicalMinIdentity : ResourceBound -> Bool
-tropicalMinIdentity (MkResourceBound mv _ _) = 
-  let x = mv in (min x 0) == x
+tropicalMinIdentity (MkResourceBound mv _ _) =
+  -- The additive identity for `min` in the min-plus (tropical) semiring is
+  -- +infinity, not 0: min(x, +inf) == x for every finite x.
+  let infinity = 1.0 / 0.0 in (min mv infinity) == mv
 
 -- Test: Identity property for +
 public export

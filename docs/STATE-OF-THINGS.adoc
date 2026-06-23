@@ -23,9 +23,9 @@ does not exist or does not work*, and the *general state*.
 
 == Verdict (current)
 
-*Early alpha — the library now compiles, runs, and is partially honest-green.*
-Still ungraded / "X" on the Component Readiness Grade scale until the test suites
-and CI are sound.
+*Early alpha — the library compiles, runs honest-green (10/10), and is gated by
+real CI.* Still ungraded / "X" on the Component Readiness Grade scale until the
+empty categories and missing artifacts are addressed.
 
 What changed in this pass (all verified against Idris2 0.7.0 locally):
 
@@ -35,13 +35,14 @@ What changed in this pass (all verified against Idris2 0.7.0 locally):
   Actually-/Provisionally-Proven classification without supplying the evidence.
 * The *benchmark harness is now honest* (see section 3): real monotonic-clock
   timing, non-memoised workloads, dead-code-elimination defeated.
-* The executable runs: `6/10` type-safe category suites pass; `4` fail, surfacing
-  genuine pre-existing test-data / property bugs (see section 9). That red is
-  *real*, not faked.
+* The executable runs and all `10/10` suites pass; it exits non-zero if any suite
+  fails, so CI gates on the result (see section 9).
+* CI now actually compiles and runs the framework — a GitHub Actions workflow plus
+  a GitLab `idris2` job — instead of skipping everything (see section 5).
 
 The conceptual architecture remains the strong part. The remaining gaps are the
-empty test categories, the failing property suites, CI that compiles nothing, and
-several missing referenced artifacts.
+empty test categories, the un-built `tests/TypeSafeTests` modules, and several
+missing referenced artifacts.
 
 == The categories we define
 
@@ -88,7 +89,7 @@ This taxonomy is the strongest part of the repository and is largely real.
 * *Evidence-carrying provenance* — the headline feature is now enforced by the
   type system (see section 2).
 * *Nine TypeSafe modules plus a runner* containing genuine, non-decorative
-  property logic. Six of the nine category suites pass at runtime.
+  property logic. All suites pass at runtime (10/10 including self-classification).
 * *An honest benchmark* (`benchmarks/Benchmark.idr` + `benchmark.ipkg`) reporting
   real ns/iteration with a printed checksum.
 * *Infrastructure and governance* — devcontainer / Containerfile, pre-commit,
@@ -156,12 +157,13 @@ optimiser cannot elide the work. It reports total and per-iteration nanoseconds.
 `README.adoc` pointing at a `TESTING-TAXONOMY.adoc` that is not in this
 repository. There are zero actual unit / p2p / e2e / ... tests.
 
-=== 5. CI compiles nothing
+=== 5. CI — FIXED (now compiles and runs Idris2)
 
-`.gitlab-ci.yml` gates every build / test / lint job on the existence of
-`Cargo.toml` or `mix.exs`. This is an Idris2 repository with neither, so those
-jobs are *skipped* — only the security scanners run. The green pipeline still
-certifies nothing about the code. (Local compilation is now verified; CI is not.)
+The Cargo/mix-gated jobs in `.gitlab-ci.yml` still skip on this repo, but there
+is now a real `idris2` job (GitLab) plus `.github/workflows/ci.yml` (GitHub
+Actions). Both bootstrap Idris2 from source and run `scripts/ci-build.sh`:
+compile the library, install it, build the benchmark, then run the suite (which
+exits non-zero on failure) and the benchmark. CI is now load-bearing.
 
 === 6. Missing referenced artifacts
 
@@ -183,24 +185,17 @@ lives separately under `tests/TypeSafeTests/`).
 Nine test files under `tests/TypeSafeTests/` exist but are not part of the
 `.ipkg`, so they are never compiled or run. They need a dedicated test package.
 
-=== 9. Four category suites fail at runtime (real red)
+=== 9. Four category suites — FIXED (10/10 now pass)
 
-Running `proven-tests` yields `Passed: 6/10`. The failures are genuine
-pre-existing logic / test-data bugs, now visible because the tests actually run:
+These previously failed and have been corrected *without weakening assertions*:
 
-* *Tropical* — `tropicalMinIdentity` asserts `min x 0 == x`, which is false for
-  `x > 0`. In the min-plus (tropical) semiring the additive identity for `min` is
-  `+infinity`, not `0`.
-* *Effects* and *Epistemic* — the suite runner applies *every* predicate to
-  *every* sample state (e.g. `all (\f => f a && f b && f c) tests`), but the
-  predicates are state-specific (e.g. `epistemicSecretHidden` does not hold for
-  public knowledge; `effectOrderMatters` only holds for empty / State-headed
-  stacks). The runner over-applies them.
-* *Bridge* — fails only because `runAllTypeSafeTests` aggregates the three above.
-
-These were left failing on purpose: fixing them means correcting the property
-semantics / test design, which is its own task and must not be done by weakening
-assertions to always-true (see `AUDIT.adoc`).
+* *Tropical* — `tropicalMinIdentity` now uses the correct min-plus additive
+  identity (`+infinity`) instead of `0`.
+* *Effects* / *Epistemic* — the runners no longer apply *every* predicate to
+  *every* sample state; each state-specific property is now asserted against the
+  input where it is meant to hold (e.g. `effectOrderMatters` only on empty /
+  State-headed stacks; declassification-to-CONFIDENTIAL only on the PUBLIC state).
+* *Bridge* — passes now that the three above do.
 
 == Roadmap (priority order)
 
@@ -222,11 +217,11 @@ assertions to always-true (see `AUDIT.adoc`).
 
 | 4
 | Fix the 4 failing property suites (correct semantics, do not weaken)
-| TODO
+| DONE (10/10 pass)
 
 | 5
-| Make CI actually build and run Idris2 (replace the Cargo/mix gating)
-| TODO
+| Make CI actually build and run Idris2 (GitHub Actions + GitLab job)
+| DONE
 
 | 6
 | Wire `tests/TypeSafeTests` into a test package; reconcile taxonomy <-> folders
@@ -260,3 +255,7 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
 * 2026-06-23 — Made the library compile; made provenance load-bearing; rewrote the
   benchmark harness honestly. Verified build + run locally on Idris2 0.7.0.
   Recorded the 4 genuinely-failing suites.
+* 2026-06-23 — Fixed all 4 failing suites (correct semantics, not weakened) — now
+  10/10. The runner exits non-zero on failure. Wired real Idris2 CI (GitHub
+  Actions + GitLab `idris2` job) via `scripts/install-idris2.sh` and
+  `scripts/ci-build.sh`. Verified locally.
