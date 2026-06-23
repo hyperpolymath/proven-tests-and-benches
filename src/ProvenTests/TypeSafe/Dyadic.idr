@@ -10,6 +10,7 @@
 module ProvenTests.TypeSafe.Dyadic
 
 import ProvenTests.Types
+import ProvenTests.Classification
 import Data.String
 
 -- =============================================================================
@@ -18,7 +19,6 @@ import Data.String
 -- Tests for binary relation types (custom implementation)
 -- Ensures properties of binary relations
 
-%%access export
 
 -- Binary relation
 public export
@@ -46,8 +46,8 @@ relationSymmetric _ _ _ = False
 -- Test: Relation is transitive (x ~ y && y ~ z => x ~ z)
 public export
 relationTransitive : Relation a -> a -> a -> a -> Bool
-relationTransitive (MkRelation _ rel _ _ True) x y z = 
-  (rel x y && rel y z) ==> (rel x z)
+relationTransitive (MkRelation _ rel _ _ True) x y z =
+  not (rel x y && rel y z) || (rel x z)
 relationTransitive _ _ _ _ = False
 
 -- Test: Relation is equivalence (reflexive + symmetric + transitive)

@@ -17,7 +17,6 @@ import ProvenTests.Types
 -- DYADIC TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================
 
-%%access export
 
 -- Helper: Create test ID for dyadic tests
 private

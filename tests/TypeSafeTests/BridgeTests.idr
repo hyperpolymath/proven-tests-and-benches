@@ -17,7 +17,6 @@ import ProvenTests.Types
 -- BRIDGE TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================
 
-%%access export
 
 -- Helper: Create test ID for bridge tests
 private

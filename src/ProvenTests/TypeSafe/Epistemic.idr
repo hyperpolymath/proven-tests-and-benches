@@ -10,6 +10,7 @@
 module ProvenTests.TypeSafe.Epistemic
 
 import ProvenTests.Types
+import ProvenTests.Classification
 import Data.String
 
 -- =============================================================================
@@ -18,7 +19,6 @@ import Data.String
 -- Tests for information-theoretic access control properties
 -- Used in typed-wasm extension for secure information flow
 
-%%access export
 
 -- Epistemic knowledge representation: tracks what information is known
 -- at different security levels

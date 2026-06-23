@@ -10,6 +10,7 @@
 module ProvenTests.TypeSafe.Ceremonial
 
 import ProvenTests.Types
+import ProvenTests.Classification
 import Data.String
 
 -- =============================================================================
@@ -18,7 +19,6 @@ import Data.String
 -- Tests for protocol/ritual types (custom implementation)
 -- Ensures proper sequencing of operations
 
-%%access export
 
 -- Ceremonial action type
 public export
@@ -34,6 +34,14 @@ public export
 data Ceremony : Type where
   MkCeremony : List CeremonyStep -> Ceremony
 
+-- Helper: get last element of list (Prelude's `last` needs a NonEmpty proof).
+-- Declared before its first use below.
+public export
+lastMaybe : List a -> Maybe a
+lastMaybe [] = Nothing
+lastMaybe [x] = Just x
+lastMaybe (_ :: xs) = lastMaybe xs
+
 -- Test: Ceremony starts with Initiate
 public export
 ceremonyStartsProperly : Ceremony -> Bool
@@ -45,8 +53,8 @@ ceremonyStartsProperly (MkCeremony _) = False
 public export
 ceremonyEndsProperly : Ceremony -> Bool
 ceremonyEndsProperly (MkCeremony []) = False
-ceremonyEndsProperly (MkCeremony xs) = 
-  case last xs of
+ceremonyEndsProperly (MkCeremony xs) =
+  case lastMaybe xs of
     Just (Complete _) => True
     _ => False
 
@@ -76,13 +84,6 @@ ceremonyHasRequiredOrder (MkCeremony steps) =
     stepName (Validate _) = "Validate"
     stepName (Confirm _) = "Confirm"
     stepName (Complete _) = "Complete"
-
--- Helper: get last element of list
-public export
-last : List a -> Maybe a
-last [] = Nothing
-last [x] = Just x
-last (_ :: xs) = last xs
 
 -- Test data
 public export

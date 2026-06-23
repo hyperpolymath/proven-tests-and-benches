@@ -12,6 +12,7 @@ module ProvenTests.Framework
 import ProvenTests.Types
 import ProvenTests.Classification
 import ProvenTests.Taxonomy
+import Data.List1
 
 -- =============================================================================
 -- TEST DEFINITION
@@ -23,7 +24,7 @@ record ActuallyProvenTest where
   constructor MkActuallyProvenTest
   metadata    : TestMetadata
   test_func    : IO TestResult
-  proof_ladder : List ProofStep
+  proof_ladder : List1 ProofStep
 
 --/ Provisionally-Proven test type
 public export
@@ -39,14 +40,24 @@ record UnprovenTest where
   metadata    : TestMetadata
   test_func    : IO TestResult
 
---/ A test is a computation that produces a result
+--/ Anything runnable yields its metadata and a result-producing action.
+--/ This replaces the previous computed-type machinery with a uniform interface
+--/ so suites can hold tests of mixed provenance.
 public export
-Test : ProvenStatus -> Type
-Test status = 
-  case status of
-    ActuallyProven => ActuallyProvenTest
-    ProvisionallyProven => ProvisionallyProvenTest
-    Unproven => UnprovenTest
+interface Runnable t where
+  toRunnable : t -> (TestMetadata, IO TestResult)
+
+public export
+Runnable ActuallyProvenTest where
+  toRunnable (MkActuallyProvenTest m f _) = (m, f)
+
+public export
+Runnable ProvisionallyProvenTest where
+  toRunnable (MkProvisionallyProvenTest m f) = (m, f)
+
+public export
+Runnable UnprovenTest where
+  toRunnable (MkUnprovenTest m f) = (m, f)
 
 -- =============================================================================
 -- TEST CONSTRUCTORS
@@ -54,16 +65,16 @@ Test status =
 
 --/ Create an Actually-Proven test
 public export
-provenTest : 
-     TestId -> 
-     String -> 
-     (IO TestResult) -> 
-     List ProofStep -> 
+provenTest :
+     TestId ->
+     String ->
+     (IO TestResult) ->
+     List1 ProofStep ->
      ActuallyProvenTest
 provenTest tid desc func ladder =
-  let meta = classifyActuallyProven tid desc ladder 
-        (designProof "Design" "Formal Verification" [] []) 
-        (typeSafetyCert 6 "Dependent Types" "Idris2" []) []
+  let meta = classifyActuallyProven tid desc ladder
+        (designProof "Design" "Formal Verification" [] [])
+        (typeSafetyCert 6 "Dependent Types" "Idris2" [])
   in MkActuallyProvenTest meta func ladder
 
 --/ Create a Provisionally-Proven test
@@ -97,18 +108,13 @@ unprovenTest tid desc func =
 -- TEST EXECUTION
 -- =============================================================================
 
---/ Run a test and return the result with metadata
+--/ Run a test and return its metadata alongside the result
 public export
-runTest : (status : ProvenStatus) -> Test status -> IO (TestMetadata, TestResult)
-runTest _ (MkActuallyProvenTest meta func _) = do
-  result <- func
-  pure (meta, result)
-runTest _ (MkProvisionallyProvenTest meta func) = do
-  result <- func
-  pure (meta, result)
-runTest _ (MkUnprovenTest meta func) = do
-  result <- func
-  pure (meta, result)
+runTest : Runnable t => t -> IO (TestMetadata, TestResult)
+runTest x =
+  let (meta, action) = toRunnable x in
+  do result <- action
+     pure (meta, result)
 
 -- =============================================================================
 -- ASSERTIONS
@@ -125,26 +131,20 @@ public export
 assertEq : Eq a => a -> a -> String -> IO TestResult
 assertEq x y msg = if x == y then pure Passed else pure (Failed msg)
 
---/ Assert that a computation doesn't throw
-public export
-assertNoThrow : IO () -> String -> IO TestResult
-assertNoThrow action msg = do
-  result <- try (action >> pure Passed) (\ _ => pure (Failed msg))
-  pure result
-  where
-    try : IO a -> (String -> IO a) -> IO a
-    try action handler = action
+-- NOTE: a previous `assertNoThrow` was removed: it claimed to catch exceptions
+-- but its helper ignored the handler and caught nothing. Re-add only with a real
+-- implementation (e.g. via Control.App or System exception handling).
 
 -- =============================================================================
 -- TEST SUITE
 -- =============================================================================
 
---/ A test suite is a list of tests with a name
+--/ A test suite is a list of runnable tests (of any provenance) with a name
 public export
 record TestSuite where
   constructor MkTestSuite
   name : String
-  tests : List (Test status)
+  tests : List (TestMetadata, IO TestResult)
 
 --/ Create an empty test suite
 public export
@@ -153,8 +153,8 @@ emptySuite name = MkTestSuite name []
 
 --/ Add a test to a suite
 public export
-addTest : Test status -> TestSuite -> TestSuite
-addTest test (MkTestSuite name tests) = MkTestSuite name (tests ++ [test])
+addTest : Runnable t => t -> TestSuite -> TestSuite
+addTest test (MkTestSuite name tests) = MkTestSuite name (tests ++ [toRunnable test])
 
 -- =============================================================================
 -- SUITE EXECUTION
@@ -163,16 +163,9 @@ addTest test (MkTestSuite name tests) = MkTestSuite name (tests ++ [test])
 --/ Run all tests in a suite
 public export
 runSuite : TestSuite -> IO (List (TestMetadata, TestResult))
-runSuite (MkTestSuite _ tests) = mapM (\t => runTest (getStatus t) t) tests
+runSuite (MkTestSuite _ tests) = traverse runOne tests
   where
-    mapM : (a -> IO b) -> List a -> IO (List b)
-    mapM _ [] = pure []
-    mapM f (x::xs) = do
-      y <- f x
-      ys <- mapM f xs
-      pure (y::ys)
-
-    getStatus : Test s -> s
-    getStatus (MkActuallyProvenTest m _ _) = ActuallyProven
-    getStatus (MkProvisionallyProvenTest m _) = ProvisionallyProven
-    getStatus (MkUnprovenTest m _) = Unproven
+    runOne : (TestMetadata, IO TestResult) -> IO (TestMetadata, TestResult)
+    runOne (meta, action) = do
+      result <- action
+      pure (meta, result)

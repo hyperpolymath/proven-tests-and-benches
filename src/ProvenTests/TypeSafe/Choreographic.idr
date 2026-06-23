@@ -10,6 +10,7 @@
 module ProvenTests.TypeSafe.Choreographic
 
 import ProvenTests.Types
+import ProvenTests.Classification
 import Data.String
 
 -- =============================================================================
@@ -18,7 +19,6 @@ import Data.String
 -- Tests for multi-party session types from TypeLL
 -- Ensures protocol correctness across distributed participants
 
-%%access export
 
 -- Session type representation
 public export

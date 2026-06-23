@@ -10,6 +10,7 @@
 module ProvenTests.Classification
 
 import ProvenTests.Types
+import Data.List1
 
 -- =============================================================================
 -- ACTUALLY-PROVEN CLASSIFICATION
@@ -28,16 +29,18 @@ record ActuallyProvenEvidence where
 --/ Classifier for Actually-Proven tests
 public export
 isActuallyProven : TestMetadata -> Bool
-isActuallyProven (MkTestMetadata _ _ _ _ _ ActuallyProven) = True
-isActuallyProven _ = False
+isActuallyProven m = case statusOf (provenance m) of
+  ActuallyProven => True
+  _ => False
 
 --/ Create an Actually-Proven classification
 public export
-classifyActuallyProven : 
-     TestId -> String -> List ProofStep -> DesignSafetyProof -> 
-     TypeSafetyCertificate -> List String -> TestMetadata
-classifyActuallyProven test_id desc ladder design type_safe proofs =
-  MkTestMetadata test_id desc Nothing Nothing Nothing ActuallyProven
+classifyActuallyProven :
+     TestId -> String -> List1 ProofStep -> DesignSafetyProof ->
+     TypeSafetyCertificate -> TestMetadata
+classifyActuallyProven tid desc ladder design type_safe =
+  MkTestMetadata tid desc Nothing Nothing Nothing
+    (PActuallyProven (MkActualEvidence ladder design type_safe))
 
 -- =============================================================================
 -- PROVISIONALLY-PROVEN CLASSIFICATION
@@ -54,15 +57,17 @@ record ProvisionallyProvenEvidence where
 --/ Classifier for Provisionally-Proven tests
 public export
 isProvisionallyProven : TestMetadata -> Bool
-isProvisionallyProven (MkTestMetadata _ _ _ _ _ ProvisionallyProven) = True
-isProvisionallyProven _ = False
+isProvisionallyProven m = case statusOf (provenance m) of
+  ProvisionallyProven => True
+  _ => False
 
 --/ Create a Provisionally-Proven classification
 public export
-classifyProvisionallyProven : 
+classifyProvisionallyProven :
      TestId -> String -> FrameworkSafetyProof -> TypeSafetyCertificate -> TestMetadata
-classifyProvisionallyProven test_id desc framework test_safe =
-  MkTestMetadata test_id desc Nothing Nothing Nothing ProvisionallyProven
+classifyProvisionallyProven tid desc framework test_safe =
+  MkTestMetadata tid desc Nothing Nothing Nothing
+    (PProvisionallyProven (MkProvisionalEvidence framework test_safe))
 
 -- =============================================================================
 -- UNPROVEN CLASSIFICATION
@@ -71,14 +76,15 @@ classifyProvisionallyProven test_id desc framework test_safe =
 --/ Classifier for Unproven tests
 public export
 isUnproven : TestMetadata -> Bool
-isUnproven (MkTestMetadata _ _ _ _ _ Unproven) = True
-isUnproven _ = False
+isUnproven m = case statusOf (provenance m) of
+  Unproven => True
+  _ => False
 
 --/ Create an Unproven classification
 public export
 classifyUnproven : TestId -> String -> TestMetadata
-classifyUnproven test_id desc =
-  MkTestMetadata test_id desc Nothing Nothing Nothing Unproven
+classifyUnproven tid desc =
+  MkTestMetadata tid desc Nothing Nothing Nothing PUnproven
 
 -- =============================================================================
 -- CLASSIFICATION UTILITIES
@@ -87,27 +93,25 @@ classifyUnproven test_id desc =
 --/ Get the proven status
 public export
 getProvenStatus : TestMetadata -> ProvenStatus
-getProvenStatus (MkTestMetadata _ _ _ _ _ status) = status
+getProvenStatus m = statusOf (provenance m)
 
 --/ Promote from Unproven to Provisionally-Proven
 public export
-promoteToProvisionallyProven : 
-     TestMetadata -> FrameworkSafetyProof -> TypeSafetyCertificate -> TestMetadata
-promoteToProvisionallyProven (MkTestMetadata tid desc cat asp tsc Unproven) fw ts =
-  MkTestMetadata tid desc cat asp tsc ProvisionallyProven
-promoteToProvisionallyProven _ _ _ = 
-  MkTestMetadata (MkTestId "" "" 0) "Cannot promote" Nothing Nothing Nothing ProvisionallyProven
+promoteToProvisionallyProven :
+     TestMetadata -> FrameworkSafetyProof -> TypeSafetyCertificate -> Maybe TestMetadata
+promoteToProvisionallyProven meta fw ts = case provenance meta of
+  PUnproven => Just ({ provenance := PProvisionallyProven (MkProvisionalEvidence fw ts) } meta)
+  _         => Nothing
 
 --/ Promote from Provisionally-Proven to Actually-Proven
 public export
-promoteToActuallyProven : 
-     TestMetadata -> List ProofStep -> DesignSafetyProof -> 
-     TypeSafetyCertificate -> List String -> TestMetadata
-promoteToActuallyProven (MkTestMetadata tid desc cat asp tsc ProvisionallyProven) 
-    ladder design ts proofs =
-  MkTestMetadata tid desc cat asp tsc ActuallyProven
-promoteToActuallyProven _ _ _ _ _ = 
-  MkTestMetadata (MkTestId "" "" 0) "Cannot promote" Nothing Nothing Nothing ActuallyProven
+promoteToActuallyProven :
+     TestMetadata -> List1 ProofStep -> DesignSafetyProof ->
+     TypeSafetyCertificate -> Maybe TestMetadata
+promoteToActuallyProven meta ladder design ts = case provenance meta of
+  PProvisionallyProven _ =>
+    Just ({ provenance := PActuallyProven (MkActualEvidence ladder design ts) } meta)
+  _ => Nothing
 
 -- =============================================================================
 -- CONSTRUCTORS

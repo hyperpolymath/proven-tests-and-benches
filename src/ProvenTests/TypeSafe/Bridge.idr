@@ -10,6 +10,8 @@
 module ProvenTests.TypeSafe.Bridge
 
 import ProvenTests.Types
+import ProvenTests.Classification
+import Data.String
 import ProvenTests.TypeSafe.Tropical
 import ProvenTests.TypeSafe.Epistemic
 import ProvenTests.TypeSafe.Choreographic
@@ -25,7 +27,6 @@ import ProvenTests.TypeSafe.Dyadic
 -- This module provides the integration bridge between Proven-Tests
 -- and the echo-types repository for advanced type theory testing
 
-%%access export
 
 -- Bridge configuration
 public export
@@ -58,8 +59,8 @@ bridgeVersionValid (MkEchoTypesBridge _ v _) =
 -- Test: Bridge repository is accessible
 public export
 bridgeRepoAccessible : EchoTypesBridge -> Bool
-bridgeRepoAccessible (MkEchoTypesBridge repo _ _) = 
-  repo.startsWith "https://github.com/"
+bridgeRepoAccessible (MkEchoTypesBridge repo _ _) =
+  isPrefixOf "https://github.com/" repo
 
 -- Test: Bridge supports echo-types category
 public export
@@ -102,7 +103,7 @@ allBridgeTestsPass = all (\f => f defaultEchoTypesBridge) bridgeTestSuite
 
 -- Echo type representation (simplified)
 public export
-data Echo a : Type where
+data Echo : Type -> Type where
   MkEcho : a -> Echo a
 
 -- Test: Echo preserves type

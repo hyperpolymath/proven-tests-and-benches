@@ -17,7 +17,6 @@ import ProvenTests.Types
 -- EPISTEMIC TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================
 
-%%access export
 
 -- Helper: Create test ID for epistemic tests
 private

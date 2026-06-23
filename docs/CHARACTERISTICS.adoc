@@ -1,0 +1,283 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-License-Identifier: MPL-2.0
+// Mozilla Post-Quantum License Provisions v1.0
+//
+// Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
+// Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+//
+= Characteristics of Great Tests and Great Benchmarks
+:toc: left
+:toclevels: 3
+:sectnums:
+
+== Purpose
+
+This is the canonical standard for *what makes a test or a benchmark good* in
+the hyperpolymath ecosystem. It is the conceptual foundation that the
+Proven-Tests framework, its taxonomy, and its provenance tiers exist to serve.
+
+It answers three questions:
+
+. What properties does a great test have?
+. What properties does a great benchmark have?
+. What surrounding concepts (coverage, oracles, doubles, determinism, audit
+  honesty) hold the discipline together?
+
+The companion document `STATE-OF-THINGS.adoc` records how far *this repository*
+currently lives up to the standard described here.
+
+== Philosophy: testing is a spectrum of evidence
+
+A test is not a binary "we tested it / we did not." A test is a *claim about
+behaviour*, and claims differ in **strength of evidence**. The central idea of
+this whole project is to make that strength explicit, typed, and honest.
+
+[cols="1,3,2,2", options="header"]
+|===
+| Strength | Mechanism | Quantifier | Provenance tier
+
+| Weakest
+| Example-based test (one case)
+| one input -> one output
+| Unproven
+
+| Stronger
+| Property-based test (generated inputs)
+| `forall` over _sampled_ inputs
+| ~ Provisionally-Proven
+
+| Strongest
+| Machine-checked proof / dependent type
+| `forall` over _all_ inputs, by construction
+| Actually-Proven
+|===
+
+In a dependently-typed language such as Idris2, the strongest possible "test"
+is a *type*: if the program type-checks, the property holds for every input, with
+no runtime cost and no possibility of a missed case. The guiding slogan is
+**"make illegal states unrepresentable."** This is precisely why the framework is
+written in Idris2 rather than a conventional xUnit harness.
+
+A corollary, and the project's prime directive (see `AUDIT.adoc`): *a test must
+never claim more than it proves.* A green example-based test is not a proof; a
+property test that samples 100 cases is not a proof over the infinite domain. The
+provenance tier must match the evidence.
+
+== Part I — Characteristics of a great test
+
+A great test is a *precise, honest, durable claim about behaviour.*
+
+=== The FIRST baseline
+
+The well-known minimum bar. A unit test should be:
+
+* *Fast* — milliseconds, so it is run constantly.
+* *Isolated* — independent of other tests and of run order.
+* *Repeatable* — same result every run, every machine.
+* *Self-validating* — a clear pass/fail with no human inspection of output.
+* *Timely* — written with (ideally before) the code it covers.
+
+=== Beyond FIRST
+
+FIRST is necessary but not sufficient. A *great* test also has:
+
+. *One reason to fail.* It exercises a single behaviour, so a red result
+  _localises_ the fault. A test that can break for five reasons diagnoses none.
+
+. *A real oracle.* The assertion genuinely distinguishes correct from incorrect.
+  "It did not crash," or an assertion that is trivially true, is the cardinal
+  sin: it manufactures confidence without evidence. The hardest part of testing
+  is knowing the right answer (the _oracle problem_).
+
+. *Determinism.* No dependence on wall-clock, network, filesystem ordering,
+  locale, or unseeded randomness. When randomness is intrinsic, the seed is
+  recorded so any failure replays exactly.
+
+. *Hermetic isolation.* No shared mutable state; runnable in any order and in
+  parallel. External services belong to a different test _tier_, never smuggled
+  into a unit test.
+
+. *Speed appropriate to its tier.* Unit in milliseconds; integration and e2e
+  may be slower but are quarantined so they do not slow the inner loop.
+
+. *Behaviour, not implementation.* It asserts on observable outcomes and
+  invariants, so it survives refactoring instead of punishing it. A test that
+  breaks on every internal rename is an anchor, not a safety net.
+
+. *Readable as a specification.* Arrange–Act–Assert (or Given–When–Then)
+  structure; the name and body teach the system. Tests are the one form of
+  documentation that cannot silently go out of date.
+
+. *Good diagnostics on failure.* The message localises the fault; for
+  property-based tests, the framework _shrinks_ a failing case to a minimal
+  counterexample.
+
+. *Known sensitivity — it can actually fail.* A test that cannot fail is worse
+  than no test, because it gives false confidence. _Mutation testing_ measures
+  this directly: inject faults and confirm the suite catches them.
+
+. *Right coverage of cases.* Boundaries, edge cases, and error paths, not only
+  the happy path. Use equivalence partitioning and boundary-value analysis
+  rather than piling up redundant happy-path cases.
+
+. *Honesty about its own strength.* It claims no more than it verifies, and is
+  classified accordingly (Unproven / Provisionally-Proven / Actually-Proven).
+
+. *Maintained as first-class code.* Reviewed, refactored, and deleted when
+  obsolete. DRY enough to be maintainable, but never so abstracted that intent
+  is lost.
+
+=== The test pyramid (and where proofs sit)
+
+The conventional pyramid — many fast unit tests, fewer integration tests, very
+few slow end-to-end tests — still holds. This framework adds a dimension
+_above_ the pyramid: properties and proofs. Where a property holds for all
+inputs, prefer encoding it as a property test or, better, a type/proof, rather
+than enumerating examples.
+
+== Part II — Characteristics of a great benchmark
+
+A benchmark answers a *different question* from a test. A test asks "is it
+correct?" — a boolean, per input. A benchmark asks "how much does it cost?" — a
+*distribution*, established statistically. Benchmarks therefore inherit every
+honesty requirement of tests and add statistical and environmental discipline.
+
+A great benchmark:
+
+. *Measures the thing you claim.* It times the hot path under a representative
+  workload — not setup, teardown, or framework overhead.
+
+. *Is statistically literate.* It runs many iterations and reports central
+  tendency _and spread_ (median plus p99 plus standard deviation or MAD), never
+  a single number. One number is noise wearing a suit.
+
+. *Controls the environment.* Pinned CPU governor and turbo state, isolated
+  cores where possible, warmup to steady state, fixed input data — and it
+  *records the environment* (CPU, RAM, OS, compiler/runtime version, flags). A
+  result without this metadata is not reproducible and therefore not a result.
+
+. *Defeats dead-code elimination.* The optimiser must not delete the work being
+  timed. Consume the result (a `black_box` / blackhole / "keep-alive"). This is
+  the single most common microbenchmark error — and the one a mock timer that
+  returns a constant fails by construction.
+
+. *Separates regimes.* Cold start vs. steady state, and warmup vs. measured
+  phase, are reported separately. Both matter; conflating them lies.
+
+. *Is reproducible and baseline-relative.* Others re-run it and get the same
+  _shape_. Regression tracking compares against a committed baseline, because
+  _relative_ change is portable across machines while absolute nanoseconds are
+  not.
+
+. *Knows its single question.* Throughput, latency, tail latency (p99/p999),
+  allocation count, peak memory, and energy are different metrics. A benchmark
+  that mixes them produces a number that means nothing.
+
+. *Avoids coordinated omission.* When measuring latency under load, do not drop
+  the samples that occur during a stall (Gil Tene's observation); doing so
+  silently fabricates good tail latencies.
+
+. *Is regression-gated in CI.* A benchmark nobody watches over time is trivia.
+  The value is the trend and the alert on a statistically significant
+  regression.
+
+. *Reports honestly.* Units, iteration count, outlier handling, and raw data
+  are all available. No cherry-picking the best run.
+
+=== Micro / meso / macro
+
+Choose the granularity to match the question, and never extrapolate across
+levels:
+
+* *Micro* — a single function or operation in isolation.
+* *Meso* — a component or subsystem under a realistic call pattern.
+* *Macro* — an end-to-end workload resembling production.
+
+== Part III — Related concepts (the connective tissue)
+
+*Coverage.* Line < branch < path < _mutation_. Coverage is necessary, not
+sufficient: it shows what was _executed_, not what was _checked_. Mutation score
+is the stronger signal because it tests the tests.
+
+*The oracle problem.* Knowing the correct answer is often harder than running
+the code. Answers include property-based testing, _metamorphic_ testing
+(relations between outputs of related inputs), differential testing (compare
+against a reference implementation), and golden/snapshot tests.
+
+*Test doubles.* Stubs, mocks, fakes, and spies isolate the unit under test.
+Over-mocking is a trap: it yields suites that stay green while the real system is
+broken, because they only ever test the mocks.
+
+*Determinism and seeds.* Record every seed; quarantine and track flaky tests
+rather than papering over them with blind retries.
+
+*Reproducible environments.* Pinned toolchains and containers
+(devcontainer / Containerfile) are part of the test apparatus, not an
+afterthought — a test is only repeatable if its environment is.
+
+*Meta-testing.* The framework must test (and, here, _prove_) its own claims.
+A provenance label that the framework cannot itself justify is decoration.
+
+*Audit honesty.* Per `AUDIT.adoc`: papers, READMEs, badges, and release claims
+must not outrun the proofs, tests, or benchmarks that support them. No fake
+benches, fake fuzz, or partial-proof debt hidden as if complete. This is itself
+a characteristic of great test infrastructure: *it tells the truth about its own
+strength.*
+
+== Part IV — How this maps to the Proven-Tests taxonomy
+
+The framework encodes several orthogonal axes (see `ProvenTests.Taxonomy`). The
+characteristics above are the _rubric_ those axes are scored against:
+
+* *Provenance tiers* (Unproven / Provisionally-Proven / Actually-Proven) are the
+  strength-of-evidence spectrum from the Philosophy section, made into a type.
+* *Test categories* (Unit, Property, Mutation, Fuzz, Contract, Chaos, …) are the
+  _kinds_ of claim; each kind has a characteristic strength and failure mode.
+* *Aspects* (the quality attributes: Performance, Security, Reproducibility, …)
+  are _what_ is being claimed about.
+* *Kategoria levels* (L1–L12) grade the strength of the type-level guarantee
+  backing an Actually-Proven test.
+
+A test's tier should be derivable from evidence, not asserted. Property-based and
+contract tests start no lower than Provisionally-Proven; proof-regression tests
+that re-check a machine-checked proof are Actually-Proven; everything else starts
+Unproven and is _promoted_ only when matching evidence is supplied.
+
+== Quick-reference checklists
+
+=== A great test
+
+* [ ] Fails for exactly one reason
+* [ ] Has a real oracle (can distinguish right from wrong)
+* [ ] Deterministic; seed recorded if randomised
+* [ ] Hermetic and order-independent
+* [ ] Fast for its tier
+* [ ] Asserts behaviour, not implementation detail
+* [ ] Reads as a specification (clear name, AAA/GWT)
+* [ ] Produces a localising failure message / shrunk counterexample
+* [ ] Demonstrably _able_ to fail (survives mutation)
+* [ ] Covers boundaries and error paths
+* [ ] Classified at a tier its evidence justifies
+
+=== A great benchmark
+
+* [ ] Times the real hot path, not setup/overhead
+* [ ] Reports median + spread + p99, not one number
+* [ ] Pins and records the environment
+* [ ] Defeats dead-code elimination (consumes the result)
+* [ ] Separates warmup from steady state
+* [ ] Reproducible; compares against a committed baseline
+* [ ] Measures one well-defined metric
+* [ ] Avoids coordinated omission for latency-under-load
+* [ ] Gated for regressions in CI
+* [ ] Publishes units, iteration count, and raw data
+
+== References
+
+* Idris2 — https://idris2.readthedocs.io
+* `AUDIT.adoc` — repo-local audit gate (honesty posture)
+* `standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc` — canonical taxonomy
+* `standards/component-readiness-grades/COMPONENT-READINESS-GRADES.md` — CRG scale
+* G. Tene, "How NOT to Measure Latency" (coordinated omission)
+* K. Beck, _Test-Driven Development by Example_ (FIRST, AAA)

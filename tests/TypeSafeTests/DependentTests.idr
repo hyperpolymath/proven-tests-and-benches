@@ -17,7 +17,6 @@ import ProvenTests.Types
 -- DEPENDENT TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================
 
-%%access export
 
 -- Helper: Create test ID for dependent tests
 private

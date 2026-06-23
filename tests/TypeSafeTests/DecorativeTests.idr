@@ -17,7 +17,6 @@ import ProvenTests.Types
 -- DECORATIVE TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================
 
-%%access export
 
 -- Helper: Create test ID for decorative tests
 private
