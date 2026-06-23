@@ -10,6 +10,7 @@
 module ProvenTests.TypeSafe.Effects
 
 import ProvenTests.Types
+import ProvenTests.Classification
 import Data.String
 
 -- =============================================================================
@@ -18,7 +19,6 @@ import Data.String
 -- Tests for Idris2 core effect system properties
 -- Ensures effect safety and correctness
 
-%%access export
 
 -- Simple effect type
 public export
@@ -28,6 +28,16 @@ data Effect : Type where
   Write : Effect
   State : Effect
   Exception : Effect
+
+-- Equality on effects (required by `elem` below)
+public export
+Eq Effect where
+  Pure == Pure = True
+  Read == Read = True
+  Write == Write = True
+  State == State = True
+  Exception == Exception = True
+  _ == _ = False
 
 -- Effect stack
 public export
@@ -53,9 +63,10 @@ effectStackValid (Exception :: xs) = effectStackValid xs
 -- Test: State effect requires both read and write
 public export
 effectStateImpliesReadWrite : EffectStack -> Bool
-effectStateImpliesReadWrite xs = 
-  State `elem` xs => (Read `elem` xs && Write `elem` xs)
-  _ => True
+effectStateImpliesReadWrite xs =
+  if (State `elem` xs)
+    then ((Read `elem` xs) && (Write `elem` xs))
+    else True
 
 -- Test: Effect order matters for State
 public export

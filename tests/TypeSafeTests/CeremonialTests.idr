@@ -17,7 +17,6 @@ import ProvenTests.Types
 -- CEREMONIAL TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================
 
-%%access export
 
 -- Helper: Create test ID for ceremonial tests
 private

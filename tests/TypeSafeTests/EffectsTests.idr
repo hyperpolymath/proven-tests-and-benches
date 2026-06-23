@@ -17,7 +17,6 @@ import ProvenTests.Types
 -- EFFECTS TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================
 
-%%access export
 
 -- Helper: Create test ID for effects tests
 private

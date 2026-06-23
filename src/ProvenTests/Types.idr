@@ -13,6 +13,7 @@ module ProvenTests.Types
 
 import Data.String
 import Data.List
+import Data.List1
 import Data.Maybe
 
 -- =============================================================================
@@ -32,6 +33,14 @@ Show ProvenStatus where
   show ActuallyProven = "Actually-Proven"
   show ProvisionallyProven = "Provisionally-Proven"
   show Unproven = "Unproven"
+
+-- Equality on the bare status tag
+export
+Eq ProvenStatus where
+  ActuallyProven == ActuallyProven = True
+  ProvisionallyProven == ProvisionallyProven = True
+  Unproven == Unproven = True
+  _ == _ = False
 
 -- =============================================================================
 -- PROOF STEPS
@@ -152,9 +161,56 @@ Show TypeSafeCategory where
   show Dyadic = "Dyadic"
   show EchoTypes = "Echo-Types"
 
+-- Equality on type-safe categories (distinct display names are injective)
+export
+Eq TypeSafeCategory where
+  x == y = show x == show y
+
 -- =============================================================================
 -- TEST METADATA
 -- =============================================================================
+
+-- =============================================================================
+-- EVIDENCE-CARRYING PROVENANCE
+-- =============================================================================
+-- A test's provenance is inseparable from the evidence that justifies it: the
+-- data constructors below *require* that evidence as typed fields, so a test
+-- cannot be labelled Provisionally- or Actually-Proven without supplying it.
+
+--/ Evidence required to justify a Provisionally-Proven classification
+public export
+record ProvisionalEvidence where
+  constructor MkProvisionalEvidence
+  framework_safety : FrameworkSafetyProof
+  test_safety      : TypeSafetyCertificate
+
+--/ Evidence required to justify an Actually-Proven classification.
+--/ The proof ladder is a non-empty `List1`, so it is impossible to claim
+--/ Actually-Proven with zero proof steps.
+public export
+record ActualEvidence where
+  constructor MkActualEvidence
+  proof_ladder : List1 ProofStep
+  design_proof : DesignSafetyProof
+  type_safety  : TypeSafetyCertificate
+
+--/ Provenance carries its own justification as a typed payload
+public export
+data Provenance : Type where
+  PUnproven            : Provenance
+  PProvisionallyProven : ProvisionalEvidence -> Provenance
+  PActuallyProven      : ActualEvidence -> Provenance
+
+--/ Project the bare status tag (for display, comparison, reporting)
+public export
+statusOf : Provenance -> ProvenStatus
+statusOf PUnproven                = Unproven
+statusOf (PProvisionallyProven _) = ProvisionallyProven
+statusOf (PActuallyProven _)      = ActuallyProven
+
+export
+Show Provenance where
+  show = show . statusOf
 
 --/ Metadata about a test
 public export
@@ -165,4 +221,4 @@ record TestMetadata where
   category      : Maybe String
   aspect        : Maybe String
   typesafe_cat  : Maybe TypeSafeCategory
-  proven_status : ProvenStatus
+  provenance    : Provenance

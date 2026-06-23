@@ -10,6 +10,7 @@
 module ProvenTests.TypeSafe.Tropical
 
 import ProvenTests.Types
+import ProvenTests.Classification
 import Data.String
 
 -- =============================================================================
@@ -18,7 +19,6 @@ import Data.String
 -- Tests for min-plus semiring resource bounds properties
 -- Used in typed-wasm extension for resource-aware computations
 
-%%access export
 
 -- Tropical semiring: (ℝ ∪ {∞}, min, +)
 -- Identity: min(x, 0) = x, x + ∞ = ∞
@@ -117,7 +117,7 @@ tropicalTests = [
 -- Run all tropical tests
 public export
 runTropicalTests : Bool
-runTropicalTests = all id tropicalTests
+runTropicalTests = all (\f => f exampleBound1 exampleBound2) tropicalTests
 
 -- =============================================================================
 -- INTEGRATION WITH PROVEN TESTS FRAMEWORK

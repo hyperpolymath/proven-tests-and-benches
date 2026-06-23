@@ -10,6 +10,7 @@
 module ProvenTests.TypeSafe.Dependent
 
 import ProvenTests.Types
+import ProvenTests.Classification
 import Data.String
 
 -- =============================================================================
@@ -18,18 +19,16 @@ import Data.String
 -- Tests for Idris2 core dependent type verification
 -- Ensures type correctness with dependent types
 
-%%access export
 
 -- Dependent pair: value depends on type
 public export
-data DepPair : Type -> (a : Type) -> a -> Type where
+data DepPair : (t : Type) -> t -> Type where
   MkDepPair : (t : Type) -> (v : t) -> DepPair t v
 
 -- Test: Dependent pair maintains type correctness
 public export
-dependentPairCorrect : DepPair Nat 5 -> Bool
-dependentPairCorrect (MkDepPair Nat x) = True
-dependentPairCorrect _ = False
+dependentPairCorrect : DepPair Nat n -> Bool
+dependentPairCorrect (MkDepPair _ _) = True
 
 -- Dependent list: list indexed by natural numbers
 public export
@@ -47,7 +46,6 @@ vectLengthCorrect _ = False
 public export
 vectHeadSafe : Vect Nat (S n) -> Bool
 vectHeadSafe (x :: _) = True
-vectHeadSafe Nil = False
 
 -- Test: Dependent type preserves invariants
 public export

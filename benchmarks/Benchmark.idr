@@ -7,208 +7,98 @@
 -- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
 --
 
-module ProvenTests.Benchmarks.Benchmark
+module Benchmark
 
-import ProvenTests.TypeSafe.Tropical
-import ProvenTests.TypeSafe.Epistemic
-import ProvenTests.TypeSafe.Choreographic
-import ProvenTests.TypeSafe.Dependent
 import ProvenTests.TypeSafe.Effects
-import ProvenTests.TypeSafe.Decorative
-import ProvenTests.TypeSafe.Ceremonial
 import ProvenTests.TypeSafe.Dyadic
-import ProvenTests.TypeSafe.Bridge
-import Data.Time
+import ProvenTests.TypeSafe.Ceremonial
+import System.Clock
+import Data.List
 
 -- =============================================================================
--- BENCHMARK SUITE FOR PROVEN-TESTS
+-- HONEST BENCHMARK HARNESS
 -- =============================================================================
+-- Real wall-clock timing via the monotonic clock. Workloads are indexed by the
+-- iteration counter so results are NOT memoised, and every result is folded into
+-- a checksum that is printed, so the optimiser cannot eliminate the work as dead
+-- code. Report relative change against a baseline; absolute ns are machine- and
+-- load-dependent.
 
-%%access export
-
--- Benchmark result type
 public export
 record BenchmarkResult where
   constructor MkBenchmarkResult
-  name : String
+  name       : String
   iterations : Nat
-  total_time : Nat  -- microseconds
-  avg_time : Nat    -- microseconds per iteration
-  passed : Bool
+  total_ns   : Integer
+  avg_ns     : Integer
+  checksum   : Bool
 
--- Display instance
-public export
+export
 Show BenchmarkResult where
-  show (MkBenchmarkResult n i t a p) = 
-    n ++ ": " ++ 
-    show i ++ " iterations, " ++ 
-    show t ++ "us total, " ++ 
-    show a ++ "us avg, " ++ 
-    (if p then "PASSED" else "FAILED")
+  show r =
+    name r ++ ": " ++ show (iterations r) ++ " iters, "
+    ++ show (total_ns r) ++ " ns total, "
+    ++ show (avg_ns r) ++ " ns/iter "
+    ++ "[checksum=" ++ show (checksum r) ++ "]"
+
+-- Total nanoseconds held by a clock value
+toNanos : Clock type -> Integer
+toNanos c = seconds c * 1000000000 + nanoseconds c
+
+-- Time an IO action, returning its result and the elapsed nanoseconds
+timeIO : IO a -> IO (a, Integer)
+timeIO act = do
+  start <- clockTime Monotonic
+  res   <- act
+  end   <- clockTime Monotonic
+  pure (res, toNanos end - toNanos start)
+
+-- Strict loop: applies the index-varied workload n times, threading the result
+-- through a running XOR checksum so nothing can be elided.
+benchLoop : Nat -> (Nat -> Bool) -> Bool -> Bool
+benchLoop Z     _ acc = acc
+benchLoop (S k) f acc = benchLoop k f (acc /= f (S k))
+
+-- Run a named workload `n` times and measure it. The `if` forces the loop's
+-- result to be evaluated between the two clock reads.
+benchmark : String -> Nat -> (Nat -> Bool) -> IO BenchmarkResult
+benchmark nm n f = do
+  (chk, elapsed) <- timeIO (if benchLoop n f False then pure True else pure False)
+  let avg = if n == 0 then 0 else elapsed `div` cast n
+  pure (MkBenchmarkResult nm n elapsed avg chk)
 
 -- =============================================================================
--- TIMING UTILITIES
+-- WORKLOADS (real, input-dependent functions from the framework)
 -- =============================================================================
 
--- Simple timing (Idris2 doesn't have high-res timers in core)
--- We use a mock timing for now
-public export
-timeAction : IO a -> IO (a, Nat)
-timeAction action = do
-  -- In a real implementation, this would use system time
-  -- For now, we return a mock value
-  result <- action
-  pure (result, 0)
+-- Validate an effect stack of length proportional to i
+wlEffects : Nat -> Bool
+wlEffects i = effectStackValid (replicate i Read)
+
+-- Check transitivity of equality over index-varied naturals
+wlDyadic : Nat -> Bool
+wlDyadic i = relationTransitive equalityRelation i (i + 1) (i + 2)
+
+-- Walk a ceremony of length proportional to i to find its terminal step
+wlCeremony : Nat -> Bool
+wlCeremony i =
+  ceremonyEndsProperly (MkCeremony (replicate i (Validate "x") ++ [Complete "done"]))
 
 -- =============================================================================
--- BENCHMARK FUNCTIONS
--- =============================================================================
-
-public export
-benchmarkTropical : Nat -> IO BenchmarkResult
-benchmarkTropical iterations = do
-  (result, time) <- timeAction (do
-    for _ in [1..iterations] do
-      _ <- pure (runTropicalTests)
-    pure True
-  )
-  pure (MkBenchmarkResult "Tropical" iterations time (time / iterations) result)
-
-public export
-benchmarkEpistemic : Nat -> IO BenchmarkResult
-benchmarkEpistemic iterations = do
-  (result, time) <- timeAction (do
-    for _ in [1..iterations] do
-      _ <- pure (runEpistemicTests)
-    pure True
-  )
-  pure (MkBenchmarkResult "Epistemic" iterations time (time / iterations) result)
-
-public export
-benchmarkChoreographic : Nat -> IO BenchmarkResult
-benchmarkChoreographic iterations = do
-  (result, time) <- timeAction (do
-    for _ in [1..iterations] do
-      _ <- pure (runChoreographicTests)
-    pure True
-  )
-  pure (MkBenchmarkResult "Choreographic" iterations time (time / iterations) result)
-
-public export
-benchmarkDependent : Nat -> IO BenchmarkResult
-benchmarkDependent iterations = do
-  (result, time) <- timeAction (do
-    for _ in [1..iterations] do
-      _ <- pure (runDependentTests)
-    pure True
-  )
-  pure (MkBenchmarkResult "Dependent" iterations time (time / iterations) result)
-
-public export
-benchmarkEffects : Nat -> IO BenchmarkResult
-benchmarkEffects iterations = do
-  (result, time) <- timeAction (do
-    for _ in [1..iterations] do
-      _ <- pure (runEffectsTests)
-    pure True
-  )
-  pure (MkBenchmarkResult "Effects" iterations time (time / iterations) result)
-
-public export
-benchmarkDecorative : Nat -> IO BenchmarkResult
-benchmarkDecorative iterations = do
-  (result, time) <- timeAction (do
-    for _ in [1..iterations] do
-      _ <- pure (runDecorativeTests)
-    pure True
-  )
-  pure (MkBenchmarkResult "Decorative" iterations time (time / iterations) result)
-
-public export
-benchmarkCeremonial : Nat -> IO BenchmarkResult
-benchmarkCeremonial iterations = do
-  (result, time) <- timeAction (do
-    for _ in [1..iterations] do
-      _ <- pure (runCeremonialTests)
-    pure True
-  )
-  pure (MkBenchmarkResult "Ceremonial" iterations time (time / iterations) result)
-
-public export
-benchmarkDyadic : Nat -> IO BenchmarkResult
-benchmarkDyadic iterations = do
-  (result, time) <- timeAction (do
-    for _ in [1..iterations] do
-      _ <- pure (runDyadicTests)
-    pure True
-  )
-  pure (MkBenchmarkResult "Dyadic" iterations time (time / iterations) result)
-
-public export
-benchmarkBridge : Nat -> IO BenchmarkResult
-benchmarkBridge iterations = do
-  (result, time) <- timeAction (do
-    for _ in [1..iterations] do
-      _ <- pure (allBridgeTestsPass)
-    pure True
-  )
-  pure (MkBenchmarkResult "Bridge" iterations time (time / iterations) result)
-
--- =============================================================================
--- RUN ALL BENCHMARKS
--- =============================================================================
-
-public export
-runAllBenchmarks : Nat -> IO (List BenchmarkResult)
-runAllBenchmarks iterations = do
-  results <- sequence [
-    benchmarkTropical iterations,
-    benchmarkEpistemic iterations,
-    benchmarkChoreographic iterations,
-    benchmarkDependent iterations,
-    benchmarkEffects iterations,
-    benchmarkDecorative iterations,
-    benchmarkCeremonial iterations,
-    benchmarkDyadic iterations,
-    benchmarkBridge iterations
-  ]
-  pure results
-  where
-    sequence : List (IO a) -> IO (List a)
-    sequence [] = pure []
-    sequence (x::xs) = do
-      y <- x
-      ys <- sequence xs
-      pure (y::ys)
-
--- =============================================================================
--- BENCHMARK MAIN
+-- BENCHMARK ENTRY POINT
 -- =============================================================================
 
 public export
 benchMain : IO ()
 benchMain = do
   putStrLn "=== Proven-Tests Benchmark Suite ==="
+  putStrLn "(monotonic clock; compare relative change, not absolute ns)"
   putStrLn ""
-  
-  -- Run benchmarks with default iterations
-  let iterations = 100
-  putStrLn ("Running benchmarks with " ++ show iterations ++ " iterations each...")
-  putStrLn ""
-  
-  results <- runAllBenchmarks iterations
-  
-  -- Print results
-  mapM_ ( => putStrLn (show r)) results
-  
-  putStrLn ""
-  
-  -- Summary
-  let passed = length (filter ( => r.passed) results)
-      total = length results
-  putStrLn ("Benchmark Summary: " ++ show passed ++ "/" ++ show total ++ " passed")
-  
-  if passed == total then
-    putStrLn "✅ All benchmarks passed!"
-  else
-    putStrLn "⚠️  Some benchmarks may have timing issues"
+  let iters = the Nat 2000
+  r1 <- benchmark "effectStackValid"     iters wlEffects
+  r2 <- benchmark "relationTransitive"   iters wlDyadic
+  r3 <- benchmark "ceremonyEndsProperly" iters wlCeremony
+  traverse_ (putStrLn . show) [r1, r2, r3]
+
+main : IO ()
+main = benchMain

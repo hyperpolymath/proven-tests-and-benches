@@ -1,0 +1,9 @@
+package proven-tests-bench
+
+version = 0.1.0
+sourcedir = "."
+
+main = Benchmark
+executable = "proven-bench"
+
+depends = proven-tests

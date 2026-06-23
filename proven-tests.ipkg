@@ -1,7 +1,10 @@
 package proven-tests
 
-version = "0.1.0"
+version = 0.1.0
 sourcedir = "src"
+
+main = ProvenTests.Main
+executable = "proven-tests"
 
 modules = ProvenTests.Types,
          ProvenTests.Classification,

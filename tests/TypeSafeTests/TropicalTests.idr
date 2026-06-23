@@ -17,7 +17,6 @@ import ProvenTests.Types
 -- TROPICAL TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================
 
-%%access export
 
 -- Helper: Create test ID for tropical tests
 private

@@ -10,6 +10,7 @@
 module ProvenTests.TypeSafe.Decorative
 
 import ProvenTests.Types
+import ProvenTests.Classification
 import Data.String
 
 -- =============================================================================
@@ -18,7 +19,6 @@ import Data.String
 -- Tests for type-level annotations (custom implementation)
 -- Decorative types add metadata without affecting runtime
 
-%%access export
 
 -- Decorated value with metadata
 public export
@@ -46,17 +46,17 @@ decorationIsTimestamped (MkDecorated _ _ _ ts) = ts > 0
 
 -- Test: Decoration doesn't affect equality
 public export
-decorationEquality : (a : Type) -> Decorated a -> Decorated a -> Bool
+decorationEquality : (a : Type) -> Eq a => Decorated a -> Decorated a -> Bool
 decorationEquality _ (MkDecorated v1 _ _ _) (MkDecorated v2 _ _ _) = v1 == v2
 
--- Decorator typeclass
+-- Decorator interface
 public export
-class Decorator a where
+interface Decorator a where
   decorate : a -> String -> Decorated a
 
--- Instance for Nat
+-- Implementation for Nat
 public export
-instance NatDecorator : Decorator Nat where
+Decorator Nat where
   decorate x meta = MkDecorated x meta "NatDecorator" 0
 
 -- Test: Decorator instance works

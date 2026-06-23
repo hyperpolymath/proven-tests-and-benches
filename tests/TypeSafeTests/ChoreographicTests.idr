@@ -17,7 +17,6 @@ import ProvenTests.Types
 -- CHOREOGRAPHIC TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================
 
-%%access export
 
 -- Helper: Create test ID for choreographic tests
 private

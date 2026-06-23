@@ -51,7 +51,7 @@ record ClassificationSummary where
   actually_proven     : Nat
   provisionally_proven : Nat
   unproven           : Nat
-  total              : Nat
+  totalCount              : Nat
 
 -- =============================================================================
 -- REPORT GENERATION
@@ -63,36 +63,8 @@ generateTestReport : TestMetadata -> TestResult -> String -> Maybe Nat -> TestRe
 generateTestReport meta result timestamp duration =
   MkTestReport meta result timestamp duration
 
---/ Count test results
+--/ Count test results as (passed, failed, errors, skipped)
 public export
-countResults : List TestReport -> (Nat, Nat, Nat, Nat)
-countResults [] = (0, 0, 0, 0)
-countResults (r::rs) = 
-  let (p, f, e, s) = countResults rs
-      this = case result r of
-               Passed => (1, 0, 0, 0)
-               Failed _ => (0, 1, 0, 0)
-               Error _ => (0, 0, 1, 0)
-               Skipped _ => (0, 0, 0, 1)
-  in (fst this + p, snd this + f, fst (snd (snd this)) + e, snd (snd (snd this)) + s)
-  where
-    fst : (a, b, c, d) -> a
-    fst (x, _, _, _) = x
-    snd : (a, b, c, d) -> b
-    snd (_, x, _, _) = x
-    -- Helper for nested tuples
-    snd2 : (a, b, c, d) -> (c, d)
-    snd2 (_, _, c, d) = (c, d)
-
---- Helper to extract 3rd and 4th from tuple
-third : (a, b, c, d) -> c
-third (_, _, x, _) = x
-
-fourth : (a, b, c, d) -> d
-fourth (_, _, _, x) = x
-
--- Corrected countResults
-public export [export]
 countResults : List TestReport -> (Nat, Nat, Nat, Nat)
 countResults reports = foldl countOne (0, 0, 0, 0) reports
   where
@@ -129,7 +101,7 @@ public export
 testReportToJSON : TestReport -> String
 testReportToJSON (MkTestReport meta result timestamp duration) =
   "{" ++
-  "\"test_id\":\"" ++ show (testId meta) ++ "\"," ++
+  "\"test_id\":\"" ++ show (test_id meta) ++ "\"," ++
   "\"status\":\"" ++ show (getProvenStatus meta) ++ "\"," ++
   "\"result\":\"" ++ show result ++ "\"," ++
   "\"timestamp\":\"" ++ timestamp ++ "\"" ++
@@ -141,12 +113,12 @@ testReportToJSON (MkTestReport meta result timestamp duration) =
 --/ Convert a ClassificationSummary to JSON-like string
 public export
 classificationSummaryToJSON : ClassificationSummary -> String
-classificationSummaryToJSON (MkClassificationSummary act prov unprov total) =
+classificationSummaryToJSON (MkClassificationSummary act prov unprov totalCount) =
   "{" ++
   "\"actually_proven\":" ++ show act ++ "," ++
   "\"provisionally_proven\":" ++ show prov ++ "," ++
   "\"unproven\":" ++ show unprov ++ "," ++
-  "\"total\":" ++ show total ++
+  "\"total\":" ++ show totalCount ++
   "}"
 
 -- =============================================================================
@@ -158,14 +130,14 @@ public export
 generateFullReport : List TestReport -> String -> String -> SuiteReport
 generateFullReport reports start end =
   let (passed, failed, errors, skipped) = countResults reports
-      total = length reports
+      totalCount = length reports
       class_summary = generateClassificationSummary reports
-  in MkSuiteReport "Proven-Tests" reports start end total passed failed errors skipped
+  in MkSuiteReport "Proven-Tests" reports start end totalCount passed failed errors skipped
 
 --/ Print a full report
 public export
 printReport : SuiteReport -> IO ()
-printReport (MkSuiteReport name tests start end total p f e s) = do
+printReport (MkSuiteReport name tests start end totalCount p f e s) = do
   putStrLn ""
   putStrLn "=== PROVEN-TESTS REPORT ==="
   putStrLn ""
@@ -174,7 +146,7 @@ printReport (MkSuiteReport name tests start end total p f e s) = do
   putStrLn ("End: " ++ end)
   putStrLn ""
   putStrLn "--- Summary ---"
-  putStrLn ("Total: " ++ show total)
+  putStrLn ("Total: " ++ show totalCount)
   putStrLn ("Passed: " ++ show p ++ " ")
   putStrLn ("Failed: " ++ show f ++ " ")
   putStrLn ("Errors: " ++ show e ++ " ")
