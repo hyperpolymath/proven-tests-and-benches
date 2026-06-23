@@ -1,0 +1,238 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-License-Identifier: MPL-2.0
+// Mozilla Post-Quantum License Provisions v1.0
+//
+// Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
+// Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+//
+= The Zigzag Regimen: Testing Co-Created Software
+:toc: left
+:toclevels: 3
+:sectnums:
+
+== Purpose
+
+This document defines the *organising principle* of Proven-Tests: the *Zigzag
+regimen*, a disciplined way to test software that is *co-created by humans and
+things* (AI agents, autonomous systems, devices) across the whole lifecycle.
+
+It is both a methodology (this document) and code (`src/ProvenTests/Zigzag.idr`,
+which is exercised every time the framework runs). It builds on
+`CHARACTERISTICS.adoc` (what makes a test good) and the audit in
+`STATE-OF-THINGS.adoc`.
+
+== Why a new regimen
+
+Classical testing assumes *one author, one artifact, one timeline*: a human
+writes code and writes tests for it. That assumption is dissolving. Software is
+now *conceived, designed, developed, implemented, and evaluated jointly* by
+humans and things — pair-programming agents, autonomous services, sensor meshes,
+mixed-initiative control loops. The interesting failures live in the *seams*
+between human and machine, and between lifecycle phases.
+
+A test, in this world, is not just "does function `f` return the right value?"
+It is a *located claim*: _at which phase of co-creation, about which actor, in
+which test category, concerning which quality aspect, and with what strength of
+evidence?_ The Zigzag regimen makes that location explicit and gives a complete,
+ordered way to walk it.
+
+== The audit that motivates it
+
+Proven-Tests already defines rich axes, but they are *disconnected* from real
+tests (see `src/ProvenTests/Taxonomy.idr`, `src/ProvenTests/Types.idr`):
+
+. *The Aspect axis is decorative.* `TestAspect` is a clean 14-constructor type,
+  but `TestMetadata.aspect` is a `Maybe String` (not `Maybe TestAspect`) and
+  every classifier sets it to `Nothing`. No test declares an aspect.
+. *The Category axis is likewise unused* — `category : Maybe String`, always
+  `Nothing`.
+. *The E2E category is empty.* `EndToEnd` exists in the taxonomy; `tests/03-e2e/`
+  holds only a stub README; and the framework's _own_ end-to-end run
+  (`Main -> Runners -> suites`) never tags itself with a category or aspect.
+. *There was no lifecycle or actor axis at all* — nothing represented
+  co-conception ... co-evaluation, or human vs. thing.
+
+Consequence: the category x aspect matrix has *17 x 14 = 238 cells, of which 0
+were populated*. The framework could not answer "which aspects does our E2E
+coverage touch?" because the coordinates never existed. The Zigzag regimen names
+those coordinates and the order in which to fill them.
+
+== The lattice
+
+A test claim is a point in a four-dimensional lattice, carrying a fifth value
+(its provenance tier):
+
+[cols="1,1,4", options="header"]
+|===
+| Axis | Size | Members
+
+| Co-phase
+| 5
+| co-conception, co-design, co-development, co-implementation, co-evaluation
+
+| Actor
+| 3
+| human, thing, collective
+
+| Category
+| 17
+| Unit ... Type-Safe (the existing `TestCategory`)
+
+| Aspect
+| 14
+| Dependability ... Portability (the existing `TestAspect`)
+
+| _Provenance (the gate)_
+| _3_
+| _Unproven, Provisionally-Proven, Actually-Proven_
+|===
+
+That is *5 x 3 x 17 x 14 = 3570 coordinates*. `ProvenTests.Zigzag.latticeSize`
+computes exactly this, and the framework prints it on every run:
+
+----
+Zigzag lattice: 5 phases x 3 actors x 17 categories x 14 aspects = 3570 coordinates
+----
+
+=== The five co-phases
+
+[cols="1,3", options="header"]
+|===
+| Phase | What is co-created, and what to test there
+
+| co-conception
+| Humans and things jointly frame the problem and assumptions. Test shared
+  intent: ambiguity detection, assumption/requirement checks, "did both parties
+  understand the same thing?"
+
+| co-design
+| Joint architecture and interfaces. Test contracts, choreography (session
+  types), and design-safety — the shapes the collaboration must obey.
+
+| co-development
+| Joint authoring of artifacts (human- and agent-written code). Unit, property,
+  and mutation tests; provenance of _who_ produced each part.
+
+| co-implementation
+| Joint integration and deployment. Build, point-to-point, end-to-end, and
+  lifecycle tests — the artifact meeting the world.
+
+| co-evaluation
+| Joint assessment in operation. Runtime, chaos/resilience, observability, and
+  regression tests; human-in-the-loop review plus autonomous monitoring.
+|===
+
+=== The three actors
+
+* *human* — claims about human input, judgement, and oversight.
+* *thing* — claims about machine / agent / device behaviour (the autonomous
+  part).
+* *collective* — claims about the *joint* human+thing system: handoffs, shared
+  state, mixed initiative, and authority transfer. This is the novel and hardest
+  locus, and the one classical testing has no vocabulary for.
+
+=== Provenance is the gate, not a label
+
+Every coordinate starts *Unproven* and is *promoted* as evidence accrues —
+example -> property -> machine-checked proof — exactly the strength-of-evidence
+spectrum in `CHARACTERISTICS.adoc`. A coordinate's *category* sets its provenance
+_floor_: `coordProvenanceFloor` (in `ProvenTests.Zigzag`) reuses
+`categoryToTypicalProvenance`, so e.g. a Proof-Regression cell is expected to
+reach Actually-Proven, while a Smoke cell may legitimately rest at Unproven.
+
+== The traversal: why "zigzag"
+
+The regimen walks the category x aspect plane as a *boustrophedon* ("as the ox
+ploughs"): each category is a row; aspects run left-to-right on one row and
+right-to-left on the next, so *adjacent visited cells differ in exactly one
+axis*.
+
+This is not decoration. It matters two ways:
+
+. *Faithful to co-creation.* You cannot test the human, then the thing, then the
+  collective in neat isolation; co-creation proceeds by alternating, incremental
+  crossings of the human<->thing boundary. The zigzag mirrors that — you are
+  always one short step from the previous claim, re-using its context.
+. *Exhaustive and ordered.* The boustrophedon visits *every cell exactly once*,
+  in a deterministic order, so coverage gaps cannot hide. That directly answers
+  the audit's "0 of 238 cells" finding: there is now a canonical sequence in
+  which to fill them.
+
+`ProvenTests.Zigzag.zigzag` implements the traversal; `allZigzagCells` is the
+whole plane in zigzag order; `latticeCoords` lifts it across every co-phase and
+actor.
+
+== The regimen in practice
+
+. *Locate every test* at its coordinate `(phase, actor, category, aspect)`.
+. *Traverse in zigzag order.* For each cell, supply the strongest evidence you
+  can and set provenance accordingly; never claim above your evidence
+  (`AUDIT.adoc`).
+. *Report coverage* as populated cells / 3570, broken down by phase and actor —
+  so "we have no _collective_ claims in _co-evaluation_" becomes visible instead
+  of invisible.
+. *Promote over time.* Re-walk the lattice; cells move Unproven ->
+  Provisionally-Proven -> Actually-Proven as proofs land. The map of provenance
+  over the lattice _is_ the project's true state.
+
+=== Worked example: E2E, co-evaluation, across actors
+
+Walking the `EndToEnd` row during *co-evaluation*, for each actor:
+
+[cols="1,1,4", options="header"]
+|===
+| Actor | Aspect (zigzag step) | The located claim
+
+| human
+| Observability
+| An operator can read the system's state and explain a decision end-to-end.
+
+| collective
+| Dependability
+| A human override mid-flow is honoured by the autonomous pipeline without data
+  loss (the handoff seam).
+
+| thing
+| Performance
+| The autonomous path meets its end-to-end latency budget unattended (a real
+  benchmark, per `CHARACTERISTICS.adoc`).
+|===
+
+Today every one of these is Unproven (the cells are empty); the regimen says
+_which_ cells, in _what order_, and _what evidence_ promotes each.
+
+== How it is encoded
+
+`src/ProvenTests/Zigzag.idr` (compiles under Idris2 0.7.0; listed in the
+`.ipkg`) provides:
+
+* `CoPhase`, `Actor` — the two new axes, with `Show` and `all*` enumerations.
+* `ZigzagCoord` — a lattice coordinate `(phase, actor, category, aspect)`.
+* `zigzag` / `allZigzagCells` — the boustrophedon traversal of category x aspect.
+* `latticeCoords` / `latticeSize` — the full 3570-coordinate lattice.
+* `coordProvenanceFloor` — ties each coordinate to its provenance floor.
+* `zigzagSummary` — printed by `runComprehensiveSuite`, so the principle is
+  exercised, not merely described.
+
+== Roadmap to fully realise it
+
+The principle is established and runnable; making it load-bearing for real tests
+needs (tracked in `STATE-OF-THINGS.adoc`):
+
+. *Type the metadata axes*: `TestMetadata.aspect : Maybe TestAspect` and
+  `category : Maybe TestCategory` (today both are `Maybe String`), and add the
+  `phase`/`actor` coordinate to metadata. (Requires moving `TestCategory` /
+  `TestAspect` into `Types` to avoid an import cycle.)
+. *Coverage reporting* over `latticeCoords`: populated vs. empty, by phase/actor.
+. *Populate cell-by-cell in zigzag order*, starting with the empty E2E category,
+  promoting provenance as evidence is supplied.
+
+== References
+
+* `docs/CHARACTERISTICS.adoc` — what makes a test/benchmark good (the evidence
+  spectrum the provenance gate encodes)
+* `docs/STATE-OF-THINGS.adoc` — the audit (§ on the decorative aspect/category
+  axes and the empty E2E category)
+* `src/ProvenTests/Zigzag.idr` — the executable encoding
+* `src/ProvenTests/Taxonomy.idr` — the Category / Aspect / Kategoria axes

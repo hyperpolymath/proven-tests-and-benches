@@ -92,6 +92,9 @@ This taxonomy is the strongest part of the repository and is largely real.
   property logic. All suites pass at runtime (10/10 including self-classification).
 * *An honest benchmark* (`benchmarks/Benchmark.idr` + `benchmark.ipkg`) reporting
   real ns/iteration with a printed checksum.
+* *The Zigzag regimen* (`src/ProvenTests/Zigzag.idr` + `docs/ZIGZAG-REGIMEN.adoc`)
+  — an organising principle: a co-phase x actor x category x aspect lattice
+  (3570 coordinates) with a boustrophedon traversal, exercised on every run.
 * *Infrastructure and governance* — devcontainer / Containerfile, pre-commit,
   TruffleHog secret scanning, a rich Justfile, plus GOVERNANCE / AUDIT /
   MAINTAINERS docs and consistent SPDX headers throughout.
@@ -197,6 +200,22 @@ These previously failed and have been corrected *without weakening assertions*:
   State-headed stacks; declassification-to-CONFIDENTIAL only on the PUBLIC state).
 * *Bridge* — passes now that the three above do.
 
+=== 10. The category and aspect axes are decorative (the Zigzag lattice is empty)
+
+`TestAspect` (14) and `TestCategory` (17) are clean types in `Taxonomy.idr`, but
+`TestMetadata` stores `aspect : Maybe String` and `category : Maybe String`
+(stringly-typed, *not* the enums) and every classifier sets both to `Nothing`.
+So no test declares a category or aspect, and the 17x14 = 238 cell matrix is
+entirely unpopulated. The `EndToEnd` category in particular has no tests
+(`tests/03-e2e/` is a stub), and the framework's own end-to-end run is never
+tagged with a coordinate.
+
+The *Zigzag regimen* (`docs/ZIGZAG-REGIMEN.adoc`, `src/ProvenTests/Zigzag.idr`)
+is the response: it names the full `co-phase x actor x category x aspect` lattice
+(3570 coordinates) and the order in which to populate it. The principle is
+encoded and runnable; wiring it into `TestMetadata` (typed axes + a coordinate)
+and populating cells is tracked below.
+
 == Roadmap (priority order)
 
 [cols="1,5,2", options="header"]
@@ -224,14 +243,19 @@ These previously failed and have been corrected *without weakening assertions*:
 | DONE
 
 | 6
-| Wire `tests/TypeSafeTests` into a test package; reconcile taxonomy <-> folders
+| Wire the Zigzag lattice into `TestMetadata` (typed `category`/`aspect` axes +
+  a `(phase, actor)` coordinate) and add coverage reporting over the 3570 cells
 | TODO
 
 | 7
-| Populate the 14 empty categories with at least one real test each
+| Wire `tests/TypeSafeTests` into a test package; reconcile taxonomy <-> folders
 | TODO
 
 | 8
+| Populate the empty categories in zigzag order, starting with E2E
+| TODO
+
+| 9
 | Add meta-tests / mutation testing so the framework's own claims are checked
 | TODO
 |===
@@ -244,7 +268,7 @@ These previously failed and have been corrected *without weakening assertions*:
 idris2 --build   proven-tests.ipkg            # compile the library + executable
 idris2 --install proven-tests.ipkg            # install so the benchmark can depend on it
 idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
-./build/exec/proven-tests                      # run the suites (currently 6/10)
+./build/exec/proven-tests                      # run the suites (10/10) + zigzag summary
 ./benchmarks/build/exec/proven-bench           # run the benchmarks
 ----
 
@@ -259,3 +283,7 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
   10/10. The runner exits non-zero on failure. Wired real Idris2 CI (GitHub
   Actions + GitLab `idris2` job) via `scripts/install-idris2.sh` and
   `scripts/ci-build.sh`. Verified locally.
+* 2026-06-23 — Audited the E2E flow and Aspect axis (found both the category and
+  aspect axes decorative; E2E category empty). Formalised the *Zigzag regimen* as
+  the organising principle: `docs/ZIGZAG-REGIMEN.adoc` + `ProvenTests.Zigzag`
+  (co-phase x actor x category x aspect lattice), exercised on every run.
