@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: MPL-2.0
-# GitHub Actions mirror of the GitLab pipeline: actually compiles and runs the
-# Idris2 framework (the GitLab Cargo/mix-gated jobs skip on this repo).
+# GitHub Actions mirror of the GitLab pipeline: compiles and runs the Idris2
+# framework. Deliberately MANUAL-ONLY (workflow_dispatch) so it consumes ZERO
+# GitHub Actions minutes on push/PR. The GitLab `idris2` job is the real gate;
+# and required-check verdicts can be posted from owned compute for 0 minutes
+# (see hyperpolymath/bag-of-actions: Bag.GitHubBridge). Trigger this on demand
+# from the Actions tab, or move it to a self-hosted runner, if you want it.
 name: CI (Idris2)
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
