@@ -13,6 +13,7 @@ import ProvenTests.Types
 import ProvenTests.Classification
 import ProvenTests.Taxonomy
 import ProvenTests.Zigzag
+import ProvenTests.Baton
 import ProvenTests.Framework
 import ProvenTests.TypeSafe.Tropical
 import ProvenTests.TypeSafe.Epistemic
@@ -123,6 +124,20 @@ runTypeSafeTests = do
   pure (concat results)
 
 -- =============================================================================
+-- PROOF-REGRESSION (ACTUALLY-PROVEN)
+-- =============================================================================
+
+--/ The tropical semiring laws are machine-checked in ProvenTests.Tropical, so
+--/ this records them as an Actually-Proven proof-regression entry — the build
+--/ itself is the proof. The runtime spot-check also exercises the operations.
+public export
+runTropicalLawTests : IO (List (TestMetadata, TestResult))
+runTropicalLawTests =
+  if tropicalLawsHold && batonContractHolds
+    then pure [(tropicalLawsClassification, Passed)]
+    else pure [(tropicalLawsClassification, Failed "Tropical law / Baton contract spot-check failed")]
+
+-- =============================================================================
 -- COMPREHENSIVE TEST SUITE
 -- =============================================================================
 
@@ -131,8 +146,9 @@ public export
 runAllTests : IO (List (TestMetadata, TestResult))
 runAllTests = do
   self     <- runSelfClassification
+  tropical <- runTropicalLawTests
   typeSafe <- runTypeSafeTests
-  pure (self :: typeSafe)
+  pure (self :: (tropical ++ typeSafe))
 
 --/ Pretty-print a single result line
 printResult : (TestMetadata, TestResult) -> IO ()

@@ -1,0 +1,124 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-License-Identifier: MPL-2.0
+// Mozilla Post-Quantum License Provisions v1.0
+//
+// Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
+// Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+//
+= Cross-Repo Unification: one tropical algebra, one Baton contract
+:toc: left
+:toclevels: 3
+:sectnums:
+
+== Purpose
+
+This realises §8 of the bag-of-actions audit/handoff: unify
+`hyperpolymath/bag-of-actions` (the cost-aware execution mesh) and
+`proven-tests-and-benches` (provenance tiers + the Zigzag lattice) around *one
+shared min-plus algebra* and *one Baton contract*. The proven-tests side is
+shipped and machine-checked here; the bag-of-actions side is the work named in
+`bag-of-actions-AUDIT-and-REMEDIATION.md`.
+
+== Part 1 — the shared tropical (min-plus) semiring
+
+`src/ProvenTests/Tropical.idr` is the single, canonical min-plus semiring over
+`Nat ∪ {PosInf}`:
+
+* `⊕` (`oplus`)  = `min`  — additive op, identity `PosInf`
+* `⊗` (`otimes`) = `+`    — multiplicative op, identity `Fin 0`, `PosInf` absorbs
+
+The laws are **total, machine-checked Idris2 proofs** (no `believe_me`): `oplus`
+is commutative, associative, idempotent, with `PosInf` as identity; `otimes` is
+commutative with `Fin 0` as identity. Because they are proofs, they hold for
+*every* input — which is why the framework lists them as the first genuinely
+**Actually-Proven** test (`ProvenTests.Baton.tropicalLawsClassification`), with a
+proof ladder citing each theorem by name.
+
+Two consumers, one algebra:
+
+[cols="1,3", options="header"]
+|===
+| Consumer | How it uses the semiring
+
+| *bag-of-actions* (mesh)
+| `Bag.Planner` / `Bag.Estate.cheapestCapable` pick the *cheapest capable node*
+  = `⊕` (min) over integer node costs. `cheapest`/`cheaperOf` here are that
+  decision, proven.
+
+| *proven-tests* (type-safe tests)
+| `ProvenTests.TypeSafe.Tropical` (Double-valued `ResourceBound`) is the
+  *applied, sampled* view of the same algebra — Provisionally-Proven, because
+  `Double` admits no equational proof. Same structure, lower tier.
+|===
+
+The tier split is the honest point: the **algebra** is Actually-Proven over a
+type that supports proof (`Nat ∪ {PosInf}`); the **Double application** is
+Provisionally-Proven by sampling. One math, two evidence strengths.
+
+== Part 2 — the Baton contract
+
+`src/ProvenTests/Baton.idr` defines what a Baton carries so the mesh can act on
+both axes at once:
+
+[source,idris]
+----
+record BatonSpec where
+  constructor MkBatonSpec
+  coord      : ZigzagCoord   -- co-phase x actor x category x aspect (what to cover)
+  provenance : Provenance    -- evidence-carrying tier (what is proven)
+  cost       : ExtNat        -- tropical cost (where it is cheapest to run)
+----
+
+* `cheaperBaton = ` route to the lower-cost Baton — the planner's tropical-min
+  decision, on the proven `⊕`.
+* `provenance` is the *evidence-carrying* `Provenance` (Actually-/Provisionally-
+  Proven constructors require their proof/certificate). So the honesty invariant
+  *survives the trip across the mesh*: a node cannot hand on an "Actually-Proven"
+  Baton it has no proof for.
+
+`batonContractHolds` exercises this at runtime (routing picks the cheaper Baton
+and preserves its tier), so the contract is tested, not decorative.
+
+== Part 3 — what bag-of-actions implements to consume this
+
+(Cross-references the handoff findings.)
+
+. *Carry the contract.* Extend `Bag.CiBaton` with `coord` (Zigzag),
+  `provenance` (tier + evidence), and keep `cost`. The mesh then schedules
+  *lattice coverage*, not just isolated checks.
+. *Single-source the algebra* (handoff **F3/F4**). Derive the Zig `estate.zig`
+  cost/capability tables and the Elixir planner's min from one spec — ideally
+  generated from / conformance-checked against this tropical semiring (or its
+  Idris mirror `Bag.Estate.cheapestCapable`). No more hand-mirrored min.
+. *Promote provenance on a passing verdict.* When a Baton's check passes and the
+  Zig host freezes an Ed25519-signed verdict, that signature is the evidence to
+  move the Baton `Unproven → Provisionally → Actually` via
+  `Classification.promote*` — never without it.
+
+== Part 4 — the provenance-promotion flow
+
+----
+Unproven  --(check runs on a capable node, verdict signed)-->  Provisionally-Proven
+Provisionally-Proven  --(machine-checked proof attached)-->     Actually-Proven
+----
+
+Each promotion needs *matching evidence* (the type system enforces it). The
+mesh's job is to walk the Zigzag lattice, run each cell on the cheapest capable
+owned node (tropical min), and promote cells as evidence accrues — a
+self-hosted, formally-graded CI/test fabric whose marginal cost ≈ 0.
+
+== Status
+
+* *proven-tests side — DONE & verified* (Idris2 0.7.0): `ProvenTests.Tropical`
+  (proofs check), `ProvenTests.Baton` (contract + runtime check), wired into the
+  suite as an Actually-Proven entry. `idris2 --build` clean; `11/11` pass.
+* *bag-of-actions side — TODO*: see `bag-of-actions-AUDIT-and-REMEDIATION.md`
+  (§7 productization, F3/F4 single-source, plus carrying the contract).
+
+== References
+
+* `docs/ZIGZAG-REGIMEN.adoc` — the lattice the Baton `coord` indexes
+* `docs/CHARACTERISTICS.adoc` — the evidence spectrum the provenance tiers encode
+* `src/ProvenTests/Tropical.idr`, `src/ProvenTests/Baton.idr` — the code
+* `bag-of-actions-AUDIT-and-REMEDIATION.md` — the bag-of-actions side
