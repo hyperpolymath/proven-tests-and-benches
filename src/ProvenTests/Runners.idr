@@ -14,6 +14,7 @@ import ProvenTests.Classification
 import ProvenTests.Taxonomy
 import ProvenTests.Zigzag
 import ProvenTests.Baton
+import ProvenTests.E2E
 import ProvenTests.Framework
 import ProvenTests.TypeSafe.Tropical
 import ProvenTests.TypeSafe.Epistemic
@@ -141,20 +142,31 @@ runTropicalLawTests =
 -- COMPREHENSIVE TEST SUITE
 -- =============================================================================
 
+--/ The first populated Zigzag cell: a real End-to-End test (see ProvenTests.E2E).
+public export
+runE2ECategoryTests : IO (List (TestMetadata, TestResult))
+runE2ECategoryTests = do
+  r <- runE2ETest
+  pure [(e2eClassification, r)]
+
 --/ Run all tests including the self-classification check
 public export
 runAllTests : IO (List (TestMetadata, TestResult))
 runAllTests = do
   self     <- runSelfClassification
   tropical <- runTropicalLawTests
+  e2e      <- runE2ECategoryTests
   typeSafe <- runTypeSafeTests
-  pure (self :: (tropical ++ typeSafe))
+  pure (self :: (tropical ++ e2e ++ typeSafe))
 
---/ Pretty-print a single result line
+--/ Pretty-print a single result line (with its lattice coordinate, if recorded)
 printResult : (TestMetadata, TestResult) -> IO ()
-printResult (meta, result) = do
-  putStrLn ("[" ++ show (getProvenStatus meta) ++ "] "
-            ++ show (test_id meta) ++ ": " ++ show result)
+printResult (meta, result) =
+  let coord = case (category meta, aspect meta) of
+                (Just c, Just a) => " {" ++ c ++ "/" ++ a ++ "}"
+                _                => ""
+  in putStrLn ("[" ++ show (getProvenStatus meta) ++ "] "
+            ++ show (test_id meta) ++ coord ++ ": " ++ show result)
 
 --/ Whether a result counts as passed
 isPassed : (TestMetadata, TestResult) -> Bool

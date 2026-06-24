@@ -104,6 +104,11 @@ This taxonomy is the strongest part of the repository and is largely real.
   `docs/CROSS-REPO-UNIFICATION.adoc`) — `BatonSpec` pairs a Zigzag coordinate,
   an evidence-carrying provenance tier, and a tropical cost, so the honesty
   invariant survives routing across the bag-of-actions mesh.
+* *The first populated Zigzag cell* (`src/ProvenTests/E2E.idr`) — a real
+  End-to-End test at coordinate (CoImplementation, Collective, EndToEnd,
+  Dependability). It runs an inner suite through `Framework.runSuite` and is the
+  first test to actually record its `category`/`aspect` (printed as
+  `{E2E/Dependability}`), not leave them `Nothing`.
 * *Infrastructure and governance* — devcontainer / Containerfile, pre-commit,
   TruffleHog secret scanning, a rich Justfile, plus GOVERNANCE / AUDIT /
   MAINTAINERS docs and consistent SPDX headers throughout.
@@ -163,11 +168,13 @@ predicates (`effectStackValid`, `relationTransitive`, `ceremonyEndsProperly`) so
 results are not memoised, and folds every result into a printed checksum so the
 optimiser cannot elide the work. It reports total and per-iteration nanoseconds.
 
-=== 4. Fourteen test-category directories are empty stubs
+=== 4. Test-category directories are (mostly) empty stubs
 
 `tests/01-unit` ... `tests/14-chaos` each contain only a near-identical
 `README.adoc` pointing at a `TESTING-TAXONOMY.adoc` that is not in this
-repository. There are zero actual unit / p2p / e2e / ... tests.
+repository. The *EndToEnd category now has a real test* (`src/ProvenTests/E2E.idr`,
+run by the suite as the first populated Zigzag cell), but the numbered `tests/NN-*`
+directories themselves are still stubs and the other 13 categories have no tests.
 
 === 5. CI — FIXED (now compiles and runs Idris2)
 
@@ -219,11 +226,11 @@ These previously failed and have been corrected *without weakening assertions*:
 
 `TestAspect` (14) and `TestCategory` (17) are clean types in `Taxonomy.idr`, but
 `TestMetadata` stores `aspect : Maybe String` and `category : Maybe String`
-(stringly-typed, *not* the enums) and every classifier sets both to `Nothing`.
-So no test declares a category or aspect, and the 17x14 = 238 cell matrix is
-entirely unpopulated. The `EndToEnd` category in particular has no tests
-(`tests/03-e2e/` is a stub), and the framework's own end-to-end run is never
-tagged with a coordinate.
+(stringly-typed, *not* the enums) and most classifiers set both to `Nothing`.
+*One cell is now populated*: `ProvenTests.E2E` records `category = Just "E2E"`,
+`aspect = Just "Dependability"` (printed as `{E2E/Dependability}`) — so 1 of the
+17x14 = 238 cells carries a coordinate; the other 237 remain empty, and the
+fields are still `Maybe String` rather than the typed enums.
 
 The *Zigzag regimen* (`docs/ZIGZAG-REGIMEN.adoc`, `src/ProvenTests/Zigzag.idr`)
 is the response: it names the full `co-phase x actor x category x aspect` lattice
@@ -311,3 +318,7 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
   (`ProvenTests.Baton`: Zigzag coord + evidence-carrying provenance + tropical
   cost), with `docs/CROSS-REPO-UNIFICATION.adoc`. The tropical laws are the first
   Actually-Proven entry. Verified: `idris2 --build` clean, suite 11/11.
+* 2026-06-23 — Populated the first Zigzag cell: `ProvenTests.E2E`, a real
+  End-to-End test at (CoImplementation, Collective, EndToEnd, Dependability) that
+  runs an inner suite through `Framework.runSuite` and is the first test to record
+  its category/aspect. Verified: `idris2 --build` clean, suite 12/12.
