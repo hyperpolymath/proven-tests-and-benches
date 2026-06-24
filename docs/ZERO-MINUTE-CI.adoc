@@ -1,0 +1,135 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-License-Identifier: MPL-2.0
+// Mozilla Post-Quantum License Provisions v1.0
+//
+// Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
+// Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+//
+= Zero-Minute CI: gating on owned compute
+:toc: left
+:toclevels: 3
+:sectnums:
+
+== Why
+
+GitHub-hosted Actions are metered. This repository's `.github/workflows/ci.yml`
+is therefore *manual-only* (`workflow_dispatch`) and consumes no minutes on
+push/PR. But a pull request can still be *gated* — by running the real checks on
+hardware you already own and publishing the verdict to GitHub as a commit
+status. A branch-protection rule that requires that status then blocks merges
+just like a hosted check would, for *zero* metered minutes.
+
+`scripts/owned-compute-gate.sh` implements this. It is the dependency-free,
+in-repo embodiment of bag-of-actions' `Bag.GitHubBridge` (see
+`docs/STATE-OF-THINGS.adoc` and the bag-of-actions audit): same mechanism, same
+honesty rules, no Elixir dependency.
+
+== How it works
+
+. You run the checks locally (or on any owned box / self-hosted runner):
++
+[source,bash]
+----
+scripts/owned-compute-gate.sh
+----
+. The script runs `scripts/ci-build.sh` (build the library + benchmark, run the
+  suite — which exits non-zero if any of the 10 suites fail).
+. It maps the result to a GitHub *commit status* and posts it to the current
+  `HEAD` commit via the `gh` CLI:
++
+[source]
+----
+gh api --method POST repos/<owner>/<repo>/statuses/<sha> \
+  -f state=success -f context=owned-compute/idris2 -f description="..."
+----
+. A branch-protection rule requiring the context `owned-compute/idris2` is now
+  satisfied — with no hosted runner involved.
+
+=== Why the Commit Status API (not Checks)
+
+The Checks API can only be written by a GitHub *App* token; a normal
+personal/OAuth token (what `gh` carries) cannot create check-runs. The *Commit
+Status* API (`POST /repos/{repo}/statuses/{sha}`) *is* writable by a normal
+token and equally satisfies a branch-protection required *context*. So the gate
+posts a status. (This is exactly the reasoning in bag-of-actions'
+`Bag.GitHubBridge`.)
+
+=== Conservative mapping (the honesty rule)
+
+Only an *all-pass* run is reported `success`. Any failure — or the check command
+not running at all — is reported `failure`. A check that did not truly pass can
+never silently satisfy a *required* gate. This mirrors `AUDIT.adoc`: the badge
+never outruns the evidence.
+
+== Setup (one time)
+
+. Ensure `gh` is installed and authenticated with `repo` scope:
++
+[source,bash]
+----
+gh auth status   # needs write access to commit statuses
+----
+. In GitHub: *Settings -> Branches -> Branch protection rule* for `main`,
+  enable *Require status checks to pass before merging*, and add the context
+  *`owned-compute/idris2`* (it appears in the list after the first post).
+. Optionally install the pre-push hook so the gate runs automatically:
++
+[source,bash]
+----
+cp scripts/git-hooks/pre-push.sample .git/hooks/pre-push
+chmod +x .git/hooks/pre-push
+----
+
+== Usage
+
+[cols="2,4", options="header"]
+|===
+| Command | Effect
+
+| `scripts/owned-compute-gate.sh`
+| Run the checks, post the verdict to `HEAD` on `origin`.
+
+| `scripts/owned-compute-gate.sh --dry-run`
+| Run the checks, print the exact `gh` call, post nothing. Exit code = verdict.
+
+| `scripts/owned-compute-gate.sh --sha=<sha> --repo=<o/r>`
+| Gate a specific commit / repository explicitly.
+
+| `GATE_CONTEXT=ci/idris2 scripts/owned-compute-gate.sh`
+| Use a different required-check context string.
+
+| `GATE_CHECK_CMD='just test' scripts/owned-compute-gate.sh`
+| Gate on any command's exit code, not just `ci-build.sh`.
+|===
+
+The script exits `0` on success, `1` on a failing verdict, `2` on a
+usage/tooling problem (e.g. `gh` missing) — so it composes in hooks and loops.
+
+== Run modes
+
+* *Manual* — run it before merging a PR (against the PR head SHA).
+* *Pre-push hook* — gate every push from your machine (see the sample).
+* *Self-hosted runner* — point the manual GitHub workflow at a `self-hosted`
+  runner, or run this script from a cron/systemd timer on an idle box. Still
+  zero hosted minutes.
+* *Mesh (strategic)* — drive it from bag-of-actions' `Bag.CiSweep` +
+  `Bag.GitHubBridge`, which fan checks across capable owned nodes and post the
+  same kind of status. This script is the single-node base case of that design.
+
+== Security notes
+
+* The status is only as trustworthy as the machine that runs the checks and the
+  token that posts it. For multi-party trust, bag-of-actions freezes each
+  verdict as an *Ed25519-signed* envelope (`src/main.zig`) and attaches its URL
+  via `--target-url` — adopt that when more than one person can post.
+* Keep the `gh` token scoped to status writes where possible; treat a token that
+  can post `success` to a required check as a merge-gate credential.
+
+== Relationship to the rest of the repo
+
+* `.github/workflows/ci.yml` — kept, but manual-only (zero auto minutes).
+* `.gitlab-ci.yml` `idris2` job — the hosted gate where GitLab minutes are
+  available; identical build via the shared `scripts/`.
+* `scripts/ci-build.sh` — the single source of truth for "what a passing build
+  is", shared by GitLab, the manual GitHub workflow, and this gate.

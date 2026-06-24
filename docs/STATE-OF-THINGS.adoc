@@ -168,6 +168,12 @@ Actions). Both bootstrap Idris2 from source and run `scripts/ci-build.sh`:
 compile the library, install it, build the benchmark, then run the suite (which
 exits non-zero on failure) and the benchmark. CI is now load-bearing.
 
+To avoid metered GitHub-hosted minutes, the GitHub Actions workflow is
+*manual-only* (`workflow_dispatch`); the GitLab job is the hosted gate. For a
+zero-minute required check, `scripts/owned-compute-gate.sh` runs the same checks
+on owned compute and posts the verdict as a GitHub commit status (the in-repo
+embodiment of bag-of-actions' `Bag.GitHubBridge`). See `docs/ZERO-MINUTE-CI.adoc`.
+
 === 6. Missing referenced artifacts
 
 * `echo-types-integration/` — referenced by README, absent.
@@ -287,3 +293,7 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
   aspect axes decorative; E2E category empty). Formalised the *Zigzag regimen* as
   the organising principle: `docs/ZIGZAG-REGIMEN.adoc` + `ProvenTests.Zigzag`
   (co-phase x actor x category x aspect lattice), exercised on every run.
+* 2026-06-23 — Cost: made the GitHub Actions workflow manual-only and added a
+  zero-minute owned-compute gate (`scripts/owned-compute-gate.sh` +
+  `docs/ZERO-MINUTE-CI.adoc`) that posts a commit status from owned compute.
+  Verified the verdict logic and a real end-to-end pass (10/10) in dry-run.
