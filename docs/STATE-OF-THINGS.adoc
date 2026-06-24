@@ -322,3 +322,8 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
   End-to-End test at (CoImplementation, Collective, EndToEnd, Dependability) that
   runs an inner suite through `Framework.runSuite` and is the first test to record
   its category/aspect. Verified: `idris2 --build` clean, suite 12/12.
+* 2026-06-23 — Added a typed coverage map (`ProvenTests.Coverage`): a
+  compiler-checked map over the lattice keyed on `ZigzagCoord`, rendered as a
+  17x14 category x aspect grid and printed on every run. Honest headline: 1 / 238
+  cells covered (full lattice 1 / 3570). Needs `Eq TestCategory`/`Eq TestAspect`.
+  Verified: `idris2 --build` clean, suite 12/12, map renders.

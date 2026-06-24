@@ -58,6 +58,11 @@ Show TestCategory where
   show ProofRegressionTest = "Proof-Regression"
   show TypeSafeTest = "Type-Safe"
 
+-- Equality on categories (distinct display names are injective)
+public export
+Eq TestCategory where
+  a == b = show a == show b
+
 -- =============================================================================
 -- ASPECT DIMENSIONS (from TESTING-TAXONOMY.adoc Part II)
 -- =============================================================================
@@ -97,6 +102,11 @@ Show TestAspect where
   show Observability = "Observability"
   show Reproducibility = "Reproducibility"
   show Portability = "Portability"
+
+-- Equality on aspects (distinct display names are injective)
+public export
+Eq TestAspect where
+  a == b = show a == show b
 
 -- =============================================================================
 -- TYPE-SAFE TESTING SUBCATEGORIES

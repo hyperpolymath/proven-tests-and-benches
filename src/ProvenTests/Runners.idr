@@ -15,6 +15,7 @@ import ProvenTests.Taxonomy
 import ProvenTests.Zigzag
 import ProvenTests.Baton
 import ProvenTests.E2E
+import ProvenTests.Coverage
 import ProvenTests.Framework
 import ProvenTests.TypeSafe.Tropical
 import ProvenTests.TypeSafe.Epistemic
@@ -193,4 +194,6 @@ runComprehensiveSuite = do
   putStrLn ""
   putStrLn "=== Test Summary ==="
   putStrLn (summaryLine allResults)
+  putStrLn ""
+  putStr coverageReport
   pure (all isPassed allResults)
