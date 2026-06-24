@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MPL-2.0
+#
+# Zero-minute CI pre-push hook: run the owned-compute gate before each push so
+# the verdict is posted to GitHub as a commit status (no Actions minutes).
+# Install:  cp scripts/git-hooks/pre-push.sample .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+#
+# Set GATE_SKIP=1 to bypass (e.g. for a docs-only push):  GATE_SKIP=1 git push
+
+set -uo pipefail
+
+if [ "${GATE_SKIP:-0}" = "1" ]; then
+  echo "owned-compute gate: skipped (GATE_SKIP=1)"
+  exit 0
+fi
+
+repo_root="$(git rev-parse --show-toplevel)"
+if [ -x "$repo_root/scripts/owned-compute-gate.sh" ]; then
+  echo "owned-compute gate: running checks before push..."
+  # The commit being pushed is HEAD; post the verdict for it.
+  "$repo_root/scripts/owned-compute-gate.sh" || {
+    echo "owned-compute gate: verdict not green — push aborted (use GATE_SKIP=1 to override)" >&2
+    exit 1
+  }
+fi
+exit 0
