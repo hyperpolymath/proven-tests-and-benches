@@ -77,6 +77,11 @@ Show ZigzagCoord where
   show (MkCoord ph ac cat asp) =
     "(" ++ show ph ++ ", " ++ show ac ++ ", " ++ show cat ++ ", " ++ show asp ++ ")"
 
+-- Equality on coordinates (the show form is injective over the four typed axes)
+public export
+Eq ZigzagCoord where
+  a == b = show a == show b
+
 -- =============================================================================
 -- THE ZIGZAG TRAVERSAL
 -- =============================================================================
