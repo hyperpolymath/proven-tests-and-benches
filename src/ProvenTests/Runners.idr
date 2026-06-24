@@ -16,6 +16,7 @@ import ProvenTests.Zigzag
 import ProvenTests.Baton
 import ProvenTests.E2E
 import ProvenTests.Coverage
+import ProvenTests.Cells
 import ProvenTests.Framework
 import ProvenTests.TypeSafe.Tropical
 import ProvenTests.TypeSafe.Epistemic
@@ -182,18 +183,26 @@ summaryLine rs =
   let verdict = if passed == count then "all passed" else "some failed" in
   "Passed: " ++ show passed ++ "/" ++ show count ++ "  (" ++ verdict ++ ")"
 
---/ Run the comprehensive suite with a summary; returns True iff all passed
+isPassR : TestResult -> Bool
+isPassR Passed = True
+isPassR _      = False
+
+--/ Run the comprehensive suite with a summary; returns True iff all passed.
+--/ Coverage is derived from the cells that actually ran and passed.
 public export
 runComprehensiveSuite : IO Bool
 runComprehensiveSuite = do
   putStrLn "=== Proven-Tests Framework ==="
   putStrLn zigzagSummary
   putStrLn ""
-  allResults <- runAllTests
-  traverse_ printResult allResults
+  cellResults <- runAllCells
+  let entries = map (\(_, m, r) => (m, r)) cellResults
+  traverse_ printResult entries
   putStrLn ""
   putStrLn "=== Test Summary ==="
-  putStrLn (summaryLine allResults)
+  putStrLn (summaryLine entries)
   putStrLn ""
-  putStr coverageReport
-  pure (all isPassed allResults)
+  let covered = map (\(co, _, _) => co)
+                    (filter (\(_, _, r) => isPassR r) cellResults)
+  putStr (coverageReportFrom covered)
+  pure (all isPassed entries)

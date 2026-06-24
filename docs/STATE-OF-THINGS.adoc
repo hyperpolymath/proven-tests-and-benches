@@ -327,3 +327,10 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
   17x14 category x aspect grid and printed on every run. Honest headline: 1 / 238
   cells covered (full lattice 1 / 3570). Needs `Eq TestCategory`/`Eq TestAspect`.
   Verified: `idris2 --build` clean, suite 12/12, map renders.
+* 2026-06-23 — Made coverage self-deriving and filled it extensively
+  (`ProvenTests.Cells`): ~31 real cell tests bound to typed `ZigzagCoord`s; the
+  map is now computed from cells that actually ran and passed (a `#` cannot be a
+  hand-written claim). All 17 categories covered; 12 of 14 aspects (Performance
+  and Reproducibility honestly empty — no pure test for those). Verified:
+  `idris2 --build` clean, suite 31/31, 31/238 cells. NOTE: the old per-category
+  runners in `Runners.idr` are now superseded by `Cells` and slated for removal.
