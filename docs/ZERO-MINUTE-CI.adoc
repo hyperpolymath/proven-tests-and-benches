@@ -64,6 +64,16 @@ never outruns the evidence.
 
 == Setup (one time)
 
+*One command* — run once on owned compute, with `gh` authenticated (admin scope
+on the repo). It posts the first verdict and makes the context a required check:
+
+[source,bash]
+----
+scripts/wire-zero-minute-gate.sh           # add --dry-run to preview both steps
+----
+
+The manual equivalent is:
+
 . Ensure `gh` is installed and authenticated with `repo` scope:
 +
 [source,bash]
