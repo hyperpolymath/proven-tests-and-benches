@@ -1,5 +1,5 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-# SPDX-License-Identifier: CC-BY-SA-4.0
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MPL-2.0
 #
 # Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
 # Copyright (c) 2026 Joshua Jewell (hyperpolymath)
