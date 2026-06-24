@@ -95,6 +95,15 @@ This taxonomy is the strongest part of the repository and is largely real.
 * *The Zigzag regimen* (`src/ProvenTests/Zigzag.idr` + `docs/ZIGZAG-REGIMEN.adoc`)
   — an organising principle: a co-phase x actor x category x aspect lattice
   (3570 coordinates) with a boustrophedon traversal, exercised on every run.
+* *A machine-checked tropical (min-plus) semiring* (`src/ProvenTests/Tropical.idr`)
+  — total Idris2 proofs of the `⊕`/`⊗` laws, the shared algebra behind
+  bag-of-actions' cheapest-capable routing and proven-tests' resource bounds.
+  This is the framework's *first genuinely Actually-Proven test* (real proofs,
+  not sampling), surfaced via `ProvenTests.Baton.tropicalLawsClassification`.
+* *The cross-repo Baton contract* (`src/ProvenTests/Baton.idr` +
+  `docs/CROSS-REPO-UNIFICATION.adoc`) — `BatonSpec` pairs a Zigzag coordinate,
+  an evidence-carrying provenance tier, and a tropical cost, so the honesty
+  invariant survives routing across the bag-of-actions mesh.
 * *Infrastructure and governance* — devcontainer / Containerfile, pre-commit,
   TruffleHog secret scanning, a rich Justfile, plus GOVERNANCE / AUDIT /
   MAINTAINERS docs and consistent SPDX headers throughout.
@@ -297,3 +306,8 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
   zero-minute owned-compute gate (`scripts/owned-compute-gate.sh` +
   `docs/ZERO-MINUTE-CI.adoc`) that posts a commit status from owned compute.
   Verified the verdict logic and a real end-to-end pass (10/10) in dry-run.
+* 2026-06-23 — Cross-repo unification: added a machine-checked tropical min-plus
+  semiring (`ProvenTests.Tropical`, total proofs) and the Baton contract
+  (`ProvenTests.Baton`: Zigzag coord + evidence-carrying provenance + tropical
+  cost), with `docs/CROSS-REPO-UNIFICATION.adoc`. The tropical laws are the first
+  Actually-Proven entry. Verified: `idris2 --build` clean, suite 11/11.
