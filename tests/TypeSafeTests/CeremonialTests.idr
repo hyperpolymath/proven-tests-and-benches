@@ -1,13 +1,9 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
-module ProvenTests.TypeSafeTests.CeremonialTests
+module TypeSafeTests.CeremonialTests
 
 import ProvenTests.TypeSafe.Ceremonial
 import ProvenTests.Framework
@@ -25,7 +21,7 @@ ceremonialTestId n = MkTestId "ProvenTests.TypeSafe.CeremonialTests" ("test_" ++
 
 -- Test: Ceremony starts with Initiate
 public export
-testCeremonialStartsProperly : Test ProvisionallyProven
+testCeremonialStartsProperly : ProvisionallyProvenTest
 testCeremonialStartsProperly = 
   provisionalTest (ceremonialTestId 1) "Ceremony starts with Initiate" (
     assertTrue (ceremonyStartsProperly validCeremony) 
@@ -34,7 +30,7 @@ testCeremonialStartsProperly =
 
 -- Test: Ceremony ends with Complete
 public export
-testCeremonialEndsProperly : Test ProvisionallyProven
+testCeremonialEndsProperly : ProvisionallyProvenTest
 testCeremonialEndsProperly = 
   provisionalTest (ceremonialTestId 2) "Ceremony ends with Complete" (
     assertTrue (ceremonyEndsProperly validCeremony) 
@@ -43,7 +39,7 @@ testCeremonialEndsProperly =
 
 -- Test: All steps are valid
 public export
-testCeremonialAllStepsValid : Test ProvisionallyProven
+testCeremonialAllStepsValid : ProvisionallyProvenTest
 testCeremonialAllStepsValid = 
   provisionalTest (ceremonialTestId 3) "All ceremony steps are valid" (
     assertTrue (ceremonyAllStepsValid validCeremony) 
@@ -52,7 +48,7 @@ testCeremonialAllStepsValid =
 
 -- Test: Ceremony has required steps in order
 public export
-testCeremonialHasRequiredOrder : Test ProvisionallyProven
+testCeremonialHasRequiredOrder : ProvisionallyProvenTest
 testCeremonialHasRequiredOrder = 
   provisionalTest (ceremonialTestId 4) "Ceremony has required order" (
     assertTrue (ceremonyHasRequiredOrder validCeremony) 
@@ -61,7 +57,7 @@ testCeremonialHasRequiredOrder =
 
 -- Test: All ceremonial tests pass
 public export
-testCeremonialAllTestsPass : Test ProvisionallyProven
+testCeremonialAllTestsPass : ProvisionallyProvenTest
 testCeremonialAllTestsPass = 
   provisionalTest (ceremonialTestId 5) "All ceremonial tests pass" (
     assertTrue (runCeremonialTests) 
@@ -70,7 +66,7 @@ testCeremonialAllTestsPass =
 
 -- All ceremonial tests
 public export
-allCeremonialTests : List (Test ProvisionallyProven)
+allCeremonialTests : List (ProvisionallyProvenTest)
 allCeremonialTests = [
     testCeremonialStartsProperly,
     testCeremonialEndsProperly,

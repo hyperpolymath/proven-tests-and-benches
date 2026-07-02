@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+//
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+//
+= Component Readiness Grade (CRG)
+:toc: left
+
+Follows the estate Component Readiness Grade convention (CRG v1.0,
+`hyperpolymath/standards`), as used by sibling repos `panic-attack`
+(`READINESS.md` + `tests/readiness.rs`) and `proven-servers`.
+
+== Grade scale
+
+[cols="1,2,5"]
+|===
+| Grade | Name | Machine-verifiable meaning
+
+| D | Alpha | Component runs without crashing on valid input
+| C | Beta | Component produces correct output on representative input
+| B | RC | Component handles edge cases and multiple input types
+| A | Stable | Sustained correct operation under adverse conditions
+|===
+
+== Current status
+
+Current Grade: D
+
+*Evidence for D (Alpha):* the framework library (22 modules) compiles under
+Idris2, installs, and its self-test suite runs green via `scripts/ci-build.sh`
+(the CI gate). The type-safe suite package (`proven-tests-suite.ipkg`) builds
+against the installed library and passes. Machine-checked content is limited to
+`src/ProvenTests/Tropical.idr` (total semiring proofs) plus the
+evidence-carrying provenance types; coverage of the taxonomy lattice is partial
+and honestly reported by the self-deriving coverage map.
+
+== Criteria to advance
+
+*To C (Beta):* the framework must produce correct, useful output about a real
+external subject — the provenance-graded module report for `proven`
+(`integrations/proven/`) running against a live checkout and reconciling with
+that repo's own module ledger.
+
+*To B (RC):* subject tests exercising a real dependency (`depends = proven`)
+pass; the machine-readable run report (`--report`) is emitted and consumed by
+at least one downstream tool (panic-attack `aggregate`); meta-tests
+demonstrate failure detection (a deliberately failing test fails the suite).
+
+*To A (Stable):* FFI-parity golden-vector harness operational against at least
+one proven binding (blocked on `proven` producing a real Idris-backed
+`libproven`); mutation/meta-testing demonstrates the suite kills seeded
+defects.
+
+== History
+
+|===
+| Date | Grade | Change
+
+| 2026-07-02 | D | Initial grading under estate CRG convention. Prior state
+was ungraded ("X") per `docs/STATE-OF-THINGS.adoc`.
+|===

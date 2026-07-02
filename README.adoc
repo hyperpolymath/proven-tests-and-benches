@@ -1,133 +1,157 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
-// SPDX-License-Identifier: CC-BY-SA-4.0
-// SPDX-License-Identifier: CC-BY-SA-4.0
-// Mozilla Post-Quantum License Provisions v1.0
 //
-// Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
-// Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
 = Proven-Tests: Type-Safe Testing Framework for Hyperpolymath
 
 :toc: left
 :toclevels: 4
 
+image::https://img.shields.io/badge/CRG-D-orange?style=flat-square[Component Readiness Grade]
+
 == Overview
 
-**Proven-Tests** is the canonical testing framework for the hyperpolymath ecosystem, implemented entirely in **Idris2**. It provides a three-tier classification system for test provenance and includes specialized support for testing type system properties.
+**Proven-Tests** is the testing framework for the hyperpolymath ecosystem,
+implemented in **Idris2**. Its organising idea: a test's *provenance* — the
+strength of evidence behind it — is a first-class, machine-checked value, not a
+label. Coverage is likewise *derived from executed tests at typed coordinates*,
+so a claimed-covered cell cannot be faked.
 
-**Key Principles:**
-* All tests are written in Idris2 for maximum type safety
+**Key principles:**
+
+* Tests are written in Idris2; provenance is evidence-carrying by construction
+  (`src/ProvenTests/Types.idr`: an Actually-Proven classification *requires* a
+  non-empty proof ladder — the type system rejects the claim without the evidence)
 * Three-tier classification: Actually-Proven, Provisionally-Proven, Unproven
-* Specialized category for testing type system properties
-* Integration with echo-types for advanced type theories
-* Designed to work with all hyperpolymath components
+  (see `docs/CHARACTERISTICS.adoc` for the evidence-spectrum philosophy:
+  example → property → proof)
+* A 17-category × 14-aspect test taxonomy, traversed as a co-creation lattice
+  (`docs/ZIGZAG-REGIMEN.adoc`)
+* A machine-checked tropical (min-plus) semiring for cost-aware test routing
+  (`src/ProvenTests/Tropical.idr` — total proofs, no escape hatches)
+* Honest status reporting: see `docs/STATE-OF-THINGS.adoc` (the self-audit)
+  and `READINESS.adoc` (Component Readiness Grade)
 
 == Classification System
 
 === Tier 1: Actually-Proven
 
-Tests that have:
-* Full proof ladder for specific functionality
-* General design proven safe
-* Complete formal verification
-
-**Example:** A compositor operator with full Idris2 proof that it never produces invalid pixel values.
+Tests backed by a full proof ladder: the property holds for *all* inputs
+because a total, machine-checked proof exists. Example in-repo: the tropical
+semiring laws (`ProvenTests.Baton.tropicalLawsClassification` cites the
+theorems in `Tropical.idr` by name).
 
 === Tier 2: Provisionally-Proven
 
-Tests that use:
-* Type-appropriate and type-safe framework
-* Specific test is type-safe
-* Framework itself has type safety guarantees
-
-**Example:** A test suite using the Proven-Tests framework with type-safe assertions.
+Tests whose *framework and assertions* are type-safe (totality-checked Idris2,
+typed assertions) but whose subject property is demonstrated by example or
+property checks rather than proof. Most of this repo's suite sits here — and
+says so.
 
 === Tier 3: Unproven
 
-Regular tests without type safety guarantees.
-
-**Note:** The goal is to migrate all tests to at least Provisionally-Proven.
+Regular tests without type-safety guarantees. The goal is to migrate all tests
+to at least Provisionally-Proven.
 
 == Type-Safe Testing Categories
 
-Specialized testing for advanced type systems:
+Specialized testing for advanced type systems. *Source* names the type theory
+that inspired each category; except where noted, the implementations here are
+self-contained Idris2 property suites, not live integrations.
 
-| Category | Description | Source |
-|----------|-------------|--------|
-| **Tropical** | Min-plus semiring resource bounds | typed-wasm extension |
-| **Epistemic** | Information-theoretic access control | typed-wasm extension |
-| **Choreographic** | Multi-party session types | TypeLL |
-| **Dependent** | Dependent type verification | Idris2 core |
-| **Effects** | Effect system properties | Idris2 core |
-| **Decorative** | Type-level annotations | Custom |
-| **Ceremonial** | Protocol/ritual types | Custom |
-| **Dyadic** | Binary relation types | Custom |
-| **Echo-Types** | Echo types integration | echo-types repo |
+[cols="1,3,2"]
+|===
+| Category | Description | Inspiration
+
+| **Tropical** | Min-plus semiring resource bounds | typed-wasm extension
+| **Epistemic** | Information-theoretic access control | typed-wasm extension
+| **Choreographic** | Multi-party session types | TypeLL
+| **Dependent** | Dependent type verification | Idris2 core
+| **Effects** | Effect system properties | Idris2 core
+| **Decorative** | Type-level annotations | Custom
+| **Ceremonial** | Protocol/ritual types | Custom
+| **Dyadic** | Binary relation types | Custom
+| **Echo-Types** | Stand-in contract for future echo-types integration (see note) | echo-types repo
+|===
+
+NOTE: The Echo-Types "bridge" (`src/ProvenTests/TypeSafe/Bridge.idr`) is a
+stand-in: a hardcoded contract record with structural checks. There is no
+dependency on the echo-types repository yet, and its tests are graded
+accordingly (nothing above Provisionally-Proven).
 
 == Repository Structure
 
 [source]
 ----
-proven-tests/
+proven-tests-and-benches/
 ├── README.adoc
-├── Justfile
-├── ipkg.json
-├── src/
-│   ├── ProvenTests/
-│   │   ├── Classification.idr
-│   │   ├── Taxonomy.idr
-│   │   ├── Framework.idr
-│   │   ├── Runners.idr
-│   │   ├── Report.idr
-│   │   └── Types.idr
-│   └── TypeSafe/
-│       ├── Tropical.idr
-│       ├── Epistemic.idr
-│       ├── Choreographic.idr
-│       ├── Dependent.idr
-│       ├── Effects.idr
-│       ├── Decorative.idr
-│       ├── Ceremonial.idr
-│       └── Dyadic.idr
-├── tests/
-│   ├── ClassificationTests.idr
-│   ├── FrameworkTests.idr
-│   └── TypeSafeTests/
-├── benchmarks/
-├── echo-types-integration/
-├── docs/
-└── .gitignore
+├── READINESS.adoc            # Component Readiness Grade (estate CRG convention)
+├── Justfile                  # build/test/bench/ci recipes (real, working)
+├── proven-tests.ipkg         # the framework library + self-test executable
+├── proven-tests-suite.ipkg   # type-safe category test suite (depends = proven-tests)
+├── src/ProvenTests/          # 22 modules: the framework
+│   ├── Types.idr             # evidence-carrying provenance (the core idea)
+│   ├── Classification.idr    # tier constructors and honest promotion
+│   ├── Taxonomy.idr          # 17 categories × 14 aspects × 12 kategoria levels
+│   ├── Tropical.idr          # machine-checked min-plus semiring (total proofs)
+│   ├── Zigzag.idr            # co-phase × actor × category × aspect lattice
+│   ├── Baton.idr             # cross-repo contract: coord + provenance + cost
+│   ├── Coverage.idr          # self-deriving coverage (cannot be faked)
+│   ├── Cells.idr             # the populated lattice cells (real tests)
+│   ├── Framework.idr         # Runnable interface, suites, assertions
+│   ├── Runners.idr           # comprehensive suite runner
+│   ├── Report.idr            # report types
+│   ├── Main.idr              # self-test entry point
+│   └── TypeSafe/             # 9 category property suites + Bridge stand-in
+├── tests/TypeSafeTests/      # suite package sources (per-category tests + Main)
+├── benchmarks/               # honest benchmark harness (defeats dead-code elim)
+├── scripts/                  # install-idris2.sh, ci-build.sh (the CI gate),
+│                             # owned-compute-gate.sh, wire-zero-minute-gate.sh
+└── docs/                     # CHARACTERISTICS, STATE-OF-THINGS (self-audit),
+                              # ZIGZAG-REGIMEN, CROSS-REPO-UNIFICATION, ZERO-MINUTE-CI
 ----
 
 == Quick Start
 
 === Prerequisites
 
-* Idris2 (>= 0.6.0)
-* GMP development libraries
+* Idris2 (0.7.0 or later; CI uses `scripts/install-idris2.sh`)
+* Chez Scheme + GMP development libraries
 
-=== Installation
+=== Build and test
 
-```bash
-git clone https://github.com/JoshuaJewell/proven-tests
-cd proven-tests
-idris2 --install ipkg.json
-just build
-just test
-```
+[source,bash]
+----
+git clone https://github.com/hyperpolymath/proven-tests-and-benches
+cd proven-tests-and-benches
+
+# Everything, exactly as CI runs it:
+bash scripts/ci-build.sh
+
+# Or piecewise:
+just build          # idris2 --build proven-tests.ipkg
+just test           # self-test suite + type-safe suite package
+just bench          # benchmark harness
+----
 
 == Using in Your Project
 
-1. Add as dependency in `ipkg.json`
-2. Import: `import ProvenTests.Framework`
-3. Write tests in Idris2
+1. `idris2 --install proven-tests.ipkg` (after building)
+2. Add `depends = proven-tests` to your `.ipkg`
+3. `import ProvenTests.Framework` and write provenance-graded tests
+   (see `tests/TypeSafeTests/` for worked examples)
 
 == License
 
-Licensed under AGPL-3.0-or-later, CC-BY-SA-4.0, MPL-2.0 with Mozilla Post-Quantum License Provisions v1.0.
+Code is licensed under MPL-2.0; documentation under CC-BY-SA-4.0.
+See `LICENSE` and `LICENSES/`.
 
 == References
 
-* [Idris2](https://idris2.readthedocs.io)
-* [echo-types](https://github.com/hyperpolymath/echo-types)
-* [Standards](https://github.com/hyperpolymath/standards)
+* https://idris2.readthedocs.io[Idris2]
+* https://github.com/hyperpolymath/proven[proven] — the verified safety
+  library this framework is being pointed at (see `integrations/`)
+* https://github.com/hyperpolymath/standards[Standards] — estate conventions
+  (CRG grading, licensing)
+* https://github.com/hyperpolymath/echo-types[echo-types] — future integration
+  (stand-in contract only today)

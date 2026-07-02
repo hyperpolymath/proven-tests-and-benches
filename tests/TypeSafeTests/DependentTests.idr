@@ -1,13 +1,9 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
-module ProvenTests.TypeSafeTests.DependentTests
+module TypeSafeTests.DependentTests
 
 import ProvenTests.TypeSafe.Dependent
 import ProvenTests.Framework
@@ -25,7 +21,7 @@ dependentTestId n = MkTestId "ProvenTests.TypeSafe.DependentTests" ("test_" ++ s
 
 -- Test: Dependent pair maintains type correctness
 public export
-testDependentPairCorrect : Test ProvisionallyProven
+testDependentPairCorrect : ProvisionallyProvenTest
 testDependentPairCorrect = 
   provisionalTest (dependentTestId 1) "Dependent pair type correct" (
     assertTrue (dependentPairCorrect testDepPair) 
@@ -34,7 +30,7 @@ testDependentPairCorrect =
 
 -- Test: Vect length matches index
 public export
-testVectLengthCorrect : Test ProvisionallyProven
+testVectLengthCorrect : ProvisionallyProvenTest
 testVectLengthCorrect = 
   provisionalTest (dependentTestId 2) "Vect length matches index" (
     assertTrue (vectLengthCorrect testVect) 
@@ -43,7 +39,7 @@ testVectLengthCorrect =
 
 -- Test: Vect head is safe
 public export
-testVectHeadSafe : Test ProvisionallyProven
+testVectHeadSafe : ProvisionallyProvenTest
 testVectHeadSafe = 
   provisionalTest (dependentTestId 3) "Vect head is safe" (
     assertTrue (vectHeadSafe testVect) 
@@ -52,7 +48,7 @@ testVectHeadSafe =
 
 -- Test: Dependent type preserves invariants
 public export
-testDependentInvariant : Test ProvisionallyProven
+testDependentInvariant : ProvisionallyProvenTest
 testDependentInvariant = 
   provisionalTest (dependentTestId 4) "Dependent type preserves invariants" (
     assertTrue (dependentInvariant 3 testVect) 
@@ -61,7 +57,7 @@ testDependentInvariant =
 
 -- Test: All dependent tests pass
 public export
-testDependentAllTestsPass : Test ProvisionallyProven
+testDependentAllTestsPass : ProvisionallyProvenTest
 testDependentAllTestsPass = 
   provisionalTest (dependentTestId 5) "All dependent tests pass" (
     assertTrue (runDependentTests) 
@@ -70,7 +66,7 @@ testDependentAllTestsPass =
 
 -- All dependent tests
 public export
-allDependentTests : List (Test ProvisionallyProven)
+allDependentTests : List (ProvisionallyProvenTest)
 allDependentTests = [
     testDependentPairCorrect,
     testVectLengthCorrect,

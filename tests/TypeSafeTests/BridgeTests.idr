@@ -1,13 +1,9 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
-module ProvenTests.TypeSafeTests.BridgeTests
+module TypeSafeTests.BridgeTests
 
 import ProvenTests.TypeSafe.Bridge
 import ProvenTests.Framework
@@ -25,7 +21,7 @@ bridgeTestId n = MkTestId "ProvenTests.TypeSafe.BridgeTests" ("test_" ++ show n)
 
 -- Test: Bridge connects to all categories
 public export
-testBridgeConnectsToAllCategories : Test ProvisionallyProven
+testBridgeConnectsToAllCategories : ProvisionallyProvenTest
 testBridgeConnectsToAllCategories = 
   provisionalTest (bridgeTestId 1) "Bridge connects to all categories" (
     assertTrue (bridgeConnectsToAllCategories defaultEchoTypesBridge) 
@@ -34,7 +30,7 @@ testBridgeConnectsToAllCategories =
 
 -- Test: Bridge version is valid
 public export
-testBridgeVersionValid : Test ProvisionallyProven
+testBridgeVersionValid : ProvisionallyProvenTest
 testBridgeVersionValid = 
   provisionalTest (bridgeTestId 2) "Bridge version is valid" (
     assertTrue (bridgeVersionValid defaultEchoTypesBridge) 
@@ -43,7 +39,7 @@ testBridgeVersionValid =
 
 -- Test: Bridge repository is accessible
 public export
-testBridgeRepoAccessible : Test ProvisionallyProven
+testBridgeRepoAccessible : ProvisionallyProvenTest
 testBridgeRepoAccessible = 
   provisionalTest (bridgeTestId 3) "Bridge repository is accessible" (
     assertTrue (bridgeRepoAccessible defaultEchoTypesBridge) 
@@ -52,7 +48,7 @@ testBridgeRepoAccessible =
 
 -- Test: Bridge supports echo-types category
 public export
-testBridgeSupportsEchoTypes : Test ProvisionallyProven
+testBridgeSupportsEchoTypes : ProvisionallyProvenTest
 testBridgeSupportsEchoTypes = 
   provisionalTest (bridgeTestId 4) "Bridge supports echo-types category" (
     assertTrue (bridgeSupportsEchoTypes defaultEchoTypesBridge) 
@@ -61,7 +57,7 @@ testBridgeSupportsEchoTypes =
 
 -- Test: All type-safe tests run through bridge
 public export
-testBridgeAllTypeSafeTests : Test ProvisionallyProven
+testBridgeAllTypeSafeTests : ProvisionallyProvenTest
 testBridgeAllTypeSafeTests = 
   provisionalTest (bridgeTestId 5) "All type-safe tests pass through bridge" (
     assertTrue (runAllTypeSafeTests) 
@@ -70,7 +66,7 @@ testBridgeAllTypeSafeTests =
 
 -- Test: Echo type preserves type
 public export
-testEchoPreservesType : Test ProvisionallyProven
+testEchoPreservesType : ProvisionallyProvenTest
 testEchoPreservesType = 
   provisionalTest (bridgeTestId 6) "Echo preserves type" (
     assertTrue (echoPreservesType (MkEcho 42)) 
@@ -79,7 +75,7 @@ testEchoPreservesType =
 
 -- Test: Echo can be unwrapped
 public export
-testEchoUnwrappable : Test ProvisionallyProven
+testEchoUnwrappable : ProvisionallyProvenTest
 testEchoUnwrappable = 
   provisionalTest (bridgeTestId 7) "Echo can be unwrapped" (
     assertTrue (echoUnwrappable (MkEcho 42) == 42) 
@@ -88,7 +84,7 @@ testEchoUnwrappable =
 
 -- Test: All bridge tests pass
 public export
-testBridgeAllTestsPass : Test ProvisionallyProven
+testBridgeAllTestsPass : ProvisionallyProvenTest
 testBridgeAllTestsPass = 
   provisionalTest (bridgeTestId 8) "All bridge tests pass" (
     assertTrue (allBridgeTestsPass) 
@@ -97,7 +93,7 @@ testBridgeAllTestsPass =
 
 -- All bridge tests
 public export
-allBridgeTests : List (Test ProvisionallyProven)
+allBridgeTests : List (ProvisionallyProvenTest)
 allBridgeTests = [
     testBridgeConnectsToAllCategories,
     testBridgeVersionValid,

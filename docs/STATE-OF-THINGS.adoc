@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
-// SPDX-License-Identifier: CC-BY-SA-4.0
-// SPDX-License-Identifier: CC-BY-SA-4.0
-// Mozilla Post-Quantum License Provisions v1.0
 //
-// Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
-// Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
 = Proven-Tests: State of Things (Honest Gap Analysis)
 :toc: left
@@ -30,7 +26,7 @@ empty categories and missing artifacts are addressed.
 What changed in this pass (all verified against Idris2 0.7.0 locally):
 
 * The library *compiles end to end*: `idris2 --build proven-tests.ipkg` builds all
-  16 modules cleanly.
+  22 modules cleanly.
 * *Provenance is now load-bearing* (see section 2): you cannot construct an
   Actually-/Provisionally-Proven classification without supplying the evidence.
 * The *benchmark harness is now honest* (see section 3): real monotonic-clock
@@ -41,7 +37,7 @@ What changed in this pass (all verified against Idris2 0.7.0 locally):
   a GitLab `idris2` job — instead of skipping everything (see section 5).
 
 The conceptual architecture remains the strong part. The remaining gaps are the
-empty test categories, the un-built `tests/TypeSafeTests` modules, and several
+empty test categories and several
 missing referenced artifacts.
 
 == The categories we define
@@ -85,7 +81,7 @@ This taxonomy is the strongest part of the repository and is largely real.
 
 * *The taxonomy above*, cleanly modelled as Idris2 algebraic data types with
   `Show`/`Eq` instances and enumerations (`Types.idr`, `Taxonomy.idr`).
-* *A compiling library* — all 16 modules build under Idris2 0.7.0.
+* *A compiling library* — all 22 modules build under Idris2 0.8.0 (previously verified on 0.7.0).
 * *Evidence-carrying provenance* — the headline feature is now enforced by the
   type system (see section 2).
 * *Nine TypeSafe modules plus a runner* containing genuine, non-decorative
@@ -190,25 +186,29 @@ zero-minute required check, `scripts/owned-compute-gate.sh` runs the same checks
 on owned compute and posts the verdict as a GitHub commit status (the in-repo
 embodiment of bag-of-actions' `Bag.GitHubBridge`). See `docs/ZERO-MINUTE-CI.adoc`.
 
-=== 6. Missing referenced artifacts
+=== 6. Missing referenced artifacts — MOSTLY FIXED (2026-07-02)
 
-* `echo-types-integration/` — referenced by README, absent.
-* `READINESS.adoc` — the Justfile `crg-badge` / `crg-grade` recipes depend on it,
-  absent.
-* `standards/.../TESTING-TAXONOMY.adoc` — the canonical taxonomy the stubs point
-  at, absent from this repo.
-* README installation says `ipkg.json`; the actual file is `proven-tests.ipkg`.
+* `echo-types-integration/` — README no longer references it; the Bridge
+  module is now explicitly labelled a stand-in contract.
+* `READINESS.adoc` — now exists (CRG grade D); `just crg-badge` /
+  `just crg-grade` work against it.
+* `standards/.../TESTING-TAXONOMY.adoc` — the numbered stubs that pointed at
+  it were removed; `tests/README.adoc` names `Taxonomy.idr` as the in-repo
+  source of truth with the standards repo as the external reference.
+* README/Justfile now reference `proven-tests.ipkg` (the `ipkg.json`
+  fiction is gone).
 
-=== 7. Taxonomy <-> folders mismatch
+=== 7. Taxonomy <-> folders mismatch — FIXED (folders removed)
 
-The code defines 17 test categories but `tests/` has 14 numbered directories.
-Compatibility, Proof-Regression, and Type-Safe have no numbered home (Type-Safe
-lives separately under `tests/TypeSafeTests/`).
+The code defined 17 test categories while `tests/` had 14 numbered stub
+directories. The stubs were removed (2026-07-02); `tests/README.adoc` now
+maps every typed category to where its tests actually live.
 
-=== 8. The tests/TypeSafeTests modules are not in any build target
+=== 8. The tests/TypeSafeTests modules are not in any build target — FIXED (proven-tests-suite.ipkg)
 
-Nine test files under `tests/TypeSafeTests/` exist but are not part of the
-`.ipkg`, so they are never compiled or run. They need a dedicated test package.
+Nine test files under `tests/TypeSafeTests/` were stale against a removed
+Framework API and absent from every build. They are now ported and built as
+the `proven-tests-suite` package (`proven-tests-suite.ipkg`), run by CI.
 
 === 9. Four category suites — FIXED (10/10 now pass)
 
@@ -271,7 +271,7 @@ and populating cells is tracked below.
 
 | 7
 | Wire `tests/TypeSafeTests` into a test package; reconcile taxonomy <-> folders
-| TODO
+| DONE (2026-07-02: proven-tests-suite.ipkg; stub folders removed)
 
 | 8
 | Populate the empty categories in zigzag order, starting with E2E
@@ -334,3 +334,20 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
   and Reproducibility honestly empty — no pure test for those). Verified:
   `idris2 --build` clean, suite 31/31, 31/238 cells. NOTE: the old per-category
   runners in `Runners.idr` are now superseded by `Cells` and slated for removal.
+* 2026-07-02 — Honesty pass and suite resurrection. License headers normalised
+  repo-wide (single SPDX per file: MPL-2.0 code / CC-BY-SA-4.0 docs; removed the
+  fictional "Mozilla Post-Quantum License Provisions" line, stray AGPL
+  identifiers, and the Joshua/Jonathan attribution split). `tests/TypeSafeTests/`
+  ported from the removed `Test : ProvenStatus -> Type` API to the current
+  Framework records and wired into a real package (`proven-tests-suite.ipkg`)
+  run by CI — the resurrection surfaced 2 test-data misapplications in the
+  Epistemic suite (predicates applied to the wrong `KnowledgeState`), now fixed
+  to the documented pairings. The superseded per-category runners were removed
+  from `Runners.idr` and the self-classification check wired into
+  `runComprehensiveSuite` (suite 31 -> 32). Justfile rewritten to real recipes;
+  README rewritten to match the repository; `READINESS.adoc` added (CRG grade
+  D); CHANGELOG populated; the 14 numbered stub test directories replaced by
+  `tests/README.adoc` pointing at the typed cells. Toolchain bumped to Idris2
+  0.8.0 (aligns with `proven`); `scripts/ci-build.sh` derives the lib path by
+  glob. Verified: `bash scripts/ci-build.sh` green — framework suite 32/32,
+  type-safe suite 52/52, benchmark runs.

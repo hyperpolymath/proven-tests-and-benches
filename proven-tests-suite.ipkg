@@ -1,0 +1,20 @@
+package proven-tests-suite
+
+version = 0.1.0
+sourcedir = "tests"
+
+main = TypeSafeTests.Main
+executable = "proven-tests-suite"
+
+depends = proven-tests
+
+modules = TypeSafeTests.TropicalTests,
+         TypeSafeTests.EpistemicTests,
+         TypeSafeTests.ChoreographicTests,
+         TypeSafeTests.DependentTests,
+         TypeSafeTests.EffectsTests,
+         TypeSafeTests.DecorativeTests,
+         TypeSafeTests.CeremonialTests,
+         TypeSafeTests.DyadicTests,
+         TypeSafeTests.BridgeTests,
+         TypeSafeTests.Main

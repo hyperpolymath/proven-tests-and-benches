@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+//
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+//
+= Where the tests live
+
+This directory previously held 14 numbered placeholder directories
+(`01-unit` … `14-chaos`) containing only stub READMEs. They were removed:
+the taxonomy they gestured at is *typed*, and the tests that populate it are
+bound to typed coordinates rather than filed in folders.
+
+== The source of truth
+
+* **The taxonomy** — 17 test categories × 14 aspects — is defined as Idris2
+  data types in `../src/ProvenTests/Taxonomy.idr` (`TestCategory`,
+  `TestAspect`), with the external reference being the estate standards repo
+  (`hyperpolymath/standards`, testing-and-benchmarking).
+* **The real tests per category** live in `../src/ProvenTests/Cells.idr`:
+  each `CellTest` binds a runnable check to a typed `ZigzagCoord`
+  (co-phase × actor × category × aspect). The coverage grid printed on every
+  run is *derived* from cells that executed and passed — see
+  `../src/ProvenTests/Coverage.idr`.
+* **The type-safe category suites** live here in `TypeSafeTests/` — nine
+  per-category test modules plus a `Main`, built as the
+  `proven-tests-suite` package (`../proven-tests-suite.ipkg`,
+  `depends = proven-tests`) and run by CI (`../scripts/ci-build.sh`).
+
+== Category → location map
+
+[cols="2,4"]
+|===
+| Category (Taxonomy.idr) | Where its tests run
+
+| UnitTest, P2PTest, EndToEnd, BuildTest, RuntimeExecTest, ReflexiveTest,
+  LifecycleTest, SmokeTest, PropertyTest, MutationTest, FuzzTest,
+  ContractTest, RegressionTest, ChaosTest, CompatibilityTest,
+  ProofRegressionTest
+| `src/ProvenTests/Cells.idr` — as typed lattice cells (grep the category
+  name to find its cells)
+
+| TypeSafeTest (all nine subcategories)
+| `src/ProvenTests/TypeSafe/*.idr` (property logic) +
+  `tests/TypeSafeTests/*.idr` (suite package exercising it)
+|===

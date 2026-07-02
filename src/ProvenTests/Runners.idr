@@ -1,35 +1,24 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
 module ProvenTests.Runners
 
 import ProvenTests.Types
 import ProvenTests.Classification
-import ProvenTests.Taxonomy
 import ProvenTests.Zigzag
-import ProvenTests.Baton
-import ProvenTests.E2E
 import ProvenTests.Coverage
 import ProvenTests.Cells
-import ProvenTests.Framework
-import ProvenTests.TypeSafe.Tropical
-import ProvenTests.TypeSafe.Epistemic
-import ProvenTests.TypeSafe.Choreographic
-import ProvenTests.TypeSafe.Dependent
-import ProvenTests.TypeSafe.Effects
-import ProvenTests.TypeSafe.Decorative
-import ProvenTests.TypeSafe.Ceremonial
-import ProvenTests.TypeSafe.Dyadic
-import ProvenTests.TypeSafe.Bridge
+
+-- NOTE: the per-category runners that used to live here (runTropicalCategoryTests
+-- et al., runTypeSafeTests, runAllTests, runTropicalLawTests, runE2ECategoryTests)
+-- were superseded by the typed lattice cells in ProvenTests.Cells — every one of
+-- their checks now runs as a CellTest with a real ZigzagCoord, so coverage is
+-- derived rather than asserted. They have been removed.
 
 -- =============================================================================
--- SELF-CLASSIFICATION TEST
+-- SELF-CLASSIFICATION TEST (Reflexive)
 -- =============================================================================
 
 --/ Test that the framework correctly classifies itself
@@ -43,123 +32,8 @@ runSelfClassification =
     else pure (provenTestsMetadata, Failed "Self-classification mismatch")
 
 -- =============================================================================
--- TYPE-SAFE CATEGORY RUNNERS
--- =============================================================================
-
-public export
-runTropicalCategoryTests : IO (List (TestMetadata, TestResult))
-runTropicalCategoryTests =
-  if runTropicalTests
-    then pure [(tropicalClassification, Passed)]
-    else pure [(tropicalClassification, Failed "Tropical tests failed")]
-
-public export
-runEpistemicCategoryTests : IO (List (TestMetadata, TestResult))
-runEpistemicCategoryTests =
-  if runEpistemicTests
-    then pure [(epistemicClassification, Passed)]
-    else pure [(epistemicClassification, Failed "Epistemic tests failed")]
-
-public export
-runChoreographicCategoryTests : IO (List (TestMetadata, TestResult))
-runChoreographicCategoryTests =
-  if runChoreographicTests
-    then pure [(choreographicClassification, Passed)]
-    else pure [(choreographicClassification, Failed "Choreographic tests failed")]
-
-public export
-runDependentCategoryTests : IO (List (TestMetadata, TestResult))
-runDependentCategoryTests =
-  if runDependentTests
-    then pure [(dependentClassification, Passed)]
-    else pure [(dependentClassification, Failed "Dependent tests failed")]
-
-public export
-runEffectsCategoryTests : IO (List (TestMetadata, TestResult))
-runEffectsCategoryTests =
-  if runEffectsTests
-    then pure [(effectsClassification, Passed)]
-    else pure [(effectsClassification, Failed "Effects tests failed")]
-
-public export
-runDecorativeCategoryTests : IO (List (TestMetadata, TestResult))
-runDecorativeCategoryTests =
-  if runDecorativeTests
-    then pure [(decorativeClassification, Passed)]
-    else pure [(decorativeClassification, Failed "Decorative tests failed")]
-
-public export
-runCeremonialCategoryTests : IO (List (TestMetadata, TestResult))
-runCeremonialCategoryTests =
-  if runCeremonialTests
-    then pure [(ceremonialClassification, Passed)]
-    else pure [(ceremonialClassification, Failed "Ceremonial tests failed")]
-
-public export
-runDyadicCategoryTests : IO (List (TestMetadata, TestResult))
-runDyadicCategoryTests =
-  if runDyadicTests
-    then pure [(dyadicClassification, Passed)]
-    else pure [(dyadicClassification, Failed "Dyadic tests failed")]
-
-public export
-runBridgeTests : IO (List (TestMetadata, TestResult))
-runBridgeTests =
-  if allBridgeTestsPass
-    then pure [(bridgeClassification, Passed)]
-    else pure [(bridgeClassification, Failed "Bridge tests failed")]
-
---/ Run all type-safe category tests
-public export
-runTypeSafeTests : IO (List (TestMetadata, TestResult))
-runTypeSafeTests = do
-  results <- sequence
-    [ runTropicalCategoryTests
-    , runEpistemicCategoryTests
-    , runChoreographicCategoryTests
-    , runDependentCategoryTests
-    , runEffectsCategoryTests
-    , runDecorativeCategoryTests
-    , runCeremonialCategoryTests
-    , runDyadicCategoryTests
-    , runBridgeTests
-    ]
-  pure (concat results)
-
--- =============================================================================
--- PROOF-REGRESSION (ACTUALLY-PROVEN)
--- =============================================================================
-
---/ The tropical semiring laws are machine-checked in ProvenTests.Tropical, so
---/ this records them as an Actually-Proven proof-regression entry — the build
---/ itself is the proof. The runtime spot-check also exercises the operations.
-public export
-runTropicalLawTests : IO (List (TestMetadata, TestResult))
-runTropicalLawTests =
-  if tropicalLawsHold && batonContractHolds
-    then pure [(tropicalLawsClassification, Passed)]
-    else pure [(tropicalLawsClassification, Failed "Tropical law / Baton contract spot-check failed")]
-
--- =============================================================================
 -- COMPREHENSIVE TEST SUITE
 -- =============================================================================
-
---/ The first populated Zigzag cell: a real End-to-End test (see ProvenTests.E2E).
-public export
-runE2ECategoryTests : IO (List (TestMetadata, TestResult))
-runE2ECategoryTests = do
-  r <- runE2ETest
-  pure [(e2eClassification, r)]
-
---/ Run all tests including the self-classification check
-public export
-runAllTests : IO (List (TestMetadata, TestResult))
-runAllTests = do
-  self     <- runSelfClassification
-  tropical <- runTropicalLawTests
-  e2e      <- runE2ECategoryTests
-  typeSafe <- runTypeSafeTests
-  pure (self :: (tropical ++ e2e ++ typeSafe))
 
 --/ Pretty-print a single result line (with its lattice coordinate, if recorded)
 printResult : (TestMetadata, TestResult) -> IO ()
@@ -188,15 +62,17 @@ isPassR Passed = True
 isPassR _      = False
 
 --/ Run the comprehensive suite with a summary; returns True iff all passed.
---/ Coverage is derived from the cells that actually ran and passed.
+--/ Includes the framework's self-classification check (Reflexive) alongside
+--/ the lattice cells. Coverage is derived only from cells that ran and passed.
 public export
 runComprehensiveSuite : IO Bool
 runComprehensiveSuite = do
   putStrLn "=== Proven-Tests Framework ==="
   putStrLn zigzagSummary
   putStrLn ""
+  self <- runSelfClassification
   cellResults <- runAllCells
-  let entries = map (\(_, m, r) => (m, r)) cellResults
+  let entries = self :: map (\(_, m, r) => (m, r)) cellResults
   traverse_ printResult entries
   putStrLn ""
   putStrLn "=== Test Summary ==="

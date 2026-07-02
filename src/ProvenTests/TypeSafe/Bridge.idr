@@ -1,10 +1,6 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
 module ProvenTests.TypeSafe.Bridge
@@ -22,10 +18,14 @@ import ProvenTests.TypeSafe.Ceremonial
 import ProvenTests.TypeSafe.Dyadic
 
 -- =============================================================================
--- ECHO-TYPES INTEGRATION BRIDGE
+-- ECHO-TYPES INTEGRATION BRIDGE (STAND-IN)
 -- =============================================================================
--- This module provides the integration bridge between Proven-Tests
--- and the echo-types repository for advanced type theory testing
+-- HONESTY NOTE: this module is a stand-in contract, not a live integration.
+-- There is no dependency on the echo-types repository: `EchoTypesBridge` is a
+-- hardcoded record and the "bridge" checks below are structural (list length,
+-- URL prefix, version string). They pin down the intended contract shape so a
+-- future real integration has something to satisfy, and they are graded
+-- accordingly — nothing in this module claims more than Provisionally-Proven.
 
 
 -- Bridge configuration
