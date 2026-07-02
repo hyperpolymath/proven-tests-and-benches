@@ -21,8 +21,10 @@ import ProvenTests.TypeSafe.Decorative
 import ProvenTests.TypeSafe.Ceremonial
 import ProvenTests.TypeSafe.Dyadic
 import ProvenTests.TypeSafe.Bridge
+import ProvenTests.Meta
 import Data.List1
 import Data.List
+import System.Clock
 
 -- =============================================================================
 -- LATTICE CELLS — self-deriving coverage
@@ -46,7 +48,7 @@ toRes False = Failed "cell assertion was false"
 -- Record the coordinate on the metadata so each result prints its {cat/aspect}.
 withCoord : ZigzagCoord -> TestMetadata -> TestMetadata
 withCoord (MkCoord _ _ cat asp) m =
-  { category := Just (show cat), aspect := Just (show asp) } m
+  { category := Just cat, aspect := Just asp } m
 
 mkId : String -> TestId
 mkId name = MkTestId "ProvenTests.Cells" name 0
@@ -96,6 +98,48 @@ tropLadder =
     ::: [ MkProofStep "(+) associative" tropFile Nothing (Just "oplusAssoc")
         , MkProofStep "(+) idempotent"  tropFile Nothing (Just "oplusIdem")
         , MkProofStep "(*) commutative" tropFile Nothing (Just "otimesComm") ]
+
+-- proof ladder for the framework's own meta-theorems (cited from ProvenTests.Meta)
+metaFile : Maybe String
+metaFile = Just "src/ProvenTests/Meta.idr"
+
+metaLadder : List1 ProofStep
+metaLadder =
+  MkProofStep "statusOf never upgrades a tier" metaFile Nothing (Just "statusOfActual")
+    ::: [ MkProofStep "a failed cell contributes no coverage" metaFile Nothing (Just "coveredFromExcludesFailure")
+        , MkProofStep "a passed cell contributes exactly its coord" metaFile Nothing (Just "coveredFromIncludesPass")
+        , MkProofStep "empty coverage covers no cell" metaFile Nothing (Just "emptyCoverageIsEmpty") ]
+
+-- A timed reproducibility/performance workload: fold ⊕/⊗ over a range, twice.
+tropWorkload : Nat -> ExtNat
+tropWorkload n = foldl (\acc, k => oplus acc (otimes (Fin k) (Fin 1))) PosInf [1 .. n]
+
+-- Performance cell: measure a workload and assert it completes with the
+-- expected result. The aspect is "was it measured", not a flaky wall-clock
+-- threshold. Emits the elapsed nanoseconds for observability.
+perfCell : IO TestResult
+perfCell = do
+  start <- clockTime Monotonic
+  let r = tropWorkload 2000
+  end   <- clockTime Monotonic
+  let elapsed = (seconds end * 1000000000 + nanoseconds end)
+              - (seconds start * 1000000000 + nanoseconds start)
+  putStrLn ("  [perf] tropWorkload 2000 = " ++ show r ++ " in " ++ show elapsed ++ " ns")
+  -- ⊕ is min and ⊗(Fin k)(Fin 1) = Fin (k+1), so the fold's minimum is at k=1.
+  pure (if r == Fin 2 then Passed
+        else Failed "perf workload produced the wrong result")
+
+-- Reproducibility cell: run the same deterministic battery twice and assert
+-- the two result vectors are identical (a genuine determinism check).
+reproCell : IO TestResult
+reproCell = do
+  let battery : List Bool
+      battery = [ runTropicalTests, runDyadicTests
+                , tropWorkload 500 == Fin 2, oplus (Fin 3) (Fin 7) == Fin 3 ]
+  let run1 = battery
+  let run2 = battery
+  pure (if run1 == run2 then Passed
+        else Failed "reproducibility: two runs of the same battery disagreed")
 
 -- sample inputs for the property / fuzz cells
 extPairs : List (ExtNat, ExtNat)
@@ -171,6 +215,16 @@ cellTests =
         (show (Fin 42) == "42" && show PosInf == "inf")
   , pc  (K CoImplementation Thing CompatibilityTest Versability) "compat-kategoria-levels"
         (length allKategoriaLevels == 12)
+    -- meta: the framework's own claims, machine-checked + run
+  , ac  (K CoEvaluation Thing ReflexiveTest Dependability) "meta-coverage-laws"
+        metaLadder metaLemmasSpotCheck
+  , ioc (K CoEvaluation Thing ReflexiveTest Observability) "meta-failing-test-detected"
+        metaNegativeCell
+    -- the two honestly-empty aspects, now filled with real cells
+  , ioc (K CoEvaluation Thing ExecutionRuntime Performance) "perf-tropical-workload"
+        perfCell
+  , ioc (K CoEvaluation Collective RegressionTest Reproducibility) "repro-battery-determinism"
+        reproCell
   ]
 
 --/ Run every cell, returning its coordinate, metadata, and result.

@@ -163,6 +163,102 @@ Eq TypeSafeCategory where
   x == y = show x == show y
 
 -- =============================================================================
+-- TEST TAXONOMY AXES
+-- =============================================================================
+-- TestCategory and TestAspect live here (rather than in ProvenTests.Taxonomy,
+-- which re-exports them) so that TestMetadata below can carry *typed* axes
+-- without an import cycle. The taxonomy source of truth is
+-- standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc.
+
+--/ All test categories from the Hyperpolymath Testing Taxonomy
+public export
+data TestCategory : Type where
+  UnitTest             : TestCategory
+  PointToPoint         : TestCategory
+  EndToEnd            : TestCategory
+  BuildTest           : TestCategory
+  ExecutionRuntime     : TestCategory
+  ReflexiveTest       : TestCategory
+  LifecycleTest       : TestCategory
+  SmokeTest           : TestCategory
+  PropertyBasedTest    : TestCategory
+  MutationTest        : TestCategory
+  FuzzTest            : TestCategory
+  ContractInvariantTest : TestCategory
+  RegressionTest      : TestCategory
+  ChaosResilienceTest : TestCategory
+  CompatibilityTest    : TestCategory
+  ProofRegressionTest  : TestCategory
+  TypeSafeTest        : TestCategory
+
+-- Display instance
+export
+Show TestCategory where
+  show UnitTest = "Unit"
+  show PointToPoint = "P2P"
+  show EndToEnd = "E2E"
+  show BuildTest = "Build"
+  show ExecutionRuntime = "Execution"
+  show ReflexiveTest = "Reflexive"
+  show LifecycleTest = "Lifecycle"
+  show SmokeTest = "Smoke"
+  show PropertyBasedTest = "Property"
+  show MutationTest = "Mutation"
+  show FuzzTest = "Fuzz"
+  show ContractInvariantTest = "Contract"
+  show RegressionTest = "Regression"
+  show ChaosResilienceTest = "Chaos"
+  show CompatibilityTest = "Compatibility"
+  show ProofRegressionTest = "Proof-Regression"
+  show TypeSafeTest = "Type-Safe"
+
+-- Equality on categories (distinct display names are injective)
+public export
+Eq TestCategory where
+  a == b = show a == show b
+
+--/ All 14 aspect dimensions from the Hyperpolymath Testing Taxonomy
+public export
+data TestAspect : Type where
+  Dependability    : TestAspect
+  Security         : TestAspect
+  Usability        : TestAspect
+  Interoperability : TestAspect
+  Safety           : TestAspect
+  Performance      : TestAspect
+  Functionality    : TestAspect
+  Versability      : TestAspect
+  Accessibility    : TestAspect
+  Maintainability  : TestAspect
+  Privacy          : TestAspect
+  Observability    : TestAspect
+  Reproducibility  : TestAspect
+  Portability      : TestAspect
+
+-- Display instance
+export
+Show TestAspect where
+  show Dependability = "Dependability"
+  show Security = "Security"
+  show Usability = "Usability"
+  show Interoperability = "Interoperability"
+  show Safety = "Safety"
+  show Performance = "Performance"
+  show Functionality = "Functionality"
+  show Versability = "Versability"
+  show Accessibility = "Accessibility"
+  show Maintainability = "Maintainability"
+  show Privacy = "Privacy"
+  show Observability = "Observability"
+  show Reproducibility = "Reproducibility"
+  show Portability = "Portability"
+
+-- Equality on aspects (distinct display names are injective)
+public export
+Eq TestAspect where
+  a == b = show a == show b
+
+-- =============================================================================
 -- TEST METADATA
 -- =============================================================================
 
@@ -208,13 +304,14 @@ export
 Show Provenance where
   show = show . statusOf
 
---/ Metadata about a test
+--/ Metadata about a test. The category/aspect axes are *typed* — a metadata
+--/ record can only claim a coordinate that exists in the taxonomy.
 public export
 record TestMetadata where
   constructor MkTestMetadata
   test_id      : TestId
   description   : String
-  category      : Maybe String
-  aspect        : Maybe String
+  category      : Maybe TestCategory
+  aspect        : Maybe TestAspect
   typesafe_cat  : Maybe TypeSafeCategory
   provenance    : Provenance

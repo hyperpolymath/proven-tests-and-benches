@@ -49,7 +49,7 @@ e2eClassification =
                (MkTestId "ProvenTests.E2E" "frameworkPipeline" 0)
                "E2E: build a suite, run it through Framework.runSuite, verify the report"
                provenTestsFrameworkProof cert
-  in { category := Just (show EndToEnd), aspect := Just (show Dependability) } base
+  in { category := Just EndToEnd, aspect := Just Dependability } base
 
 --/ The Baton carrying this cell across the mesh (coordinate + provenance + cost).
 public export

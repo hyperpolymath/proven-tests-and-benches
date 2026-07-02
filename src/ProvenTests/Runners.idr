@@ -39,7 +39,7 @@ runSelfClassification =
 printResult : (TestMetadata, TestResult) -> IO ()
 printResult (meta, result) =
   let coord = case (category meta, aspect meta) of
-                (Just c, Just a) => " {" ++ c ++ "/" ++ a ++ "}"
+                (Just c, Just a) => " {" ++ show c ++ "/" ++ show a ++ "}"
                 _                => ""
   in putStrLn ("[" ++ show (getProvenStatus meta) ++ "] "
             ++ show (test_id meta) ++ coord ++ ": " ++ show result)
@@ -56,10 +56,6 @@ summaryLine rs =
   let count = length rs in
   let verdict = if passed == count then "all passed" else "some failed" in
   "Passed: " ++ show passed ++ "/" ++ show count ++ "  (" ++ verdict ++ ")"
-
-isPassR : TestResult -> Bool
-isPassR Passed = True
-isPassR _      = False
 
 --/ Run the comprehensive suite with a summary; returns True iff all passed.
 --/ Includes the framework's self-classification check (Reflexive) alongside
@@ -78,7 +74,5 @@ runComprehensiveSuite = do
   putStrLn "=== Test Summary ==="
   putStrLn (summaryLine entries)
   putStrLn ""
-  let covered = map (\(co, _, _) => co)
-                    (filter (\(_, _, r) => isPassR r) cellResults)
-  putStr (coverageReportFrom covered)
+  putStr (coverageReportFrom (coveredFrom cellResults))
   pure (all isPassed entries)

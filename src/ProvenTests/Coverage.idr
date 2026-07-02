@@ -26,6 +26,17 @@ public export
 cellCoveredBy : List ZigzagCoord -> TestCategory -> TestAspect -> Bool
 cellCoveredBy cov c a = any (\z => category z == c && aspect z == a) cov
 
+--/ Derive covered coordinates from run results: only cells that ran and PASSED
+--/ count. Failed/Error/Skipped contribute nothing (machine-checked in
+--/ ProvenTests.Meta: coveredFromExcludesFailure et al.).
+public export
+coveredFrom : List (ZigzagCoord, TestMetadata, TestResult) -> List ZigzagCoord
+coveredFrom = mapMaybe pick
+  where
+    pick : (ZigzagCoord, TestMetadata, TestResult) -> Maybe ZigzagCoord
+    pick (co, _, Passed) = Just co
+    pick _               = Nothing
+
 --/ Number of (category x aspect) cells with at least one covered coordinate.
 public export
 coveredCatAspect : List ZigzagCoord -> Nat

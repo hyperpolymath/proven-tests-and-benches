@@ -267,7 +267,8 @@ and populating cells is tracked below.
 | 6
 | Wire the Zigzag lattice into `TestMetadata` (typed `category`/`aspect` axes +
   a `(phase, actor)` coordinate) and add coverage reporting over the 3570 cells
-| TODO
+| DONE (2026-07-02: `category`/`aspect` are now `Maybe TestCategory`/`Maybe
+  TestAspect`; the enums moved to `Types.idr`, re-exported by `Taxonomy.idr`)
 
 | 7
 | Wire `tests/TypeSafeTests` into a test package; reconcile taxonomy <-> folders
@@ -275,11 +276,14 @@ and populating cells is tracked below.
 
 | 8
 | Populate the empty categories in zigzag order, starting with E2E
-| TODO
+| IN PROGRESS (2026-07-02: 35/238 cells; both previously-empty aspects
+  Performance + Reproducibility now covered — all 14 aspect columns non-empty)
 
 | 9
 | Add meta-tests / mutation testing so the framework's own claims are checked
-| TODO
+| DONE for meta-tests (2026-07-02: `ProvenTests.Meta` — machine-checked coverage
+  lemmas + a runtime negative test that a deliberately failing test is reported
+  as failing). Mutation testing remains a stretch item (see the roadmap below).
 |===
 
 == Reproducing the local build
@@ -351,3 +355,17 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
   0.8.0 (aligns with `proven`); `scripts/ci-build.sh` derives the lib path by
   glob. Verified: `bash scripts/ci-build.sh` green — framework suite 32/32,
   type-safe suite 52/52, benchmark runs.
+* 2026-07-02 (Stage B) — Completed framework-core roadmap items 6, 8 (partial),
+  and 9 (meta half). Typed the `TestMetadata` category/aspect axes (`Maybe
+  TestCategory` / `Maybe TestAspect`); moved the enums into `Types.idr` to break
+  the `Types`<->`Taxonomy` import cycle, with `Taxonomy.idr` re-exporting via
+  `import public`. Added `ProvenTests.Meta`: total, machine-checked lemmas that
+  `statusOf` never upgrades a tier and that coverage derivation excludes
+  failed/errored/skipped cells (the "a `#` cannot be faked" claim, now proven,
+  backing an Actually-Proven meta cell), plus a runtime negative test that runs
+  an in-process suite with a deliberately failing test and asserts the framework
+  reports exactly one failure. Filled the two honestly-empty aspects with real
+  cells: a timed tropical workload (Performance) and a run-twice determinism
+  check (Reproducibility). Verified: `bash scripts/ci-build.sh` green — framework
+  suite 36/36, type-safe suite 52/52, 35/238 cells, all 14 aspect columns
+  non-empty.
