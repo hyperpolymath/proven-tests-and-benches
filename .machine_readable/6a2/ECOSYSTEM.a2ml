@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MPL-2.0
+# ECOSYSTEM.a2ml — Ecosystem position
+
+[metadata]
+project = "proven-tests-and-benches"
+ecosystem = "hyperpolymath"
+
+[position]
+type = "component"
+role = "canonical Idris2 testing + benchmarking framework; provenance-grades other components"
+
+[relations]
+relations = [
+  { project = "proven", relation = "subject", detail = "graded by three-tier provenance from its own ledgers (integrations/proven); the natural first real subject. See proven/.machine_readable/6a2/ECOSYSTEM.a2ml for the reciprocal link." },
+  { project = "panic-attack", relation = "aggregator", detail = "consumes the JSON run report: Actually-Proven ladder files fold into panic-attack aggregate (Closed), and src/aggregate/proven_tests.rs parses the report natively. See docs/INTEROP-PANIC-ATTACK.adoc." },
+  { project = "proven-servers", relation = "abi-pattern-source", detail = "its single-sourced ABI (tools/gen-abi.sh + comptime drift guard) is the model the FFI-parity harness generalizes (docs/FFI-PARITY-DESIGN.adoc E6)." },
+  { project = "bag-of-actions", relation = "aspirational", detail = "the Baton contract (coord + provenance + tropical cost) is the cross-repo CI-mesh interface; consumer side not yet present." },
+  { project = "echo-types", relation = "aspirational", detail = "TypeSafe/Bridge.idr is a stand-in contract only; no dependency yet." },
+]

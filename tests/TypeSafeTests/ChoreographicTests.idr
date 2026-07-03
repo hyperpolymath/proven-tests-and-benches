@@ -1,13 +1,9 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
-module ProvenTests.TypeSafeTests.ChoreographicTests
+module TypeSafeTests.ChoreographicTests
 
 import ProvenTests.TypeSafe.Choreographic
 import ProvenTests.Framework
@@ -25,7 +21,7 @@ choreographicTestId n = MkTestId "ProvenTests.TypeSafe.ChoreographicTests" ("tes
 
 -- Test: Send followed by Recv is valid
 public export
-testChoreographicSendRecvValid : Test ProvisionallyProven
+testChoreographicSendRecvValid : ProvisionallyProvenTest
 testChoreographicSendRecvValid = 
   provisionalTest (choreographicTestId 1) "Send followed by Recv is valid" (
     assertTrue (choreographicSendRecvValid) 
@@ -34,7 +30,7 @@ testChoreographicSendRecvValid =
 
 -- Test: Session ends properly
 public export
-testChoreographicEndsProperly : Test ProvisionallyProven
+testChoreographicEndsProperly : ProvisionallyProvenTest
 testChoreographicEndsProperly = 
   provisionalTest (choreographicTestId 2) "Session ends properly" (
     assertTrue (choreographicEndsProperly dualSession) 
@@ -43,7 +39,7 @@ testChoreographicEndsProperly =
 
 -- Test: No orphaned choices
 public export
-testChoreographicNoOrphanedChoices : Test ProvisionallyProven
+testChoreographicNoOrphanedChoices : ProvisionallyProvenTest
 testChoreographicNoOrphanedChoices = 
   provisionalTest (choreographicTestId 3) "No orphaned choices" (
     assertTrue (choreographicNoOrphanedChoices choiceSession) 
@@ -52,7 +48,7 @@ testChoreographicNoOrphanedChoices =
 
 -- Test: All choreographic tests pass
 public export
-testChoreographicAllTestsPass : Test ProvisionallyProven
+testChoreographicAllTestsPass : ProvisionallyProvenTest
 testChoreographicAllTestsPass = 
   provisionalTest (choreographicTestId 4) "All choreographic tests pass" (
     assertTrue (runChoreographicTests) 
@@ -61,7 +57,7 @@ testChoreographicAllTestsPass =
 
 -- All choreographic tests
 public export
-allChoreographicTests : List (Test ProvisionallyProven)
+allChoreographicTests : List (ProvisionallyProvenTest)
 allChoreographicTests = [
     testChoreographicSendRecvValid,
     testChoreographicEndsProperly,

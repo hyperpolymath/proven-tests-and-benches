@@ -1,10 +1,6 @@
--- SPDX-License-Identifier: AGPL-3.0-or-later
--- SPDX-License-Identifier: CC-BY-SA-4.0
 -- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
 module ProvenTests.Coverage
@@ -29,6 +25,17 @@ import Data.List
 public export
 cellCoveredBy : List ZigzagCoord -> TestCategory -> TestAspect -> Bool
 cellCoveredBy cov c a = any (\z => category z == c && aspect z == a) cov
+
+--/ Derive covered coordinates from run results: only cells that ran and PASSED
+--/ count. Failed/Error/Skipped contribute nothing (machine-checked in
+--/ ProvenTests.Meta: coveredFromExcludesFailure et al.).
+public export
+coveredFrom : List (ZigzagCoord, TestMetadata, TestResult) -> List ZigzagCoord
+coveredFrom = mapMaybe pick
+  where
+    pick : (ZigzagCoord, TestMetadata, TestResult) -> Maybe ZigzagCoord
+    pick (co, _, Passed) = Just co
+    pick _               = Nothing
 
 --/ Number of (category x aspect) cells with at least one covered coordinate.
 public export

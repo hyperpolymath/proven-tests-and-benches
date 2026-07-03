@@ -1,13 +1,9 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
-module ProvenTests.TypeSafeTests.TropicalTests
+module TypeSafeTests.TropicalTests
 
 import ProvenTests.TypeSafe.Tropical
 import ProvenTests.Framework
@@ -25,7 +21,7 @@ tropicalTestId n = MkTestId "ProvenTests.TypeSafe.TropicalTests" ("test_" ++ sho
 
 -- Test: Tropical min is idempotent
 public export
-testTropicalMinIdempotent : Test ProvisionallyProven
+testTropicalMinIdempotent : ProvisionallyProvenTest
 testTropicalMinIdempotent = 
   provisionalTest (tropicalTestId 1) "Tropical min is idempotent" (
     assertTrue (tropicalMinIdempotent exampleBound1) 
@@ -34,7 +30,7 @@ testTropicalMinIdempotent =
 
 -- Test: Tropical plus is commutative
 public export
-testTropicalPlusCommutative : Test ProvisionallyProven
+testTropicalPlusCommutative : ProvisionallyProvenTest
 testTropicalPlusCommutative = 
   provisionalTest (tropicalTestId 2) "Tropical plus is commutative" (
     assertTrue (tropicalPlusCommutative exampleBound1 exampleBound2) 
@@ -43,7 +39,7 @@ testTropicalPlusCommutative =
 
 -- Test: Tropical min identity
 public export
-testTropicalMinIdentity : Test ProvisionallyProven
+testTropicalMinIdentity : ProvisionallyProvenTest
 testTropicalMinIdentity = 
   provisionalTest (tropicalTestId 3) "Tropical min identity property" (
     assertTrue (tropicalMinIdentity exampleBound1) 
@@ -52,7 +48,7 @@ testTropicalMinIdentity =
 
 -- Test: Tropical plus identity
 public export
-testTropicalPlusIdentity : Test ProvisionallyProven
+testTropicalPlusIdentity : ProvisionallyProvenTest
 testTropicalPlusIdentity = 
   provisionalTest (tropicalTestId 4) "Tropical plus identity property" (
     assertTrue (tropicalPlusIdentity exampleBound1) 
@@ -61,7 +57,7 @@ testTropicalPlusIdentity =
 
 -- Test: Resource bounds are non-negative
 public export
-testTropicalNonNegative : Test ProvisionallyProven
+testTropicalNonNegative : ProvisionallyProvenTest
 testTropicalNonNegative = 
   provisionalTest (tropicalTestId 5) "Tropical resource bounds are non-negative" (
     assertTrue (tropicalNonNegative exampleBound1) 
@@ -70,7 +66,7 @@ testTropicalNonNegative =
 
 -- Test: Combined bounds maintain validity
 public export
-testTropicalCombinedBounds : Test ProvisionallyProven
+testTropicalCombinedBounds : ProvisionallyProvenTest
 testTropicalCombinedBounds = 
   provisionalTest (tropicalTestId 6) "Tropical combined bounds maintain validity" (
     assertTrue (tropicalCombinedBounds exampleBound1 exampleBound2) 
@@ -79,7 +75,7 @@ testTropicalCombinedBounds =
 
 -- Test: Order preserving property
 public export
-testTropicalOrderPreserving : Test ProvisionallyProven
+testTropicalOrderPreserving : ProvisionallyProvenTest
 testTropicalOrderPreserving = 
   provisionalTest (tropicalTestId 7) "Tropical operations preserve order" (
     assertTrue (tropicalOrderPreserving exampleBound1 exampleBound2) 
@@ -88,7 +84,7 @@ testTropicalOrderPreserving =
 
 -- All tropical tests
 public export
-allTropicalTests : List (Test ProvisionallyProven)
+allTropicalTests : List (ProvisionallyProvenTest)
 allTropicalTests = [
     testTropicalMinIdempotent,
     testTropicalPlusCommutative,

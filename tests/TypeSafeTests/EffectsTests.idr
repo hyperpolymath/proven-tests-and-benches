@@ -1,13 +1,9 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
-module ProvenTests.TypeSafeTests.EffectsTests
+module TypeSafeTests.EffectsTests
 
 import ProvenTests.TypeSafe.Effects
 import ProvenTests.Framework
@@ -25,7 +21,7 @@ effectsTestId n = MkTestId "ProvenTests.TypeSafe.EffectsTests" ("test_" ++ show 
 
 -- Test: Pure effect has no side effects
 public export
-testEffectPureIsPure : Test ProvisionallyProven
+testEffectPureIsPure : ProvisionallyProvenTest
 testEffectPureIsPure = 
   provisionalTest (effectsTestId 1) "Pure effect has no side effects" (
     assertTrue (effectPureIsPure Pure) 
@@ -34,7 +30,7 @@ testEffectPureIsPure =
 
 -- Test: Effect stack is valid
 public export
-testEffectStackValid : Test ProvisionallyProven
+testEffectStackValid : ProvisionallyProvenTest
 testEffectStackValid = 
   provisionalTest (effectsTestId 2) "Effect stack is valid" (
     assertTrue (effectStackValid stateStack) 
@@ -43,7 +39,7 @@ testEffectStackValid =
 
 -- Test: State effect implies Read and Write
 public export
-testEffectStateImpliesReadWrite : Test ProvisionallyProven
+testEffectStateImpliesReadWrite : ProvisionallyProvenTest
 testEffectStateImpliesReadWrite = 
   provisionalTest (effectsTestId 3) "State effect implies Read and Write" (
     assertTrue (effectStateImpliesReadWrite stateStack) 
@@ -52,7 +48,7 @@ testEffectStateImpliesReadWrite =
 
 -- Test: Effect order matters for State
 public export
-testEffectOrderMatters : Test ProvisionallyProven
+testEffectOrderMatters : ProvisionallyProvenTest
 testEffectOrderMatters = 
   provisionalTest (effectsTestId 4) "Effect order matters for State" (
     assertTrue (effectOrderMatters stateStack) 
@@ -61,7 +57,7 @@ testEffectOrderMatters =
 
 -- Test: All effects tests pass
 public export
-testEffectsAllTestsPass : Test ProvisionallyProven
+testEffectsAllTestsPass : ProvisionallyProvenTest
 testEffectsAllTestsPass = 
   provisionalTest (effectsTestId 5) "All effects tests pass" (
     assertTrue (runEffectsTests) 
@@ -70,7 +66,7 @@ testEffectsAllTestsPass =
 
 -- All effects tests
 public export
-allEffectsTests : List (Test ProvisionallyProven)
+allEffectsTests : List (ProvisionallyProvenTest)
 allEffectsTests = [
     testEffectPureIsPure,
     testEffectStackValid,

@@ -1,13 +1,9 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
-module ProvenTests.TypeSafeTests.DecorativeTests
+module TypeSafeTests.DecorativeTests
 
 import ProvenTests.TypeSafe.Decorative
 import ProvenTests.Framework
@@ -25,7 +21,7 @@ decorativeTestId n = MkTestId "ProvenTests.TypeSafe.DecorativeTests" ("test_" ++
 
 -- Test: Decoration preserves underlying value
 public export
-testDecorationPreservesValue : Test ProvisionallyProven
+testDecorationPreservesValue : ProvisionallyProvenTest
 testDecorationPreservesValue = 
   provisionalTest (decorativeTestId 1) "Decoration preserves value" (
     assertTrue ((decorationPreservesValue Nat testDecorated) == 42) 
@@ -34,7 +30,7 @@ testDecorationPreservesValue =
 
 -- Test: Decoration has metadata
 public export
-testDecorationHasMetadata : Test ProvisionallyProven
+testDecorationHasMetadata : ProvisionallyProvenTest
 testDecorationHasMetadata = 
   provisionalTest (decorativeTestId 2) "Decoration has metadata" (
     assertTrue (decorationHasMetadata testDecorated) 
@@ -43,7 +39,7 @@ testDecorationHasMetadata =
 
 -- Test: Decoration is timestamped
 public export
-testDecorationIsTimestamped : Test ProvisionallyProven
+testDecorationIsTimestamped : ProvisionallyProvenTest
 testDecorationIsTimestamped = 
   provisionalTest (decorativeTestId 3) "Decoration is timestamped" (
     assertTrue (decorationIsTimestamped testDecorated) 
@@ -52,7 +48,7 @@ testDecorationIsTimestamped =
 
 -- Test: Decoration equality works
 public export
-testDecorationEquality : Test ProvisionallyProven
+testDecorationEquality : ProvisionallyProvenTest
 testDecorationEquality = 
   provisionalTest (decorativeTestId 4) "Decoration equality works" (
     assertTrue (decorationEquality Nat testDecorated testDecorated) 
@@ -61,7 +57,7 @@ testDecorationEquality =
 
 -- Test: Decorator instance works
 public export
-testDecoratorInstanceWorks : Test ProvisionallyProven
+testDecoratorInstanceWorks : ProvisionallyProvenTest
 testDecoratorInstanceWorks = 
   provisionalTest (decorativeTestId 5) "Decorator instance works" (
     assertTrue (decoratorInstanceWorks) 
@@ -70,7 +66,7 @@ testDecoratorInstanceWorks =
 
 -- Test: All decorative tests pass
 public export
-testDecorativeAllTestsPass : Test ProvisionallyProven
+testDecorativeAllTestsPass : ProvisionallyProvenTest
 testDecorativeAllTestsPass = 
   provisionalTest (decorativeTestId 6) "All decorative tests pass" (
     assertTrue (runDecorativeTests) 
@@ -79,7 +75,7 @@ testDecorativeAllTestsPass =
 
 -- All decorative tests
 public export
-allDecorativeTests : List (Test ProvisionallyProven)
+allDecorativeTests : List (ProvisionallyProvenTest)
 allDecorativeTests = [
     testDecorationPreservesValue,
     testDecorationHasMetadata,

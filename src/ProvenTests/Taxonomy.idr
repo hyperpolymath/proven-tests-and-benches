@@ -1,112 +1,20 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
 module ProvenTests.Taxonomy
 
-import ProvenTests.Types
+import public ProvenTests.Types
 import ProvenTests.Classification
 
 -- =============================================================================
--- TEST CATEGORY TAXONOMY (from standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc)
+-- TEST CATEGORY TAXONOMY
 -- =============================================================================
-
---/ All test categories from the Hyperpolymath Testing Taxonomy
-public export
-data TestCategory : Type where
-  UnitTest             : TestCategory
-  PointToPoint         : TestCategory
-  EndToEnd            : TestCategory
-  BuildTest           : TestCategory
-  ExecutionRuntime     : TestCategory
-  ReflexiveTest       : TestCategory
-  LifecycleTest       : TestCategory
-  SmokeTest           : TestCategory
-  PropertyBasedTest    : TestCategory
-  MutationTest        : TestCategory
-  FuzzTest            : TestCategory
-  ContractInvariantTest : TestCategory
-  RegressionTest      : TestCategory
-  ChaosResilienceTest : TestCategory
-  CompatibilityTest    : TestCategory
-  ProofRegressionTest  : TestCategory
-  TypeSafeTest        : TestCategory  -- NEW: Type-safe testing category
-
--- Display instance
-export
-Show TestCategory where
-  show UnitTest = "Unit"
-  show PointToPoint = "P2P"
-  show EndToEnd = "E2E"
-  show BuildTest = "Build"
-  show ExecutionRuntime = "Execution"
-  show ReflexiveTest = "Reflexive"
-  show LifecycleTest = "Lifecycle"
-  show SmokeTest = "Smoke"
-  show PropertyBasedTest = "Property"
-  show MutationTest = "Mutation"
-  show FuzzTest = "Fuzz"
-  show ContractInvariantTest = "Contract"
-  show RegressionTest = "Regression"
-  show ChaosResilienceTest = "Chaos"
-  show CompatibilityTest = "Compatibility"
-  show ProofRegressionTest = "Proof-Regression"
-  show TypeSafeTest = "Type-Safe"
-
--- Equality on categories (distinct display names are injective)
-public export
-Eq TestCategory where
-  a == b = show a == show b
-
--- =============================================================================
--- ASPECT DIMENSIONS (from TESTING-TAXONOMY.adoc Part II)
--- =============================================================================
-
---/ All 14 aspect dimensions from Hyperpolymath Testing Taxonomy
-public export
-data TestAspect : Type where
-  Dependability    : TestAspect
-  Security         : TestAspect
-  Usability        : TestAspect
-  Interoperability : TestAspect
-  Safety           : TestAspect
-  Performance      : TestAspect
-  Functionality    : TestAspect
-  Versability      : TestAspect
-  Accessibility    : TestAspect
-  Maintainability  : TestAspect
-  Privacy          : TestAspect
-  Observability    : TestAspect
-  Reproducibility  : TestAspect
-  Portability      : TestAspect
-
--- Display instance
-export
-Show TestAspect where
-  show Dependability = "Dependability"
-  show Security = "Security"
-  show Usability = "Usability"
-  show Interoperability = "Interoperability"
-  show Safety = "Safety"
-  show Performance = "Performance"
-  show Functionality = "Functionality"
-  show Versability = "Versability"
-  show Accessibility = "Accessibility"
-  show Maintainability = "Maintainability"
-  show Privacy = "Privacy"
-  show Observability = "Observability"
-  show Reproducibility = "Reproducibility"
-  show Portability = "Portability"
-
--- Equality on aspects (distinct display names are injective)
-public export
-Eq TestAspect where
-  a == b = show a == show b
+-- TestCategory and TestAspect are defined in ProvenTests.Types (so that
+-- TestMetadata can carry typed axes) and re-exported here via
+-- `import public ProvenTests.Types`. The enumerations and provenance
+-- mapping below remain the taxonomy utilities.
 
 -- =============================================================================
 -- TYPE-SAFE TESTING SUBCATEGORIES

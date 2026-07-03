@@ -1,13 +1,9 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
-module ProvenTests.TypeSafeTests.DyadicTests
+module TypeSafeTests.DyadicTests
 
 import ProvenTests.TypeSafe.Dyadic
 import ProvenTests.Framework
@@ -25,7 +21,7 @@ dyadicTestId n = MkTestId "ProvenTests.TypeSafe.DyadicTests" ("test_" ++ show n)
 
 -- Test: Relation is reflexive
 public export
-testRelationReflexive : Test ProvisionallyProven
+testRelationReflexive : ProvisionallyProvenTest
 testRelationReflexive = 
   provisionalTest (dyadicTestId 1) "Relation is reflexive" (
     assertTrue (relationReflexive equalityRelation 42) 
@@ -34,7 +30,7 @@ testRelationReflexive =
 
 -- Test: Relation is symmetric
 public export
-testRelationSymmetric : Test ProvisionallyProven
+testRelationSymmetric : ProvisionallyProvenTest
 testRelationSymmetric = 
   provisionalTest (dyadicTestId 2) "Relation is symmetric" (
     assertTrue (relationSymmetric equalityRelation 1 2) 
@@ -43,7 +39,7 @@ testRelationSymmetric =
 
 -- Test: Relation is transitive
 public export
-testRelationTransitive : Test ProvisionallyProven
+testRelationTransitive : ProvisionallyProvenTest
 testRelationTransitive = 
   provisionalTest (dyadicTestId 3) "Relation is transitive" (
     assertTrue (relationTransitive equalityRelation 1 2 3) 
@@ -52,7 +48,7 @@ testRelationTransitive =
 
 -- Test: Relation is equivalence
 public export
-testRelationIsEquivalence : Test ProvisionallyProven
+testRelationIsEquivalence : ProvisionallyProvenTest
 testRelationIsEquivalence = 
   provisionalTest (dyadicTestId 4) "Relation is equivalence" (
     assertTrue (relationIsEquivalence equalityRelation) 
@@ -61,7 +57,7 @@ testRelationIsEquivalence =
 
 -- Test: All dyadic tests pass
 public export
-testDyadicAllTestsPass : Test ProvisionallyProven
+testDyadicAllTestsPass : ProvisionallyProvenTest
 testDyadicAllTestsPass = 
   provisionalTest (dyadicTestId 5) "All dyadic tests pass" (
     assertTrue (runDyadicTests) 
@@ -70,7 +66,7 @@ testDyadicAllTestsPass =
 
 -- All dyadic tests
 public export
-allDyadicTests : List (Test ProvisionallyProven)
+allDyadicTests : List (ProvisionallyProvenTest)
 allDyadicTests = [
     testRelationReflexive,
     testRelationSymmetric,

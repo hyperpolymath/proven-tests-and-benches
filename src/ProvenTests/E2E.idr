@@ -1,10 +1,6 @@
 -- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- SPDX-License-Identifier: MPL-2.0
--- Mozilla Post-Quantum License Provisions v1.0
 --
--- Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
--- Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 --
 
 module ProvenTests.E2E
@@ -53,7 +49,7 @@ e2eClassification =
                (MkTestId "ProvenTests.E2E" "frameworkPipeline" 0)
                "E2E: build a suite, run it through Framework.runSuite, verify the report"
                provenTestsFrameworkProof cert
-  in { category := Just (show EndToEnd), aspect := Just (show Dependability) } base
+  in { category := Just EndToEnd, aspect := Just Dependability } base
 
 --/ The Baton carrying this cell across the mesh (coordinate + provenance + cost).
 public export

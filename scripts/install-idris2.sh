@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MPL-2.0
 #
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
 # Install Idris2 (chez backend) from source into $HOME/.idris2.
 # Idempotent: skips the bootstrap if idris2 is already present (e.g. restored
 # from a CI cache). chezscheme + GMP are always installed because the chez

@@ -1,0 +1,116 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+//
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+//
+= FFI-Parity Harness — Design
+:toc: left
+:toclevels: 3
+
+== Why
+
+`proven` exposes one verified core (Idris2) through a Zig FFI bridge to ~120
+language bindings. `proven`'s own `TEST-NEEDS.md` names the open gap directly:
+
+* "Idris2 spec → Zig FFI → Rust binding → verification roundtrip"
+* "Multi-language consistency: same operation in 120 bindings produces
+  identical results"
+* "89% of bindings (109/120) still untested"
+
+This is exactly the hole this framework exists to fill. A binding is only
+"thin" (per proven's ADR-008) if it returns *the same answer the verified core
+would*. The FFI-parity harness makes that a mechanical, provenance-tagged check.
+
+== The idea: one oracle, many runners
+
+[source]
+----
+   Idris oracle (known provenance)          each proven binding
+   ────────────────────────────────         ────────────────────
+   golden vector {fn, input, expected}  ──►  run fn(input) in <lang>
+                                             assert result == expected
+                                             emit PASS/FAIL + provenance
+----
+
+The *oracle* computes `expected` from a function whose provenance the framework
+already grades. When the oracle is Actually-Proven (e.g. the min-plus semiring
+in `ProvenTests.Tropical`, total proofs), a passing binding inherits a
+provenance-tagged parity guarantee: "this binding agrees with a machine-checked
+oracle on these inputs."
+
+== Golden-vector schema (JSONL, one object per line)
+
+[source,json]
+----
+{"module":"min_plus","function":"min_plus.min","input":[9,1],
+ "expected":1,"oracle_provenance":"ActuallyProven:ProvenTests.Tropical"}
+----
+
+[cols="2,5"]
+|===
+| Field | Meaning
+
+| `module` | the proven module under parity test (e.g. `SafeMath`)
+| `function` | fully-qualified operation
+| `input` | ordered argument list (JSON values marshalled per the binding ABI)
+| `expected` | the oracle's result, rendered canonically
+| `oracle_provenance` | `<tier>:<source>` — the provenance the framework assigned
+  the oracle. A binding cannot inherit a tier the oracle does not hold.
+|===
+
+Optional per-vector fields for the blocked-on phase (see below):
+`libproven_blake3` (the hash of the shared object the vector was generated
+against, for non-repudiation), `abi` (the marshalling contract used).
+
+== Components
+
+.Generator (exists today, in this repo)
+`integrations/proven/src/ProvenSubject/GoldenVectors.idr` emits real vectors for
+the min-plus integer surface, tagged `ActuallyProven:ProvenTests.Tropical`.
+Run: `./build/exec/proven-subject-report golden > vectors.jsonl`.
+The oracle is pure Idris and self-contained — no dependency on proven — so the
+fixture is producible now. When proven ships a real Idris-backed `libproven`,
+swap the oracle for proven's `SafeMath`/`SafeCurrency` functions; the schema and
+every runner are unchanged.
+
+.Per-binding runner (contract; one small program per language)
+Reads `vectors.jsonl`, and for each vector calls the named function in that
+binding and compares to `expected`. Exit code: `0` all-pass, `1` any mismatch,
+`2` unrunnable (binding absent / function unimplemented). Emits one result line
+per vector for the Stage-D report:
+`{function, input, expected, actual, verdict, binding, libproven_blake3}`.
+
+.Aggregator (this framework)
+Folds the per-binding results into a provenance-graded parity report: a binding
+is "parity-Provisional" if it passes all vectors from a Provisionally-Proven
+oracle, "parity-Actual" if it passes all vectors from an Actually-Proven oracle,
+and "parity-failing" otherwise. Reuses the three-tier types in
+`ProvenTests.Types` and the JSON report emitter (Stage D).
+
+== BLOCKED-ON
+
+The end-to-end harness cannot run against proven *today* because the verified
+core is not yet callable:
+
+* `proven/ffi/zig/src/main.zig` does not call Idris — its two real functions are
+  hand-written Zig; the rest are stubs.
+* `proven/bindings/rust/src/ffi.rs` declares ~200 `extern "C"` symbols that do
+  not exist and disagree with the Zig on signatures.
+* The full Idris→RefC→Zig pipeline is deferred behind a private-repo token
+  (proven ADR-003); public CI builds only the standalone Zig surface.
+
+So a runner executed today would be testing hand-written Zig or unlinkable
+bindings, not the verified core. **What is unblocked and done now:** the schema,
+the generator, and a real fixture. **What unblocks the rest:** proven producing a
+genuine `libproven` that exports the declared symbols *from* Idris. At that point
+the generator's oracle switches to proven's own functions and the runners light
+up — no redesign required.
+
+== Relationship to proven-servers
+
+`proven-servers` already single-sources its ABI from Idris (`tools/gen-abi.sh`
+regenerates Zig + C headers from the Idris ABI modules; `e2e.sh` asserts no
+git drift; comptime guards make drift a compile error). That is the same
+"Idris is the source of truth" principle at the ABI layer. The natural
+convergence (stretch item E6) is for this harness's generator to emit its
+golden vectors *through* that single-sourced ABI, so vector marshalling and the
+binding ABI are provably the same contract.

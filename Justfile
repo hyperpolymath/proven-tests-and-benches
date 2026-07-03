@@ -1,188 +1,98 @@
 # SPDX-License-Identifier: MPL-2.0
-# SPDX-License-Identifier: MPL-2.0
 #
-# Copyright (c) 2026 Joshua Jewell (JoshuaJewell)
-# Copyright (c) 2026 Joshua Jewell (hyperpolymath)
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
 
-# Proven-Tests Build and Test Automation
+# Proven-Tests build and test automation.
+# Every recipe reflects a real, working command; scripts/ci-build.sh remains
+# the single source of truth for the full CI gate.
 
-# Default recipe: build and test
-@default:
-    just build
-    just test
+export PATH := env_var("HOME") + "/.idris2/bin:" + env_var("PATH")
 
-# Build the project
-@build:
+# Default: build and run everything
+default: build test
+
+# Build the framework library
+build:
+    idris2 --build proven-tests.ipkg
+
+# Install the framework library (dependents build against it)
+install: build
+    idris2 --install proven-tests.ipkg
+
+# Build and run the framework self-test suite and the type-safe test suite
+test: install
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Building Proven-Tests..."
-    idris2 --build ipkg.json
-    echo "Build complete!"
-
-# Run all tests
-@test:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Running Proven-Tests..."
-    idris2 --exec main -p proven-tests
-
-# Run specific test category
-@test category="all":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    case "{{category}}" in
-        tropical)
-            idris2 --exec main -p proven-tests --category Tropical
-            ;;
-        epistemic)
-            idris2 --exec main -p proven-tests --category Epistemic
-            ;;
-        choreographic)
-            idris2 --exec main -p proven-tests --category Choreographic
-            ;;
-        dependent)
-            idris2 --exec main -p proven-tests --category Dependent
-            ;;
-        effects)
-            idris2 --exec main -p proven-tests --category Effects
-            ;;
-        decorative)
-            idris2 --exec main -p proven-tests --category Decorative
-            ;;
-        ceremonial)
-            idris2 --exec main -p proven-tests --category Ceremonial
-            ;;
-        dyadic)
-            idris2 --exec main -p proven-tests --category Dyadic
-            ;;
-        echo-types)
-            idris2 --exec main -p proven-tests --category EchoTypes
-            ;;
-        all)
-            just test
-            ;;
-        *)
-            echo "Unknown category: {{category}}"
-            exit 1
-            ;;
-    esac
-
-# Run type-safe tests only
-@test-typesafe:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    idris2 --exec main -p proven-tests --typesafe-only
-
-# Run benchmarks
-@bench:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Running benchmarks..."
-    for bench in benchmarks/*; do
-        if [ -f "$bench" ] && [ -x "$bench" ]; then
-            echo "Running $bench..."
-            "$bench"
-        fi
+    for libdir in "$HOME"/.idris2/idris2-*/lib; do
+        export LD_LIBRARY_PATH="$libdir:${LD_LIBRARY_PATH:-}"
     done
+    idris2 --build proven-tests-suite.ipkg
+    ./build/exec/proven-tests
+    ./build/exec/proven-tests-suite
 
-# Clean build artifacts
-@clean:
+# Run only the type-safe category suite package
+test-typesafe: install
     #!/usr/bin/env bash
     set -euo pipefail
-    rm -rf build/ .idris2/ *.ibc *.ibc.*
-    echo "Cleaned!"
+    for libdir in "$HOME"/.idris2/idris2-*/lib; do
+        export LD_LIBRARY_PATH="$libdir:${LD_LIBRARY_PATH:-}"
+    done
+    idris2 --build proven-tests-suite.ipkg
+    ./build/exec/proven-tests-suite
 
-# Install the package
-@install:
+# Build and run the benchmark harness
+bench: install
     #!/usr/bin/env bash
     set -euo pipefail
-    idris2 --install ipkg.json
-    echo "Installed!"
+    for libdir in "$HOME"/.idris2/idris2-*/lib; do
+        export LD_LIBRARY_PATH="$libdir:${LD_LIBRARY_PATH:-}"
+    done
+    idris2 --build benchmarks/benchmark.ipkg
+    ./benchmarks/build/exec/proven-bench
 
-# Generate documentation
-@docs:
-    #!/usr/bin/env bash
-    set -euo pipefil
-    echo "Generating documentation..."
-    # Would need idris2-doc or similar tool
-    echo "Documentation generation not yet implemented"
+# Run the full CI gate (what the hosted pipelines run)
+ci:
+    bash scripts/ci-build.sh
 
-# Verify all tests pass
-@verify:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    just build
-    just test
-    just bench
-    echo "All verifications passed!"
+# Remove build artifacts
+clean:
+    rm -rf build benchmarks/build
 
-# Generate coverage report
-@coverage:
+# Report proof escape hatches (the honesty lint)
+lint:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Coverage reporting not yet implemented for Idris2"
-    # Would need idris2-coverage or similar
+    echo "Scanning for proof escape hatches..."
+    grep -rn "believe_me\|assert_total\|%partial\|unsafePerformIO" src/ tests/ benchmarks/ --include="*.idr" || echo "none found"
 
-# Lint the codebase
-@lint:
+# Print the shields.io badge URL for the current CRG grade
+crg-badge:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Linting..."
-    # Check for common issues
-    grep -r "sorry" src/ || true
-    grep -r "undefined" src/ || true
-    echo "Linting complete!"
-
-# Run CI/CD wellness tests
-@ci-wellness:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Running CI/CD wellness checks..."
-    just build
-    just test
-    just lint
-    echo "CI/CD wellness checks passed!"
-
-# Run tests of tests (meta-tests)
-@meta-test:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Running meta-tests (tests of tests)..."
-    # This would test the test framework itself
-    echo "Meta-tests not yet implemented"
-
-# Generate CRG badge
-@crg-badge:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Generating CRG badge..."
-    GRADE=$(grep "Current Grade:" READINESS.adoc | head -1 | sed 's/.*Current Grade: \([A-Z]\)).*/\1/')
-    if [ -z "$GRADE" ]; then
-        GRADE="X"
-    fi
+    GRADE=$(grep "Current Grade:" READINESS.adoc | head -1 | sed 's/.*Current Grade:[^A-Z]*\([A-Z]\).*/\1/')
+    [ -z "$GRADE" ] && GRADE="X"
     case "$GRADE" in
         A) COLOR="brightgreen" ;;
         B) COLOR="green" ;;
         C) COLOR="yellowgreen" ;;
         D) COLOR="orange" ;;
         E|F) COLOR="red" ;;
-        X) COLOR="lightgrey" ;;
         *) COLOR="lightgrey" ;;
     esac
     echo "https://img.shields.io/badge/CRG-${GRADE}-${COLOR}?style=flat-square"
 
-# Check CRG compliance
-@crg-grade:
+# Print the current Component Readiness Grade
+crg-grade:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Checking CRG compliance..."
-    GRADE=$(grep "Current Grade:" READINESS.adoc | head -1 | sed 's/.*Current Grade: \([A-Z]\)).*/\1/')
+    GRADE=$(grep "Current Grade:" READINESS.adoc | head -1 | sed 's/.*Current Grade:[^A-Z]*\([A-Z]\).*/\1/')
     if [ -z "$GRADE" ]; then
         echo "ERROR: No Current Grade found in READINESS.adoc"
         exit 1
     fi
     echo "Current CRG Grade: $GRADE"
-    echo "Compliance check passed!"
 
+# Best-effort verified-secret scan (no-op if trufflehog absent)
 secret-scan-trufflehog:
     @command -v trufflehog >/dev/null && trufflehog filesystem . --only-verified || true
