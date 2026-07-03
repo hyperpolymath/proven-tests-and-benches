@@ -9,6 +9,9 @@ import ProvenTests.Types
 import ProvenTests.Classification
 import ProvenTests.Taxonomy
 import ProvenTests.Framework
+import Data.List
+import Data.List1
+import Data.String
 
 -- =============================================================================
 -- REPORT DATA STRUCTURES
@@ -158,3 +161,85 @@ printReport (MkSuiteReport name tests start end totalCount p f e s) = do
   
   putStrLn ""
   putStrLn "=== END REPORT ==="
+
+-- =============================================================================
+-- MACHINE-READABLE RUN REPORT (schema_version 1)
+-- =============================================================================
+-- A stable JSON document describing a run: per-test provenance (with proof
+-- ladders for Actually-Proven tests) plus a coverage summary. This is the
+-- estate-interop surface — panic-attack's `aggregate` folds the cited proof
+-- ladder files in (see docs/INTEROP-PANIC-ATTACK.adoc). Hand-rolled encoder;
+-- our string values are known-safe (identifiers, digits, file paths).
+
+jstr : String -> String
+jstr s = "\"" ++ s ++ "\""
+
+jmaybeCat : Maybe TestCategory -> String
+jmaybeCat Nothing  = "null"
+jmaybeCat (Just c) = jstr (show c)
+
+jmaybeAsp : Maybe TestAspect -> String
+jmaybeAsp Nothing  = "null"
+jmaybeAsp (Just a) = jstr (show a)
+
+--/ The proof ladder behind a provenance (empty unless Actually-Proven).
+ladderOf : Provenance -> List ProofStep
+ladderOf (PActuallyProven ev) = forget (proof_ladder ev)
+ladderOf _                    = []
+
+proofStepJSON : ProofStep -> String
+proofStepJSON (MkProofStep desc file _ thm) =
+  "{" ++ jstr "description" ++ ":" ++ jstr desc
+      ++ "," ++ jstr "proof_file" ++ ":" ++ (maybe "null" jstr file)
+      ++ "," ++ jstr "theorem" ++ ":" ++ (maybe "null" jstr thm)
+      ++ "}"
+
+resultJSON : TestResult -> String
+resultJSON Passed        = jstr "passed"
+resultJSON (Failed m)    = "{" ++ jstr "failed"  ++ ":" ++ jstr m ++ "}"
+resultJSON (Error m)     = "{" ++ jstr "error"   ++ ":" ++ jstr m ++ "}"
+resultJSON (Skipped m)   = "{" ++ jstr "skipped" ++ ":" ++ jstr m ++ "}"
+
+--/ One test entry: id, coordinate axes, provenance tier + ladder, result.
+entryJSON : (TestMetadata, TestResult) -> String
+entryJSON (m, r) =
+  let ladder = ladderOf (provenance m)
+  in "{" ++ jstr "test_id" ++ ":" ++ jstr (show (test_id m))
+        ++ "," ++ jstr "category" ++ ":" ++ jmaybeCat (category m)
+        ++ "," ++ jstr "aspect" ++ ":" ++ jmaybeAsp (aspect m)
+        ++ "," ++ jstr "provenance" ++ ":" ++ jstr (show (getProvenStatus m))
+        ++ "," ++ jstr "proof_ladder" ++ ":["
+             ++ concat (intersperse "," (map proofStepJSON ladder)) ++ "]"
+        ++ "," ++ jstr "result" ++ ":" ++ resultJSON r
+        ++ "}"
+
+entryPassed : (TestMetadata, TestResult) -> Bool
+entryPassed (_, Passed) = True
+entryPassed _           = False
+
+toReport : (TestMetadata, TestResult) -> TestReport
+toReport (m, r) = MkTestReport m r "" Nothing
+
+--/ The full run report. Takes the run entries and the coverage triple
+--/ (covered category x aspect cells, total such cells, full-lattice covered).
+public export
+runReportJSON : List (TestMetadata, TestResult) -> (Nat, Nat, Nat) -> String
+runReportJSON entries (coveredCells, totalCells, latticeCovered) =
+  "{" ++ jstr "schema_version" ++ ":1"
+      ++ "," ++ jstr "suite" ++ ":" ++ jstr "proven-tests"
+      ++ "," ++ jstr "summary" ++ ":{"
+           ++ jstr "passed" ++ ":" ++ show (length (filter entryPassed entries))
+           ++ "," ++ jstr "total" ++ ":" ++ show (length entries)
+           ++ "," ++ jstr "actually_proven" ++ ":" ++ show (actually_proven cs)
+           ++ "," ++ jstr "provisionally_proven" ++ ":" ++ show (provisionally_proven cs)
+           ++ "," ++ jstr "unproven" ++ ":" ++ show (unproven cs)
+           ++ "," ++ jstr "covered_cells" ++ ":" ++ show coveredCells
+           ++ "," ++ jstr "cat_aspect_cells" ++ ":" ++ show totalCells
+           ++ "," ++ jstr "lattice_covered" ++ ":" ++ show latticeCovered
+           ++ "}"
+      ++ "," ++ jstr "entries" ++ ":["
+           ++ concat (intersperse "," (map entryJSON entries)) ++ "]"
+      ++ "}\n"
+  where
+    cs : ClassificationSummary
+    cs = generateClassificationSummary (map toReport entries)

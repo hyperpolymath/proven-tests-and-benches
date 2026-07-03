@@ -10,6 +10,7 @@ import ProvenTests.Classification
 import ProvenTests.Zigzag
 import ProvenTests.Coverage
 import ProvenTests.Cells
+import Data.List
 
 -- NOTE: the per-category runners that used to live here (runTropicalCategoryTests
 -- et al., runTypeSafeTests, runAllTests, runTropicalLawTests, runE2ECategoryTests)
@@ -76,3 +77,15 @@ runComprehensiveSuite = do
   putStrLn ""
   putStr (coverageReportFrom (coveredFrom cellResults))
   pure (all isPassed entries)
+
+--/ Run the suite and also return the data needed for a machine-readable report:
+--/ the (metadata, result) entries and the derived covered coordinates.
+public export
+runComprehensiveSuiteData :
+     IO (Bool, List (TestMetadata, TestResult), List ZigzagCoord)
+runComprehensiveSuiteData = do
+  self <- runSelfClassification
+  cellResults <- runAllCells
+  let entries = self :: map (\(_, m, r) => (m, r)) cellResults
+  let covered = coveredFrom cellResults
+  pure (all isPassed entries, entries, covered)

@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+//
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+//
+= Interop: proven-tests → panic-attack aggregate
+:toc: left
+
+== Two directions, one honest mapping
+
+panic-attack is the estate's diagnostic tool. Its `aggregate` module folds
+external prover artifacts into trust-tagged, BLAKE3-hashed reports, classifying
+each as `Closed` / `Holes` / `Refuted` / `Indeterminate`. proven-tests produces
+provenance-graded runs. These two vocabularies rhyme but are NOT identical, and
+conflating them would be dishonest. This document pins the mapping.
+
+=== The tiers and the verdicts
+
+[cols="2,3,3"]
+|===
+| proven-tests tier | has a proof artifact? | panic-attack aggregate
+
+| Actually-Proven | YES — a proof ladder citing machine-checked theorems in
+  real `.idr` files | the ladder files are fed to `aggregate`; each is expected
+  `Closed`. A `Holes`/`Refuted` verdict is a real failure (a cited theorem is
+  not discharged).
+| Provisionally-Proven | NO — type-safe framework + example/property evidence,
+  but no proof object | *not fed.* Provisionally-Proven is NOT `Holes`. Absence
+  of a proof artifact is not the presence of a hole.
+| Unproven | NO | *not fed.*
+|===
+
+The trap this avoids: mapping Provisionally-Proven → `Holes` would invent a
+defect where there is only a (correctly labelled) weaker evidence tier. The
+honest correspondence is *only* between Actually-Proven ladder files and the
+`Closed` verdict.
+
+== Two integration surfaces
+
+=== 1. Ladder-file aggregation (no panic-attack change)
+
+`scripts/emit-aggregate-inputs.sh <run-report.json>` extracts the distinct
+`proof_file` paths from the Actually-Proven entries of the JSON run report
+(`--report`, schema_version 1) and invokes
+`panic-attack aggregate --proof <file> --label <name>` for each. panic-attack
+already ingests `.idr` files, so this needs nothing new on its side. CI fails if
+any cited ladder file classifies `Holes`/`Refuted`.
+
+=== 2. Native run-report ingestion (one panic-attack change)
+
+panic-attack's `aggregate` gains an input kind that parses the proven-tests JSON
+run report directly (`src/aggregate/proven_tests.rs`), so a whole run — its tier
+counts and coverage — can be folded into an assail/assault report as a
+trust-tagged, hash-pinned record, with the tier→verdict mapping above applied in
+code. This is the reciprocal of surface 1: instead of exporting proof files to
+panic-attack, panic-attack reads the report. Both honour the same mapping.
+
+== Trust boundary (unchanged from panic-attack's stance)
+
+panic-attack does NOT re-check the proofs; a `Closed` verdict is conditioned on
+the Idris checker's soundness, and the BLAKE3 hash only proves "these are the
+bytes handed over." proven-tests makes the *stronger* in-repo claim (the proofs
+are machine-checked by `idris2 --build`), but across the tool boundary only the
+hash-pinned, checker-conditioned guarantee travels. Neither tool overclaims.

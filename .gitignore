@@ -37,3 +37,5 @@ node_modules/
 
 # Ignore template files from rsr-template-repo
 *.template
+reports/
+build/

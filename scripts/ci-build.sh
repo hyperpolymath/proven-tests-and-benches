@@ -30,8 +30,9 @@ idris2 --build proven-tests-suite.ipkg
 echo "--- building benchmark ---"
 idris2 --build benchmarks/benchmark.ipkg
 
-echo "--- running framework self-test suite (exits non-zero on failure) ---"
-./build/exec/proven-tests
+echo "--- running framework self-test suite + emitting JSON run report ---"
+mkdir -p build/report
+./build/exec/proven-tests --report build/report/proven-tests-report.json
 
 echo "--- running type-safe test suite (exits non-zero on failure) ---"
 ./build/exec/proven-tests-suite

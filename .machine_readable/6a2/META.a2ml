@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: MPL-2.0
+# META.a2ml — Project meta-information
+
+[metadata]
+project = "proven-tests-and-benches"
+author = "Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+license = "MPL-2.0 (code) / CC-BY-SA-4.0 (docs)"
+standard = "RSR 2026"
+last-updated = "2026-07-02"
+
+[architecture-decisions]
+decisions = [
+  { id = "ADR-001", title = "Evidence-carrying provenance", status = "accepted", date = "2026-06-24", body = "The three-tier provenance (Actually-Proven / Provisionally-Proven / Unproven) is a data type whose Actually-/Provisionally-Proven constructors REQUIRE their evidence as typed fields (src/ProvenTests/Types.idr: Provenance, ActualEvidence). ActualEvidence.proof_ladder is a non-empty List1, so 'Actually-Proven with zero proof steps' is unrepresentable. A tier cannot be claimed without its justification." },
+  { id = "ADR-002", title = "Self-deriving coverage", status = "accepted", date = "2026-06-24", body = "The coverage grid is DERIVED from tests that actually ran and passed (src/ProvenTests/Coverage.idr: coveredFrom, cellCoveredBy), keyed on typed ZigzagCoord. A covered cell cannot be a hand-written claim. The exclusion of Failed/Error/Skipped and inclusion of Passed are machine-checked in src/ProvenTests/Meta.idr (coveredFromExcludesFailure, coveredFromIncludesPass)." },
+  { id = "ADR-003", title = "Typed taxonomy axes", status = "accepted", date = "2026-07-02", body = "TestMetadata.category/aspect are Maybe TestCategory / Maybe TestAspect (not stringly). To break the Types<->Taxonomy import cycle, the TestCategory/TestAspect enums live in Types.idr and are re-exported by Taxonomy.idr via `import public`. A metadata record can only name a coordinate that exists in the taxonomy." },
+  { id = "ADR-004", title = "Subjects graded from their own ledgers, not re-checked", status = "accepted", date = "2026-07-02", body = "integrations/proven grades proven's modules by parsing proven's own MODULE-STATUS.txt + STATE.a2ml (no code dependency, proofs not re-checked). The strict evidence-carrying reading requires a module to be both proof-bearing AND in proven's zero-OWED clean set to be Actually-Proven; the gap between that and proven's declared tier is the reported drift. Mirrors panic-attack aggregate's trust-by-name stance." },
+  { id = "ADR-005", title = "Toolchain Idris2 0.8.0", status = "accepted", date = "2026-07-02", body = "The build targets Idris2 0.8.0 (aligning with proven), bootstrapped from the official source release tarball. scripts/ci-build.sh derives the support-library path by glob rather than hardcoding a version." },
+]
+
+[provenance-tiers]
+tiers = ["Actually-Proven", "Provisionally-Proven", "Unproven"]
+evidence-carrying = true
+actually-proven-requires = "non-empty proof ladder (List1 ProofStep) citing machine-checked theorems"
+banned-in-actually-proven = ["believe_me", "assert_total", "%partial", "unsafePerformIO"]
+report-schema = "src/ProvenTests/Report.idr runReportJSON, schema_version 1"

@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: MPL-2.0
+# STATE.a2ml — Current state ledger
+
+[metadata]
+project = "proven-tests-and-benches"
+last-updated = "2026-07-02"
+readiness-grade = "C"          # see READINESS.adoc (estate CRG v1.0)
+
+[build]
+toolchain = "idris2-0.8.0"
+gate = "scripts/ci-build.sh"
+library-modules = 23
+framework-suite = "36/36 passing"
+type-safe-suite = "52/52 passing"
+benchmark = "runs (System.Clock, DCE-defeated)"
+
+[coverage]
+# self-derived from tests that ran and passed (src/ProvenTests/Coverage.idr)
+cat-aspect-cells-covered = 35
+cat-aspect-cells-total = 238
+lattice-coordinates-covered = 35
+lattice-size = 3570
+aspect-columns-nonempty = "14 / 14"
+
+[machine-checked]
+# Actually-Proven content (total Idris2 proofs, no escape hatches)
+tropical-semiring-laws = "src/ProvenTests/Tropical.idr"
+coverage-derivation-lemmas = "src/ProvenTests/Meta.idr"
+runtime-negative-test = "src/ProvenTests/Meta.idr metaFailingSuiteDetected"
+
+[subject-grading]
+# integrations/proven — grading proven from its own ledgers
+subject = "proven"
+modules-graded = 88
+as-declared = "4 Actually / 37 Provisionally / 47 Unproven"
+strict-evidence-carrying = "0 Actually / 41 Provisionally / 47 Unproven"
+drift = 4
+finding = "proven's 4 proof-bearing modules all sit in its 256-axiom OWED ledger, disjoint from its 6 zero-OWED clean modules, so 0 modules meet strict Actually-Proven."
+
+[roadmap]
+done = ["evidence-carrying provenance", "self-deriving coverage", "typed axes", "meta-tests", "type-safe suite package", "proven subject report", "JSON run report", "panic-attack aggregate interop", "FFI-parity design + golden vectors"]
+in-progress = ["grow lattice coverage beyond 35/238"]
+blocked = [
+  { item = "FFI-parity runtime harness", on = "proven shipping a real Idris-backed libproven (proven ADR-003)" },
+  { item = "runtime depends=proven subject tests", on = "proven's ipkg installing (47 non-compiling WIP modules)" },
+]
