@@ -23,15 +23,25 @@ Follows the estate Component Readiness Grade convention (CRG v1.0,
 
 == Current status
 
-Current Grade: D
+Current Grade: C
 
-*Evidence for D (Alpha):* the framework library (22 modules) compiles under
+*Evidence for D (Alpha):* the framework library (23 modules) compiles under
 Idris2, installs, and its self-test suite runs green via `scripts/ci-build.sh`
 (the CI gate). The type-safe suite package (`proven-tests-suite.ipkg`) builds
-against the installed library and passes. Machine-checked content is limited to
-`src/ProvenTests/Tropical.idr` (total semiring proofs) plus the
-evidence-carrying provenance types; coverage of the taxonomy lattice is partial
-and honestly reported by the self-deriving coverage map.
+against the installed library and passes. Machine-checked content includes
+`src/ProvenTests/Tropical.idr` (total semiring proofs) and
+`src/ProvenTests/Meta.idr` (coverage-derivation lemmas), plus the
+evidence-carrying provenance types.
+
+*Evidence for C (Beta):* the framework now produces correct, useful output
+about a *real external subject*. `integrations/proven/` grades all 88 of
+proven's modules by three-tier provenance, parsing proven's own
+`MODULE-STATUS.txt` and OWED ledger. Its as-declared reading (4 Actually / 37
+Provisionally / 47 Unproven) reconciles exactly with proven's own header
+(4 FIRST + 37 SECOND + 47 WIP), and its strict evidence-carrying reading
+surfaces the drift: 0 modules are Actually-Proven, because proven's four
+proof-bearing modules all still sit in its 256-axiom OWED ledger. Meta-tests
+demonstrate the framework detects a deliberately failing test.
 
 == Criteria to advance
 

@@ -19,9 +19,12 @@ does not exist or does not work*, and the *general state*.
 
 == Verdict (current)
 
-*Early alpha — the library compiles, runs honest-green (10/10), and is gated by
-real CI.* Still ungraded / "X" on the Component Readiness Grade scale until the
-empty categories and missing artifacts are addressed.
+*Beta (CRG grade C, see `READINESS.adoc`).* The library compiles and runs
+honest-green under real CI (framework suite 36/36, type-safe suite 52/52), and
+now produces correct, useful output about a *real external subject*: the
+`integrations/proven/` report grades all 88 proven modules by three-tier
+provenance and reconciles with proven's own ledger. Remaining work is coverage
+breadth and the FFI-parity runtime (blocked on proven's `libproven`).
 
 What changed in this pass (all verified against Idris2 0.7.0 locally):
 
@@ -369,3 +372,18 @@ idris2 --build   benchmarks/benchmark.ipkg    # compile the benchmark
   check (Reproducibility). Verified: `bash scripts/ci-build.sh` green — framework
   suite 36/36, type-safe suite 52/52, 35/238 cells, all 14 aspect columns
   non-empty.
+* 2026-07-02 (Stage C) — Pointed the framework at a real subject: proven.
+  `integrations/proven/` grades all 88 proven modules by three-tier provenance
+  from proven's own ledgers (MODULE-STATUS.txt + STATE.a2ml) — no code
+  dependency on proven. As-declared (4/37/47) reconciles with proven's header;
+  the strict evidence-carrying reading finds 0 Actually-Proven (proven's 4
+  proof-bearing modules all sit in its 256-axiom OWED ledger, disjoint from the
+  6 clean modules) — a mechanized drift measurement. Added the FFI-parity
+  harness design (`docs/FFI-PARITY-DESIGN.adoc`) plus a working golden-vector
+  generator (`proven-subject-report golden`) emitting ActuallyProven min-plus
+  vectors and Provisionally-graded proven SafeBase64 vectors (from proven's own
+  unit tests, RFC-4648 oracle). CRG grade D -> C. NOTE: the runtime
+  `depends = proven` port (C2) is blocked — proven's ipkg lists 47 non-compiling
+  WIP modules and does not install in reasonable time; the golden-vector capture
+  is the unblocked substitute, to be executed by the FFI runner once proven
+  ships a real libproven.

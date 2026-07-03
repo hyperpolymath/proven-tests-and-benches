@@ -1,0 +1,14 @@
+package proven-subject
+
+version = 0.1.0
+sourcedir = "src"
+
+main = ProvenSubject.Main
+executable = "proven-subject-report"
+
+depends = proven-tests
+
+modules = ProvenSubject.Ledger,
+         ProvenSubject.Grading,
+         ProvenSubject.GoldenVectors,
+         ProvenSubject.Main

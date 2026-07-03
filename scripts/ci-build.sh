@@ -38,3 +38,16 @@ echo "--- running type-safe test suite (exits non-zero on failure) ---"
 
 echo "--- running benchmark ---"
 ./benchmarks/build/exec/proven-bench
+
+# The proven subject report grades a real external subject. It needs only
+# proven's ledger files (no code dependency), so it runs whenever a proven
+# checkout is reachable; otherwise it is skipped, not failed.
+PROVEN_ROOT="${PROVEN_ROOT:-/home/user/proven}"
+if [ -f "$PROVEN_ROOT/MODULE-STATUS.txt" ]; then
+  echo "--- building proven subject report ---"
+  idris2 --build integrations/proven/proven-subject.ipkg
+  echo "--- running proven subject report (PROVEN_ROOT=$PROVEN_ROOT) ---"
+  ( cd integrations/proven && PROVEN_ROOT="$PROVEN_ROOT" ./build/exec/proven-subject-report )
+else
+  echo "--- skipping proven subject report (no proven checkout at $PROVEN_ROOT) ---"
+fi
