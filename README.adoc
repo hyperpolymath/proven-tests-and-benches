@@ -2,7 +2,7 @@
 //
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
-= Proven-Tests: Type-Safe Testing Framework for Hyperpolymath
+= Proven-Tests: Type-Safe Testing Framework
 
 :toc: left
 :toclevels: 4
