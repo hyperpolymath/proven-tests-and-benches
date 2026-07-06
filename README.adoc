@@ -2,7 +2,7 @@
 //
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
-= Proven-Tests: Type-Safe Testing Framework
+= Proven-Tests: Type-Safe and Beyond Testing Framework
 
 :toc: left
 :toclevels: 4
@@ -12,7 +12,7 @@ image::https://img.shields.io/badge/CRG-D-orange?style=flat-square[Component Rea
 == Overview
 
 **Proven-Tests** is the testing framework for the hyperpolymath ecosystem,
-implemented in **Idris2**. Its organising idea: a test's *provenance* — the
+implemented in **Idris2**. Its organising idea: a test's *warrant* — the
 strength of evidence behind it — is a first-class, machine-checked value, not a
 label. Coverage is likewise *derived from executed tests at typed coordinates*,
 so a claimed-covered cell cannot be faked.
