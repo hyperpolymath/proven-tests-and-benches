@@ -1,0 +1,160 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= PROOFS — catalogue of what this repo establishes
+:toc: left
+:icons: font
+
+Required by the Proven Tests specification
+(`standards/.github/ISSUES/cicd-optimization/004-tests-benches-standards.md` §3.1).
+
+[IMPORTANT]
+====
+**Nothing in this repository is currently Actually-Proven.**
+
+The framework defines three tiers and implements all three. Measured on
+2026-07-28:
+
+[cols="2,1,4"]
+!===
+! Tier ! Uses ! Meaning
+
+! `ActuallyProven`
+! **0**
+! Carries a proof term. The property holds for all inputs.
+
+! `ProvisionallyProven`
+! **97**
+! Checked at run time on named witnesses. Holds for those inputs.
+
+! `Unproven`
+! 0
+! Declared but not checked.
+!===
+
+Every test in this repo is a `Bool` evaluated on concrete example data. That is
+a real check — the suites exit non-zero when a property fails, verified by
+injection — but it is **not** a proof, and this document does not describe it as
+one. The `[Provisionally-Proven]` label printed on every line of suite output is
+accurate and should stay.
+====
+
+== Why the distinction is kept sharp
+
+A repository called `proven-tests-and-benches` that quietly used "proven" to
+mean "the test passed" would be the most expensive kind of wrong: it would look
+like the strongest evidence in the estate while being the same strength as any
+other test suite. The three-tier `ProvenStatus` exists so the difference is
+visible in the type system and in the output, not just in a README.
+
+Promoting a property from provisional to actual is therefore a real piece of
+work, not a relabelling. It means replacing
+
+[source,idris]
+----
+prop : Widget -> Bool
+prop w = someCheck w
+----
+
+with a statement quantified over all inputs and a term inhabiting it
+
+[source,idris]
+----
+propHolds : (w : Widget) -> SomeCheck w = True
+----
+
+and passing the resulting `ProofStep` ladder to `provenTest` rather than
+`provisionalTest`. `Framework.idr` already supports this; nothing has used it yet.
+
+== Suite inventory
+
+=== `proven-tests-suite` — TypeSafe categories (52 tests)
+
+Nine category modules under `src/ProvenTests/TypeSafe/`, exercised by
+`tests/TypeSafeTests/`. Verified 2026-07-28: **52/52 pass, exit 0**; with an
+injected failure, **51/52, exit 1**.
+
+[cols="2,4"]
+|===
+| Module | Properties checked
+
+| `Tropical` | min-plus semiring resource bounds: min idempotent, `+` commutative and associative, identity, non-negativity, order preservation
+| `Epistemic` | knowledge-state properties
+| `Choreographic` | session-type progression and termination
+| `Dependent` | dependent-type formation
+| `Effects` | effect-row properties
+| `Decorative` | decorator composition
+| `Ceremonial` | ceremony sequencing
+| `Dyadic` | two-party interaction
+| `Bridge` | cross-representation bridging
+|===
+
+=== `proven-spec-suite` — HigherOrder + SetTheory (45 tests)
+
+Added 2026-07-28 to reconcile the repo with §3.1 of the spec. Verified:
+**45/45 pass, exit 0**; with an injected failure, **44/45, exit 1**.
+
+[cols="2,1,4"]
+|===
+| Module | Tests | Properties checked
+
+| `HigherOrder/Identity`
+| 8
+| `id . f = f`, `f . id = f`, `id . id = id`, functor identity for `List` and `Maybe` (including the empty case), functor composition
+
+| `HigherOrder/Projection`
+| 5
+| The three lens laws — get-put, put-get, put-put — and projection idempotence `p . p = p`
+
+| `HigherOrder/Traversal`
+| 6
+| Length and emptiness preservation, fusion `map g . map f = map (g . f)`, order commutation with `reverse`, `traverse (Just . f) = Just . map f`, short-circuiting on `Nothing`
+
+| `HigherOrder/Transfer`
+| 5
+| Round trip `backward . forward = id`, isomorphism in both directions, identity transfer as a unit for composition, length preservation
+
+| `SetTheory/Basics`
+| 11
+| Idempotence, commutativity, associativity of union and intersection; empty-set identity and annihilation; distributivity; `A \ A = {}`; De Morgan relative to a universe
+
+| `SetTheory/Advanced`
+| 10
+| Subset reflexivity, transitivity, antisymmetry; intersection/union containment; `|P(S)| = 2^|S|`; power-set members are subsets; extremes present; inclusion-exclusion
+|===
+
+==== Two deliberate honesty choices in these suites
+
+`Transfer` includes `intStringTransfer : Transfer Int String`, which is a
+section/retraction and **not** an isomorphism — `"007"` and `"7"` both parse to
+`7`. The suite asserts only the direction that holds. A test asserting the
+reverse round trip would be false, and a false test is worse than a missing one.
+
+`Traversal.traverseMaybeShortCircuits` returns `True` on `[]` because
+`traverse` on the empty list is `Just []`, so there is nothing to short-circuit.
+That vacuity is stated in the source rather than hidden behind a passing tick.
+
+== Not implemented, on purpose
+
+`EchoTypes/Safety.idr` and `EchoTypes/Invariance.idr` are named in the spec and
+are **not** written. There is no formal definition of an echo type to encode:
+the spec names the phrase without defining it, and `hyperpolymath/echo-types`
+contains **0** `.idr`, **0** `.lean` and **0** `.v` files, so its formal content
+is prose and audit trail rather than machine-checked definitions.
+
+Full reasoning and the three things that would unblock it:
+`src/ProvenTests/EchoTypes/README.adoc`.
+
+== How to verify these claims
+
+[source,console]
+----
+$ idris2 --typecheck proven-tests.ipkg        # 29 modules
+$ idris2 --install   proven-tests.ipkg
+$ idris2 --build     proven-tests-suite.ipkg && ./build/exec/proven-tests-suite
+$ idris2 --build     proven-spec-suite.ipkg  && ./build/exec/proven-spec-suite
+----
+
+Use `idris2 --typecheck <ipkg>`. Do **not** use per-file `idris2 --check` as a
+gate: it prints `Error:` and still exits `0`, so a CI step built on it passes
+while the code is broken. Confirmed again on Idris2 0.7.0 while writing these
+modules.

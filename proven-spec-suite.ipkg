@@ -1,0 +1,17 @@
+package proven-spec-suite
+
+version = 0.1.0
+sourcedir = "tests"
+
+main = SpecSuite.Main
+executable = "proven-spec-suite"
+
+depends = proven-tests
+
+modules = HigherOrderTests.IdentityTests,
+         HigherOrderTests.ProjectionTests,
+         HigherOrderTests.TraversalTests,
+         HigherOrderTests.TransferTests,
+         SetTheoryTests.BasicsTests,
+         SetTheoryTests.AdvancedTests,
+         SpecSuite.Main
