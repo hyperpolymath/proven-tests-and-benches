@@ -7,6 +7,8 @@ module SpecSuite.Main
 
 import ProvenTests.Types
 import ProvenTests.Framework
+import AffineScriptTests.AffinityTests
+import AffineScriptTests.BorrowTests
 import HigherOrderTests.IdentityTests
 import HigherOrderTests.ProjectionTests
 import HigherOrderTests.TraversalTests
@@ -28,7 +30,9 @@ import System
 
 allSuiteTests : List ProvisionallyProvenTest
 allSuiteTests =
-     allIdentityTests
+     allAffinityTests
+  ++ allBorrowTests
+  ++ allIdentityTests
   ++ allProjectionTests
   ++ allTraversalTests
   ++ allTransferTests
@@ -36,7 +40,7 @@ allSuiteTests =
   ++ allAdvancedTests
 
 suite : TestSuite
-suite = MkTestSuite "Spec suites (HigherOrder + SetTheory)" (map toRunnable allSuiteTests)
+suite = MkTestSuite "Spec suites (AffineScript + HigherOrder + SetTheory)" (map toRunnable allSuiteTests)
 
 isPass : TestResult -> Bool
 isPass Passed = True
@@ -49,7 +53,7 @@ printOutcome (meta, result) =
 
 main : IO ()
 main = do
-  putStrLn "=== proven-spec-suite: HigherOrder + SetTheory ==="
+  putStrLn "=== proven-spec-suite: AffineScript + HigherOrder + SetTheory ==="
   results <- runSuite suite
   traverse_ printOutcome results
   let passed = length (filter (isPass . snd) results)
