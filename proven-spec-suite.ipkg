@@ -8,7 +8,9 @@ executable = "proven-spec-suite"
 
 depends = proven-tests
 
-modules = HigherOrderTests.IdentityTests,
+modules = AffineScriptTests.AffinityTests,
+         AffineScriptTests.BorrowTests,
+         HigherOrderTests.IdentityTests,
          HigherOrderTests.ProjectionTests,
          HigherOrderTests.TraversalTests,
          HigherOrderTests.TransferTests,
