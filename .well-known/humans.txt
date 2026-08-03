@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# humanstxt.org
+
+/* TEAM */
+Maintainer: Jonathan D.A. Jewell
+Role: Sole maintainer
+GitHub: @hyperpolymath
+Contact: jonathan.jewell [at] open.ac.uk
+
+/* SITE */
+Name: proven-tests-and-benches
+Purpose: The Hyperpolymath estate's Idris2 testing and benchmarking framework
+Language: Idris2
+Licence: MPL-2.0 (code), CC-BY-SA-4.0 (documentation)
+Standards: RSR 2026, Component Readiness Grades, Testing & Benchmarking Taxonomy
+Repository: https://github.com/hyperpolymath/proven-tests-and-benches
+
+/* THANKS */
+The Idris2 project and its contributors, without whom none of the
+machine-checked warrants in this repository would be expressible.

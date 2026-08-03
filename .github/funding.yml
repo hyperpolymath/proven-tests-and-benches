@@ -1,4 +1,8 @@
-# Funding Configuration
+# SPDX-License-Identifier: MPL-2.0
+# Funding configuration.
 # See: https://docs.github.com/en/repositories/managing-your-repositorys-custom-fields/displaying-a-sponsor-button-in-your-repository
+#
+# Was `github: metadatastician` — donor-template identity leak. Corrected
+# 2026-08-03 to match the repository owner.
 
-github: metadatastician
+github: hyperpolymath

@@ -11,9 +11,55 @@ Follows the estate Component Readiness Grade convention (CRG v1.0,
 
 == Grade scale
 
+WARNING: *This ladder is not the estate standard, and the grade below is
+measured against it rather than against CRG.* Flagged 2026-08-03; reconciling
+it is an owner decision and has deliberately not been done unilaterally.
+
+The estate standard is *Component Readiness Grades v2.2*
+(`hyperpolymath/standards/component-readiness-grades/COMPONENT-READINESS-GRADES.md`),
+whose scale is `X F E D C B A` — seven rungs, not four — and whose rung
+definitions differ materially from the four below:
+
+[cols="1,3,4"]
+|===
+| Grade | CRG v2.2 name | What CRG v2.2 actually requires
+
+| D | Partial / Inconsistent (alpha-unstable)
+| A matrix of tested scenarios; documented scope; at least one test per claimed
+  capability; *RSR compliance*; *Immaculate Guide compliance* — including
+  `.tool-versions` pinning all tools and `panic-attack assail` passing.
+
+| C | Self-Validated (alpha-stable)
+| Dogfooding on the project itself; *CI integration or equivalent automated
+  validation in the home context*; no known failures in the home context; deep
+  annotation. Per the Testing Taxonomy's CRG mapping, C additionally requires
+  unit + P2P + E2E + smoke + reflexive + build + contract + aspect tests all
+  passing, and *benchmarks baselined*.
+
+| B | Broadly Validated (beta-stable)
+| Tested on *at least six genuinely diverse external targets*, with results and
+  evidence that findings were fed back. Not "handles edge cases".
+
+| A | Field-Proven (stable)
+| Real-world external usage data and evidence of feedback incorporation.
+|===
+
+Two CRG C requirements are currently *not* met, which is why the grade below
+should not simply be carried across:
+
+* *No automated validation on push or PR.* `.github/workflows/ci.yml` is
+  `workflow_dispatch:`-only and no GitLab remote is configured in this
+  checkout, so the Idris2 gate runs only when a human triggers it.
+* *Benchmarks are not baselined.* There is a working harness but no baseline,
+  no thresholds, no history and no regression gate. See `TEST-NEEDS.md` Gap C.
+
+The four-rung ladder retained below is what the grade in _Current status_ was
+actually assessed against, and is kept verbatim so the assessment remains
+interpretable rather than being silently re-scored.
+
 [cols="1,2,5"]
 |===
-| Grade | Name | Machine-verifiable meaning
+| Grade | Name | Machine-verifiable meaning (LOCAL ladder, not CRG v2.2)
 
 | D | Alpha | Component runs without crashing on valid input
 | C | Beta | Component produces correct output on representative input

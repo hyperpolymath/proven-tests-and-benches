@@ -1,8 +1,21 @@
+<!--
+SPDX-License-Identifier: CC-BY-SA-4.0
+SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+-->
 # Governance
 
 ## Overview
 
-This project is governed by the following principles and structures to ensure transparent, inclusive, and effective decision-making.
+This project is governed by the following principles and structures to ensure
+transparent and effective decision-making.
+
+> **Scale note (2026-08-03).** This repository has a **single maintainer**
+> (`MAINTAINERS.adoc`). The multi-maintainer quorum rules below were inherited
+> from a template and, as written, described approvals that could not be
+> obtained — "at least 2 maintainers" and "a majority of maintainers" out of
+> one. They have been restated for the actual scale. The intent behind them is
+> preserved: the larger the change, the more it must be written down before it
+> lands, since there is no second reviewer to catch it.
 
 ## Roles and Responsibilities
 
@@ -31,14 +44,17 @@ Contributors are expected to:
 - Include bug fixes, documentation updates, dependency updates
 
 ### Major Changes
-- Require discussion in issues or pull requests
+- Require discussion in an issue or pull request **before** implementation
 - Include new features, architectural changes, API changes
-- Need approval from at least 2 maintainers
+- Must be recorded as an ADR in `.machine_readable/6a2/META.a2ml`
+- With one maintainer there is no second approver, so the written rationale
+  is the review: a major change that lands with no ADR has skipped the process
 
 ### Breaking Changes
-- Require RFC (Request for Comments) process
-- Need approval from majority of maintainers
-- Must include migration guide
+- Require an RFC issue, open for comment before implementation
+- Must include a migration guide and a CHANGELOG entry
+- Must bump the version per the compatibility rules in the Testing &
+  Benchmarking Taxonomy (Versability aspect)
 
 ## Code of Conduct
 

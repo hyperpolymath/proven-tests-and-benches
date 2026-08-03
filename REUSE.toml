@@ -1,0 +1,118 @@
+version = 1
+SPDX-PackageName = "proven-tests-and-benches"
+SPDX-PackageSupplier = "Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-PackageDownloadLocation = "https://github.com/hyperpolymath/proven-tests-and-benches"
+
+# ---------------------------------------------------------------------------
+# Why this file exists rather than 35 edited file headers
+# ---------------------------------------------------------------------------
+# `reuse lint` reported 9 files with neither copyright nor licence information
+# and a further 26 missing copyright, leaving this repository non-compliant
+# with REUSE 3.3.
+#
+# The obvious remedy — sweeping SPDX headers into every file — is explicitly
+# forbidden by estate policy: "NEVER sweep SPDX headers in bulk. Every prior
+# LLM sweep has scrambled identifiers, mis-licensed third-party code, or
+# reverted owner decisions." REUSE.toml is the sanctioned alternative: it
+# declares licensing for paths WITHOUT modifying the files themselves, so no
+# existing header is touched and nothing can be silently relicensed.
+#
+# Licensing follows the estate's two-way split for a sole-owner repository:
+#   code, config, CI, manifests -> MPL-2.0
+#   prose and documentation     -> CC-BY-SA-4.0
+#
+# ---------------------------------------------------------------------------
+# OUTSTANDING — needs an owner decision, deliberately NOT actioned here
+# ---------------------------------------------------------------------------
+# LICENSES/AGPL-3.0-or-later.txt is an UNUSED licence: no file in this
+# repository declares AGPL, and CHANGELOG.md records that stray AGPL
+# identifiers were removed — but the licence text itself was left behind.
+# `reuse lint` will continue to report "Unused licenses: AGPL-3.0-or-later"
+# until it is removed.
+#
+# It has NOT been deleted here. Removing a file from LICENSES/ is a licensing
+# action, and estate policy reserves those to the owner. AGPL-3.0-or-later is
+# the estate's licence for repositories co-maintained with the owner's son; if
+# that was ever the intent for this repository, deleting the text would be the
+# wrong call. Flagging instead of guessing.
+
+# --- Build manifests and package definitions (code) ------------------------
+[[annotations]]
+path = [
+  "proven-tests.ipkg",
+  "proven-tests-suite.ipkg",
+  "benchmarks/benchmark.ipkg",
+  "integrations/proven/proven-subject.ipkg",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
+
+# --- Repository configuration (code) ---------------------------------------
+[[annotations]]
+path = [
+  ".editorconfig",
+  ".gitignore",
+  ".gitattributes",
+  ".tool-versions",
+  ".pre-commit-config.yaml",
+  ".gitlab-ci.yml",
+  "guix.scm",
+  "Justfile",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
+
+# --- GitHub/CI configuration (code) ----------------------------------------
+[[annotations]]
+path = [
+  ".github/**",
+  "scripts/**",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
+
+# --- Machine-readable metadata (code: consumed by tools, not prose) --------
+[[annotations]]
+path = [
+  ".machine_readable/**",
+  "0-AI-MANIFEST.a2ml",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
+
+# --- Container and devcontainer scaffolding --------------------------------
+# NOTE: container/ is self-declared uninstantiated template boilerplate (see
+# container/README.adoc). It is licensed here so the repository can be REUSE
+# compliant; that is NOT an assertion that it works or is wired into CI.
+[[annotations]]
+path = [
+  "container/**",
+  ".devcontainer/**",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
+
+# --- Documentation and prose (share-alike) ---------------------------------
+[[annotations]]
+path = [
+  "AGENTS.md",
+  "ARCHITECTURE.md",
+  "GOVERNANCE.md",
+  "TEST-NEEDS.md",
+  ".well-known/**",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+# --- Sample git hook --------------------------------------------------------
+[[annotations]]
+path = "scripts/git-hooks/pre-push.sample"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"

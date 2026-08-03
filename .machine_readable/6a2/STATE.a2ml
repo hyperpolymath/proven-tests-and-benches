@@ -7,7 +7,7 @@ last-updated = "2026-07-02"
 readiness-grade = "C"          # see READINESS.adoc (estate CRG v1.0)
 
 [build]
-toolchain = "idris2-0.8.0"
+toolchain = "idris2-0.7.0"   # corrected 2026-08-03; gated by scripts/check-toolchain-pins.sh
 gate = "scripts/ci-build.sh"
 library-modules = 23
 framework-suite = "36/36 passing"

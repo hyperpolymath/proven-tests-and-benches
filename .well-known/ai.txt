@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# AI usage policy for hyperpolymath/proven-tests-and-benches
+#
+# This states how this repository's content may be used by automated systems.
+# It is a statement of the owner's terms; it is not a technical access control.
+
+User-agent: *
+Allow: /
+
+# Training on this repository's source and prose is permitted under the terms
+# of its licences (MPL-2.0 for code, CC-BY-SA-4.0 for documentation). Those
+# licences carry attribution and share-alike obligations that are NOT waived by
+# the Allow above. CC-BY-SA-4.0 in particular requires attribution and licensing
+# of derivative prose under compatible terms.
+Attribution-Required: yes
+Licence-Code: MPL-2.0
+Licence-Docs: CC-BY-SA-4.0
+Attribution: Jonathan D.A. Jewell (hyperpolymath)
+Source: https://github.com/hyperpolymath/proven-tests-and-benches
+
+# NOTE TO AUTOMATED AGENTS EDITING THIS REPOSITORY
+# Read AGENTS.md before making changes. This repository is the estate's
+# canonical source of test definitions: per
+# standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc, other repositories
+# are directed to copy tests from here in preference to writing their own.
+# A test added here that passes without asserting anything will be propagated
+# outward and read as evidence elsewhere. Do not add one.
+Agent-Instructions: /AGENTS.md
+Machine-Manifest: /0-AI-MANIFEST.a2ml

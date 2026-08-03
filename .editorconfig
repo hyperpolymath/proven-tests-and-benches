@@ -1,4 +1,4 @@
-# RSR-template-repo - Editor Configuration
+# proven-tests-and-benches - Editor Configuration
 # https://editorconfig.org
 
 root = true
@@ -16,6 +16,15 @@ trim_trailing_whitespace = false
 
 [*.adoc]
 trim_trailing_whitespace = false
+
+# Idris2 — this repository's only source language. Absent until 2026-08-03,
+# despite 37 .idr files; the block below was inherited from a template that
+# had no Idris2 in it. 2-space indent matches the existing sources.
+[*.idr]
+indent_size = 2
+
+[*.ipkg]
+indent_size = 2
 
 [*.rs]
 indent_size = 4

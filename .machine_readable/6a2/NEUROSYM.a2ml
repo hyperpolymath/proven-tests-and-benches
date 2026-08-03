@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: MPL-2.0
+# NEUROSYM.a2ml — symbolic semantics and composition algebra
+#
+# HUMAN SUMMARY: this repository is almost entirely symbolic. It runs no
+# neural inference, computes no embeddings and fine-tunes nothing. The
+# interesting content here is the symbolic layer: what is machine-checked,
+# what is merely tested, and the algebra the coverage lattice is built on.
+
+[neurosym-config]
+version = "1.0.0"
+project = "proven-tests-and-benches"
+last-updated = "2026-08-03"
+
+[neurosym-config.symbolic-layer]
+type = "idris2"
+reasoning = "deductive"
+verification = "formal"
+prover = "Idris2 0.7.0 (QTT)"
+totality = "%default total in Tropical, Coverage, Meta, Baton, GoldenVectors, Grading, Ledger"
+escape-hatches-present = 0
+escape-hatch-policy = "banned; enforced by `just lint`"
+
+[neurosym-config.symbolic-layer.machine-checked]
+# Content that is Actually-Proven: total Idris2 proofs, no escape hatches.
+tropical-semiring-laws = "src/ProvenTests/Tropical.idr — minNAssoc, oplusComm, oplusAssoc, otimesIdentityR"
+coverage-derivation-lemmas = "src/ProvenTests/Meta.idr — coveredFromExcludesFailure, coveredFromIncludesPass"
+structural-honesty-invariant = "src/ProvenTests/Types.idr — ActualEvidence.proof_ladder : List1 ProofStep makes 'Actually-Proven with zero proof steps' unrepresentable"
+runtime-negative-test = "src/ProvenTests/Meta.idr metaFailingSuiteDetected — a deliberately failing test must be reported as failing"
+
+[neurosym-config.symbolic-layer.algebra]
+# The cost algebra the coverage lattice is expressed over.
+structure = "tropical (min-plus) semiring"
+carrier = "Fin n | PosInf"
+oplus = "min"                     # additive operation
+otimes = "+"                      # multiplicative operation
+additive-identity = "PosInf"
+multiplicative-identity = "Fin 0"
+kategoria-level = "L11 (tropical cost-tracking)"
+laws-proven = true
+
+[neurosym-config.symbolic-layer.lattice]
+# The typed coordinate space coverage is derived over.
+axes = ["TestCategory", "TestAspect", "ZigzagCoord"]
+categories = 17                   # 16 from the estate taxonomy + TypeSafeTest
+aspects = 14
+cat-aspect-cells = 238            # 17 x 14
+lattice-size = 3570               # 5 x 3 x 238
+taxonomy-drift = "The estate taxonomy (standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc Part I) defines 16 categories. This repo implements a 17th, TypeSafeTest, which exists in no standard. The drift is intentional but unratified; either the standard adopts it or this repo marks it as a local extension."
+
+[neurosym-config.symbolic-layer.provenance-tiers]
+tiers = ["Actually-Proven", "Provisionally-Proven", "Unproven"]
+actually-proven-requires = "non-empty proof ladder (List1 ProofStep) citing machine-checked theorems"
+provisionally-proven-means = "a test that passes but whose warrant is execution, not proof"
+tier-is-structural = true
+tier-cannot-be-asserted = "constructors require their evidence as typed fields"
+
+# ---------------------------------------------------------------------------
+# Neural layer — deliberately empty
+# ---------------------------------------------------------------------------
+[neurosym-config.neural-layer]
+embeddings = false
+fine-tuning = false
+inference = false
+rationale = "This is a proof and measurement framework. Nothing in it is statistical, and a claim's warrant here is a type-checked derivation rather than a learned estimate. Introducing a neural component would require re-answering what 'Actually-Proven' means, which is the repository's central commitment."
+
+[neurosym-config.integration]
+mode = "symbolic-only"
+downstream-consumer = "panic-attack aggregate — parses this repo's JSON run report (schema_version 1) into its Closed/Holes/Refuted verdict lattice"
+downstream-status = "PARTIAL: panic-attack src/aggregate/proven_tests.rs implements and unit-tests the parser, but it is declared only at aggregate/mod.rs and reachable from no CLI flag. Ladder-file aggregation via --proof works; native run-report ingestion does not."
+
+[provenance]
+last-modified-by = "claude-opus-5"
+last-modified-at = "2026-08-03"
+modification-summary = "Initial creation. Added as part of completing the 6-file A2ML set."

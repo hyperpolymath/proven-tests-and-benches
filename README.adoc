@@ -89,7 +89,7 @@ proven-tests-and-benches/
 ├── Justfile                  # build/test/bench/ci recipes (real, working)
 ├── proven-tests.ipkg         # the framework library + self-test executable
 ├── proven-tests-suite.ipkg   # type-safe category test suite (depends = proven-tests)
-├── src/ProvenTests/          # 22 modules: the framework
+├── src/ProvenTests/          # 23 modules: the framework
 │   ├── Types.idr             # evidence-carrying provenance (the core idea)
 │   ├── Classification.idr    # tier constructors and honest promotion
 │   ├── Taxonomy.idr          # 17 categories × 14 aspects × 12 kategoria levels
