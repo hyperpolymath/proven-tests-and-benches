@@ -46,5 +46,14 @@ repos:
         exclude: '(\.git|node_modules|target|_build|deps|\.deno|external_corpora|\.lake)/'
 
   # --- Secret detection ---
+  # NOTE: this entry was truncated — the `- repo:` line and the hook `id` were
+  # missing, leaving an orphaned `rev:`/`hooks:` pair. YAML did not error: it
+  # folded them into the PRECEDING editorconfig-checker entry as duplicate
+  # keys, setting its `hooks:` to null. Net effect was two hooks lost at once
+  # (editorconfig-checker silently disabled, gitleaks never registered) while
+  # the file still parsed. Restored below.
+  - repo: https://github.com/gitleaks/gitleaks
     rev: v8.24.3
     hooks:
+      - id: gitleaks
+        name: Detect hardcoded secrets

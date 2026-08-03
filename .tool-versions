@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Toolchain pins for proven-tests-and-benches.
+# Required by the Hyperpolymath Immaculate Guide (CRG grade D evidence:
+# ".tool-versions pins all tools").
+#
+# CAVEAT — read before assuming `asdf install` works here.
+# There is no asdf/mise plugin for Idris2. The pin below is DECLARATIVE: it
+# records the version every other artefact in this repo must agree on, and it
+# is what `scripts/check-toolchain-pins.sh` diffs against. It does not, by
+# itself, install anything.
+#
+# The real provisioning path is `scripts/install-idris2.sh`, which builds
+# Idris2 from source against the Chez Scheme backend (needs `chezscheme` and
+# `libgmp-dev`). `just deps` wraps it.
+#
+# Every one of these must state the same version; CI enforces it:
+#   .tool-versions                        (this file)
+#   scripts/install-idris2.sh             IDRIS2_VERSION
+#   .github/workflows/ci.yml              IDRIS2_VERSION
+#   .gitlab-ci.yml                        cache key
+#   .machine_readable/6a2/META.a2ml       ADR-005
+#   .machine_readable/6a2/STATE.a2ml      [build] toolchain
+#   README.adoc                           prerequisites
+
+idris2 0.7.0
+
+# Chez Scheme is the Idris2 backend, not an independent choice: Idris2 invokes
+# it at build time, not merely to bootstrap. Version is whatever the distro
+# ships (Debian bookworm: 9.5.8); pinned exactly only if a regression forces it.
+# chezscheme system
