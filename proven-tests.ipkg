@@ -6,7 +6,13 @@ sourcedir = "src"
 main = ProvenTests.Main
 executable = "proven-tests"
 
-modules = ProvenTests.Types,
+modules = ProvenTests.HigherOrder.Identity,
+         ProvenTests.HigherOrder.Projection,
+         ProvenTests.HigherOrder.Traversal,
+         ProvenTests.HigherOrder.Transfer,
+         ProvenTests.SetTheory.Basics,
+         ProvenTests.SetTheory.Advanced,
+         ProvenTests.Types,
          ProvenTests.Classification,
          ProvenTests.Taxonomy,
          ProvenTests.Tropical,

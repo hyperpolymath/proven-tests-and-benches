@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= EchoTypes — deliberately not implemented yet
+:toc:
+
+The Proven Tests specification
+(`standards/.github/ISSUES/cicd-optimization/004-tests-benches-standards.md` §3.1)
+calls for two modules here:
+
+....
+src/EchoTypes/
+├── Safety.idr       # Echo-type safety
+└── Invariance.idr   # Echo-type invariance
+....
+
+They are **not** written, and this file exists so that absence is a recorded
+decision rather than an oversight.
+
+== Why not
+
+Writing them would mean encoding echo-type semantics in Idris2. The semantics
+would have to come from somewhere, and the two candidate sources both fail:
+
+**The spec does not define them.** It names the two modules and the phrases
+"echo-type safety" and "echo-type invariance", and stops there. There is no
+statement of what is preserved, under what operations, or what a violation looks
+like.
+
+**`hyperpolymath/echo-types` has no formal artefacts.** It is a large and
+serious repo — Pillars A–D landed, gates F1–F5 passed, a Buchholz rank-monotone
+ordinal umbrella closing 11/13 constructors, a retraction ledger — but measured
+on 2026-07-28 it contains:
+
+[cols="2,1"]
+|===
+| Artefact | Count
+
+| `.idr` | **0**
+| `.lean` | **0**
+| `.v` | **0**
+|===
+
+So there is no machine-checked definition to import, mirror, or even
+paraphrase. Its formal content is prose and audit trail.
+
+Inventing the semantics here would produce modules that typecheck, run green,
+and mean nothing — the exact failure this repo's three-tier `ProvenStatus`
+exists to prevent. `ProvisionallyProven` already means "checked at run time, not
+proven"; there is no tier for "checked against a definition we made up", and
+there should not be.
+
+== What would unblock it
+
+Any one of these, in decreasing order of strength:
+
+. A formalisation in `echo-types` — even a single `.idr` giving the echo-type
+  former and its invariant — that this module can import or mirror.
+. A precise statement in the spec: what an echo type *is*, which operations must
+  preserve it, and what a counterexample looks like.
+. A ruling that the intended content is the `Tropical` and `Epistemic` work
+  already in `src/ProvenTests/TypeSafe/`, in which case this directory should be
+  deleted rather than filled, and the spec corrected.
+
+Until one of those exists, `HigherOrder/` and `SetTheory/` — both grounded in
+standard mathematics — carry the spec's structural intent, and this directory
+stays empty on purpose.
+
+== Related
+
+* `src/ProvenTests/TypeSafe/Tropical.idr` — min-plus semiring resource bounds,
+  the nearest thing to an echo-type property currently proven here.
+* `PROOFS.adoc` — the catalogue of what this repo actually establishes.
