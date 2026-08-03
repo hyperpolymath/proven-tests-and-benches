@@ -43,12 +43,39 @@ echo "--- running benchmark ---"
 # The proven subject report grades a real external subject. It needs only
 # proven's ledger files (no code dependency), so it runs whenever a proven
 # checkout is reachable; otherwise it is skipped, not failed.
-PROVEN_ROOT="${PROVEN_ROOT:-/home/user/proven}"
+#
+# NOTE (2026-08-03): PROVEN_ROOT defaulted to the single hardcoded path
+# /home/user/proven, which exists on no machine in this estate — so this step
+# was skipped on every run that has ever happened, while the actual checkout
+# sat at ../proven relative to this repository. That matters more than a
+# missing report: READINESS.adoc rests its CRG grade on this step's output,
+# so the headline evidence for the grade had never been produced. The default
+# now searches the places a sibling checkout actually lives; an explicit
+# PROVEN_ROOT still wins.
+if [ -z "${PROVEN_ROOT:-}" ]; then
+  for candidate in \
+    "$(dirname "$PWD")/proven" \
+    "$PWD/../proven" \
+    "$HOME/developer/hyper-repos/proven" \
+    "/home/user/proven"
+  do
+    if [ -f "$candidate/MODULE-STATUS.txt" ]; then
+      PROVEN_ROOT="$candidate"
+      break
+    fi
+  done
+fi
+PROVEN_ROOT="${PROVEN_ROOT:-/nonexistent}"
+
 if [ -f "$PROVEN_ROOT/MODULE-STATUS.txt" ]; then
   echo "--- building proven subject report ---"
   idris2 --build integrations/proven/proven-subject.ipkg
   echo "--- running proven subject report (PROVEN_ROOT=$PROVEN_ROOT) ---"
   ( cd integrations/proven && PROVEN_ROOT="$PROVEN_ROOT" ./build/exec/proven-subject-report )
 else
-  echo "--- skipping proven subject report (no proven checkout at $PROVEN_ROOT) ---"
+  # Deliberately loud. A skip here is NOT a pass, and the CRG evidence in
+  # READINESS.adoc depends on this step having run.
+  echo "--- SKIPPED: proven subject report — no proven checkout found ---" >&2
+  echo "    Searched: ../proven, \$HOME/developer/hyper-repos/proven" >&2
+  echo "    Set PROVEN_ROOT to grade the subject. A skip is not a pass." >&2
 fi

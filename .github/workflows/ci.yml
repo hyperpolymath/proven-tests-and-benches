@@ -1,34 +1,141 @@
 # SPDX-License-Identifier: MPL-2.0
-# GitHub Actions mirror of the GitLab pipeline: compiles and runs the Idris2
-# framework. Deliberately MANUAL-ONLY (workflow_dispatch) so it consumes ZERO
-# GitHub Actions minutes on push/PR. The GitLab `idris2` job is the real gate;
-# and required-check verdicts can be posted from owned compute for 0 minutes
-# (see hyperpolymath/bag-of-actions: Bag.GitHubBridge). Trigger this on demand
-# from the Actions tab, or move it to a self-hosted runner, if you want it.
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# The Idris2 gate for this repository.
+#
+# WHY THIS CHANGED (2026-08-03)
+# -----------------------------
+# This workflow was `workflow_dispatch:`-only, on the stated rationale that the
+# GitLab `idris2` job was "the real gate" and GitHub should therefore consume
+# zero Actions minutes. Two things were wrong with that:
+#
+#   1. There is no GitLab remote. `git remote -v` lists exactly one remote,
+#      github.com/hyperpolymath/proven-tests-and-benches. `.gitlab-ci.yml`
+#      describes a pipeline with no project to run on, so the "real gate" did
+#      not exist.
+#
+#   2. Nothing else compiled the code either. `gh run list` shows this
+#      workflow has NEVER run. The only workflow executing on push was CodeQL,
+#      which fails every time (code scanning is not enabled on this private
+#      repository) — so the repository was spending billed minutes on a job
+#      that cannot succeed, while never running the one that matters.
+#
+# The zero-minute intent is honoured where it is cheap to do so: the three
+# cheapest gates run before the toolchain is provisioned, the toolchain is
+# cached across runs, and superseded runs are cancelled rather than left to
+# finish.
+#
+# This repository is the estate's canonical source of test definitions
+# (standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc directs other repos
+# to copy tests from here first), so an ungated regression here propagates.
+
 name: CI (Idris2)
 
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
+# Least privilege: this job reads the repository and nothing else.
 permissions:
-  actions: read
   contents: read
 
+# Cancel superseded runs on the same ref. A second push while the first is
+# still bootstrapping Idris2 would otherwise pay for both.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Single source of truth for CI. scripts/check-toolchain-pins.sh fails the
+  # build if this disagrees with .tool-versions, the installer, .gitlab-ci.yml,
+  # META.a2ml, STATE.a2ml or the README.
+  IDRIS2_VERSION: 0.7.0
+
 jobs:
-  idris2:
-    name: Build, test & benchmark
+  gate:
+    name: Build, test and benchmark
     runs-on: ubuntu-latest
+    # Generous because a cold cache bootstraps Idris2 from source; a warm cache
+    # finishes in a fraction of this.
+    timeout-minutes: 45
+
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.2.2
+
+      # --- Cheap gates first: these need no toolchain, so drift and escape
+      # --- hatches fail in seconds rather than after a 15-minute bootstrap.
+
+      - name: Check toolchain pins agree
+        run: bash scripts/check-toolchain-pins.sh
+
+      - name: Check for proof escape hatches
+        run: |
+          set -uo pipefail
+          if grep -rn "believe_me\|assert_total\|%partial\|unsafePerformIO" \
+               src/ tests/ benchmarks/ integrations/ --include="*.idr"; then
+            echo "::error::Proof escape hatch found. Actually-Proven content may not use these."
+            exit 1
+          fi
+          echo "OK: no proof escape hatches."
+
+      - name: Shellcheck
+        run: shellcheck -S warning scripts/*.sh
+
+      # --- Toolchain ---
 
       - name: Cache Idris2 toolchain
-        uses: actions/cache@v4
+        id: cache-idris2
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.idris2
-          key: idris2-v0.7.0-${{ runner.os }}
+          key: idris2-v${{ env.IDRIS2_VERSION }}-${{ runner.os }}
 
       - name: Install Idris2
         run: bash scripts/install-idris2.sh
+        env:
+          IDRIS2_VERSION: v${{ env.IDRIS2_VERSION }}
 
-      - name: Build, test & benchmark
+      - name: Confirm the installed compiler matches the pin
+        run: |
+          echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
+          "$HOME/.idris2/bin/idris2" --version
+          bash scripts/check-toolchain-pins.sh
+
+      # --- The actual gate ---
+
+      - name: Build, test and benchmark
         run: bash scripts/ci-build.sh
+
+      # --- Subject grading ---
+      # scripts/ci-build.sh grades the external `proven` subject when a checkout
+      # is reachable, and reports loudly on stderr when it is not — a skip there
+      # is not a pass, and it is the evidence READINESS.adoc rests its grade on.
+      #
+      # CI has no sibling checkout by default, so the step below fetches one.
+      # It is `continue-on-error` ONLY because the subject is an external
+      # repository whose availability is not this repository's invariant; the
+      # gate above has already run by this point and its result stands
+      # regardless.
+      - name: Fetch the `proven` subject for grading
+        id: fetch-proven
+        continue-on-error: true
+        run: |
+          git clone --depth 1 https://github.com/hyperpolymath/proven.git "$RUNNER_TEMP/proven"
+
+      - name: Grade the `proven` subject
+        if: steps.fetch-proven.outcome == 'success'
+        run: |
+          export PATH="$HOME/.idris2/bin:$PATH"
+          idris2 --build integrations/proven/proven-subject.ipkg
+          cd integrations/proven
+          PROVEN_ROOT="$RUNNER_TEMP/proven" ./build/exec/proven-subject-report
+
+      - name: Note when subject grading did not run
+        if: steps.fetch-proven.outcome != 'success'
+        run: |
+          echo "::warning::Subject grading DID NOT RUN — the 'proven' checkout could not be fetched."
+          echo "The CRG evidence in READINESS.adoc rests on this step. A skip is not a pass."

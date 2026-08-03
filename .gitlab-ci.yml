@@ -1,5 +1,23 @@
 # SPDX-License-Identifier: MPL-2.0
-# Primary CI/CD - GitLab is the source of truth
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# DORMANT — this pipeline has no GitLab project to run on.
+#
+# The header used to read "Primary CI/CD - GitLab is the source of truth", and
+# .github/workflows/ci.yml disabled itself on that basis, calling the `idris2`
+# job below "the real gate". As of 2026-08-03 `git remote -v` lists exactly one
+# remote — github.com/hyperpolymath/proven-tests-and-benches — so no GitLab
+# mirror exists and nothing here has ever executed. Between the two files, the
+# repository had no automated build gate at all.
+#
+# The GitHub workflow is now the real gate. This file is kept because the
+# `idris2` job is correct and would work if a GitLab mirror were configured,
+# but it must not be cited as evidence that anything is being checked.
+#
+# Also note, if this is ever activated: every Rust and Elixir job below is
+# gated on `exists: [Cargo.toml]` / `[mix.exs]`, neither of which is present,
+# and semgrep/cargo-deny/mix-audit/clippy/credo all carry
+# `allow_failure: true`. Only trivy, trufflehog and idris2 would actually gate.
 
 stages:
   - security
