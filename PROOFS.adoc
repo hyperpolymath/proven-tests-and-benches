@@ -23,7 +23,7 @@ The framework defines three tiers and implements all three. Measured on
 ! Carries a proof term. The property holds for all inputs.
 
 ! `ProvisionallyProven`
-! **97**
+! **115**
 ! Checked at run time on named witnesses. Holds for those inputs.
 
 ! `Unproven`
@@ -88,10 +88,40 @@ injected failure, **51/52, exit 1**.
 | `Bridge` | cross-representation bridging
 |===
 
-=== `proven-spec-suite` — HigherOrder + SetTheory (45 tests)
+=== `proven-spec-suite` — AffineScript + HigherOrder + SetTheory (63 tests)
 
-Added 2026-07-28 to reconcile the repo with §3.1 of the spec. Verified:
-**45/45 pass, exit 0**; with an injected failure, **44/45, exit 1**.
+Added 2026-07-28 to reconcile the repo with §3.1 of the spec and to cover
+AffineScript. Verified: **63/63 pass, exit 0**; with an injected failure,
+**61/63, exit 1**.
+
+==== AffineScript (18 tests)
+
+Properties taken from the borrow checker's own contract —
+`affinescript/lib/borrow.ml`, module docstring — not invented here:
+
+[cols="2,1,4"]
+!===
+! Module ! Tests ! Guarantee
+
+! `AffineScript/Affinity`
+! 9
+! *No use after move.* Affine = at most once: dropping is fine, two uses is not. Includes `affineIsWeakerThanLinear`, because conflating affine with linear would silently reject valid programs.
+
+! `AffineScript/Borrow`
+! 9
+! *No conflicting borrows* (Shared XOR Exclusive over overlapping lifetimes) and *borrows don't outlive owners* (containment at both ends).
+!===
+
+**These are properties of a model, not a proof about the OCaml.** Passing them
+says nothing about whether `lib/borrow.ml` is correct. They pin down what the
+guarantees mean precisely enough to disagree with — the honest limit of this
+tier, and both modules say so at the top.
+
+**Half the assertions are rejections on purpose.** A suite that only checks
+happy paths passes just as well against a checker that accepts everything.
+Verified by making that mistake deliberately — replacing
+`affine v t = useCount v t <= 1` with `affine v t = True` gives
+**61/63, SUITE: FAIL, exit 1**. The suite detects a vacuous checker.
 
 [cols="2,1,4"]
 |===
@@ -148,7 +178,7 @@ Full reasoning and the three things that would unblock it:
 
 [source,console]
 ----
-$ idris2 --typecheck proven-tests.ipkg        # 29 modules
+$ idris2 --typecheck proven-tests.ipkg        # 32 modules
 $ idris2 --install   proven-tests.ipkg
 $ idris2 --build     proven-tests-suite.ipkg && ./build/exec/proven-tests-suite
 $ idris2 --build     proven-spec-suite.ipkg  && ./build/exec/proven-spec-suite
