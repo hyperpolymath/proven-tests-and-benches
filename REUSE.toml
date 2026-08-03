@@ -37,13 +37,12 @@ SPDX-PackageDownloadLocation = "https://github.com/hyperpolymath/proven-tests-an
 # wrong call. Flagging instead of guessing.
 
 # --- Build manifests and package definitions (code) ------------------------
+# Globbed rather than listed by name: PR #20 added a fifth manifest
+# (proven-spec-suite.ipkg) the same day this file was written, and an
+# enumeration silently stops covering new ones. `reuse lint` went 108/108 ->
+# 124/125 as a result. A glob cannot drift that way.
 [[annotations]]
-path = [
-  "proven-tests.ipkg",
-  "proven-tests-suite.ipkg",
-  "benchmarks/benchmark.ipkg",
-  "integrations/proven/proven-subject.ipkg",
-]
+path = "**/*.ipkg"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 SPDX-License-Identifier = "MPL-2.0"
