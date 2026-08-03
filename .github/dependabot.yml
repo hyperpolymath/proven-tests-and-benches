@@ -1,10 +1,31 @@
 # SPDX-License-Identifier: MPL-2.0
-# Dependabot configuration for RSR-compliant repositories
-# Covers common ecosystems - remove unused ones for your project
+# Dependabot configuration for hyperpolymath/proven-tests-and-benches
+#
+# This file previously declared six ecosystems — github-actions, cargo, mix,
+# npm, pip and nix — of which exactly one applies here. There is no Cargo.toml,
+# no mix.exs, no package.json, no requirements.txt and no flake.nix in this
+# repository, and there never has been; the list was donor-template boilerplate
+# whose own header said "remove unused ones for your project".
+#
+# Two reasons that mattered rather than being merely untidy:
+#
+#   1. `nix` is not a valid package-ecosystem value. Dependabot rejects a
+#      configuration file as a whole when any entry is invalid, so the one
+#      ecosystem that DOES apply here (github-actions) was at risk of never
+#      being processed.
+#
+#   2. Estate ruling 2026-05-18 retired Nix in favour of Guix, so a nix
+#      entry could not become correct later either.
+#
+# Idris2 has no Dependabot ecosystem. Its toolchain pin is enforced instead by
+# scripts/check-toolchain-pins.sh, and .ipkg dependencies are vendored through
+# the Idris2 package path rather than resolved from a registry.
 
 version: 2
 updates:
-  # GitHub Actions - always include
+  # GitHub Actions — the only dependency ecosystem present in this repository.
+  # Actions are SHA-pinned (see .github/workflows/*), so these PRs are how the
+  # pins get moved deliberately rather than drifting.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -13,39 +34,3 @@ updates:
       actions:
         patterns:
           - "*"
-
-  # Rust/Cargo
-  - package-ecosystem: "cargo"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    # `open-pull-requests-limit: 0` suppresses routine version-update PRs
-    # while leaving Dependabot SECURITY PRs flowing. The previous
-    # `ignore: "*" patch` rule also silenced security PRs under GitHub\'s
-    # current Dependabot behaviour. See rsr-template-repo commit 78b050e
-    # and 007-lang/audits/audit-dependabot-automation-gap-2026-04-17.md.
-    open-pull-requests-limit: 0
-
-  # Elixir/Mix
-  - package-ecosystem: "mix"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
-  # Node.js/npm
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
-  # Python/pip
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
-  # Nix flakes
-  - package-ecosystem: "nix"
-    directory: "/"
-    schedule:
-      interval: "weekly"

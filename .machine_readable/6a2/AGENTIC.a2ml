@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: MPL-2.0
+# AGENTIC.a2ml — AI agent operational gating and safety controls
+#
+# HUMAN SUMMARY: rules of engagement for AI coding agents working on this
+# repository. The prose version is AGENTS.md; this is the machine-readable
+# counterpart and the two must agree.
+
+[agentic-config]
+version = "1.0.0"
+project = "proven-tests-and-benches"
+prose-equivalent = "AGENTS.md"
+last-updated = "2026-08-03"
+
+[agentic-config.claude-code]
+tools = ["read", "edit", "bash", "grep", "glob"]
+permissions = "read-all"
+
+[agentic-config.patterns]
+code-review = "thorough"
+refactoring = "conservative"      # this repo is copied FROM; churn propagates
+testing = "comprehensive"
+documentation = "both"            # inline Idris2 comments + .adoc under docs/
+
+[agentic-config.constraints]
+languages = ["idris2", "bash"]
+banned = ["typescript", "rescript", "go", "python", "makefile", "vlang", "ats2"]
+# Idris2 is the only implementation language here. Bash is permitted for
+# scripts/ and CI only, and must pass shellcheck at -S warning.
+
+[agentic-config.project-specific]
+# ---------------------------------------------------------------------------
+# The asymmetry that governs everything else in this file
+# ---------------------------------------------------------------------------
+upstream-of-estate-tests = true
+provenance-rule = "standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc directs every estate repo to draw tests from THIS repository first, ahead of the standard's own examples. A vacuous test added here is copied outward and read as evidence in repos that never re-examine it."
+overclaim-cost = "estate-wide, not local"
+
+# ---------------------------------------------------------------------------
+# Hard prohibitions — an agent must refuse these, not weigh them
+# ---------------------------------------------------------------------------
+banned-proof-escape-hatches = ["believe_me", "assert_total", "%partial", "idris_crash", "unsafePerformIO", "?hole"]
+escape-hatch-scope = ["src/", "tests/", "benchmarks/", "integrations/"]
+escape-hatch-gate = "just lint (exits 1 on any hit; must not be weakened to reporting-only)"
+current-escape-hatch-count = 0
+
+banned-gate-shapes = [
+  "|| true",
+  "|| echo <message>",
+  "continue-on-error: true on a load-bearing gate",
+  "skip-if-absent guards that exit 0 when the subject is missing",
+]
+gate-rule = "Before adding any check, run it against deliberately broken input and confirm a non-zero exit. A check never observed to fail is not a gate."
+missing-input-convention = "exit 2 and say NO CHECK WAS PERFORMED; never exit 0"
+
+licence-edits = "manual, owner-only"
+licence-rule = "Never sweep SPDX headers in bulk; never generate a licence-change commit; never touch vendored licence text. Newly authored files may carry correct SPDX from birth. Existing files are declared via REUSE.toml, not by editing them."
+
+settings-yml = "must-not-create"
+settings-yml-reason = "Probot's name: field self-renames the repository on push; ~20 estate repos are armed with this."
+
+# ---------------------------------------------------------------------------
+# Structural invariants an agent must preserve
+# ---------------------------------------------------------------------------
+[agentic-config.invariants]
+evidence-carrying-provenance = "ActualEvidence.proof_ladder is List1 ProofStep (src/ProvenTests/Types.idr), so Actually-Proven with zero proof steps is unrepresentable. Do not relax to List."
+self-deriving-coverage = "Coverage is derived from tests that ran and passed (src/ProvenTests/Coverage.idr); the derivation is machine-checked in src/ProvenTests/Meta.idr. A covered cell must never become a hand-written claim."
+typed-taxonomy-axes = "TestCategory/TestAspect are enums in Types.idr, not strings. Metadata can only name a coordinate that exists."
+
+# ---------------------------------------------------------------------------
+# Verification an agent must run before claiming completion
+# ---------------------------------------------------------------------------
+[agentic-config.verification]
+required-commands = [
+  "just check-pins",     # 7 artefacts + installed compiler must agree
+  "just lint",           # zero proof escape hatches
+  "just ci",             # full gate: build, install, suite, benchmark
+]
+evidence-rule = "Report what was measured, not what was expected. A skipped suite is reported as skipped, never as a pass. A number taken from a document is attributed to that document, not to a run."
+known-skip = "integrations/proven subject report is skipped unless a proven checkout is present; the skip is not a pass."
+
+[agentic-config.escalation]
+# Conditions under which an agent should stop and ask rather than proceed.
+stop-and-ask = [
+  "any change to a licence or to LICENSES/",
+  "any change to the CRG grade recorded in READINESS.adoc",
+  "any weakening of a gate's failure condition",
+  "any edit that would make a test pass without asserting a fact",
+]
+
+[provenance]
+last-modified-by = "claude-opus-5"
+last-modified-at = "2026-08-03"
+modification-summary = "Initial creation. Added as part of completing the 6-file A2ML set (AGENTIC/NEUROSYM/PLAYBOOK were absent; only META/STATE/ECOSYSTEM existed)."

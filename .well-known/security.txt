@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# Security contact information for hyperpolymath/proven-tests-and-benches
+# Format: RFC 9116 (https://www.rfc-editor.org/rfc/rfc9116)
+#
+# Kept in agreement with SECURITY.md; if you change one, change both.
+
+Contact: mailto:j.d.a.jewell@open.ac.uk
+Expires: 2027-08-03T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://github.com/hyperpolymath/proven-tests-and-benches/blob/main/.well-known/security.txt
+Policy: https://github.com/hyperpolymath/proven-tests-and-benches/blob/main/SECURITY.md
+
+# Acknowledgement within 48 hours, initial assessment within 7 days,
+# fix or mitigation within 90 days. Safe harbour applies to researchers
+# following responsible disclosure — see SECURITY.md.

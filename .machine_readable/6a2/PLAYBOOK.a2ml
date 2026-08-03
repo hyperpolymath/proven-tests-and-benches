@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: MPL-2.0
+# PLAYBOOK.a2ml — operational runbook
+#
+# HUMAN SUMMARY: how to build, check, and troubleshoot this repository.
+# Every command below was executed on 2026-08-03 and is recorded with what it
+# actually did, not what it is supposed to do.
+
+[playbook]
+version = "1.0.0"
+project = "proven-tests-and-benches"
+last-updated = "2026-08-03"
+last-verified = "2026-08-03"   # by a full scripts/ci-build.sh run, exit 0
+
+[playbook.prerequisites]
+toolchain = "Idris2 0.7.0"
+backend = "Chez Scheme (invoked at BUILD time, not only to bootstrap)"
+system-packages = ["chezscheme", "libgmp-dev", "git", "make", "gcc"]
+asdf-plugin = "none — .tool-versions is a declarative pin, NOT an installer"
+provisioning = "scripts/install-idris2.sh (builds Idris2 from source at the pinned tag)"
+guix = "guix shell -D -f guix.scm provides the inputs; UNVALIDATED (guix absent on the authoring machine)"
+
+[playbook.procedures.build]
+deps = "just deps"                  # provision the toolchain
+check-pins = "just check-pins"      # all 7 version artefacts must agree
+build = "just build"                # idris2 --build proven-tests.ipkg
+install = "just install"            # dependents build against the installed lib
+test = "just test"                  # framework self-test + type-safe suite
+test-typesafe = "just test-typesafe"
+bench = "just bench"
+lint = "just lint"                  # zero proof escape hatches; exits 1 on a hit
+ci = "just ci"                      # scripts/ci-build.sh — the full gate
+clean = "just clean"
+
+[playbook.procedures.verification]
+# What a green run looks like, so a broken one is recognisable.
+expected-typesafe = "=== 52/52 passed === then SUITE: PASS"
+expected-bench = "three workloads (effectStackValid, relationTransitive, ceremonyEndsProperly), 2000 iterations each, ns/iter plus checksum"
+expected-check-pins = "OK: all Idris2 pins agree on 0.7.0"
+expected-lint = "OK: no proof escape hatches in src/ tests/ benchmarks/ integrations/"
+
+[playbook.gotchas]
+# Things that have actually gone wrong here, with their signatures.
+
+silent-framework-runner = "./build/exec/proven-tests prints almost nothing. This is a DEFECT, not a quiet success: Main.idr calls runComprehensiveSuiteData (no output) while runComprehensiveSuite (which prints the per-test lines and the coverage grid) is never called from anywhere. Do not read the silence as a pass."
+
+skipped-subject-report = "scripts/ci-build.sh runs the integrations/proven subject report only if $PROVEN_ROOT/MODULE-STATUS.txt exists, defaulting to /home/user/proven — a path that exists on no machine in this estate. The real checkout is at hyper-repos/proven. The step has been skipped on every run, and the skip is reported as success. This is the evidence READINESS.adoc rests its grade on."
+
+toolchain-drift = "META.a2ml and STATE.a2ml declared Idris2 0.8.0 for a month while every executable path used 0.7.0. Nothing detected it because nothing compared the two populations. `just check-pins` now does; run it after touching any version string."
+
+ld-library-path = "The Idris2 support libraries must be on LD_LIBRARY_PATH or the built executables fail at load. The Justfile recipes glob $HOME/.idris2/idris2-*/lib for this; a bare `idris2 --build` outside `just` may not."
+
+workflow-parse-refusal = "A GitHub Actions workflow refused at parse time produces NO check run at all — `gh pr checks` shows nothing rather than a failure. Absence of red is not evidence of green. Confirm with `gh run list`."
+
+phantom-action-pins = "github/codeql-action@29b1f65c1f735799893313399435a59f54045865 was pinned here and exists in no repository (GitHub API returns 422). CodeQL therefore never ran. Verify any pin with `gh api repos/<owner>/<repo>/commits/<sha>` before trusting it."
+
+[playbook.troubleshooting]
+build-fails-missing-chez = "install chezscheme and libgmp-dev; the Chez backend is needed at build time, not just to bootstrap"
+executable-fails-to-load = "LD_LIBRARY_PATH is unset — run via `just`, not a bare idris2 invocation"
+check-pins-exit-1 = "two artefacts name different Idris2 versions; the script prints every artefact and its version — reconcile all of them in one commit"
+check-pins-exit-2 = "an artefact declares no version at all; add the pin rather than removing the check"
+reuse-lint-unused-licence = "LICENSES/AGPL-3.0-or-later.txt is unused. Deliberately NOT deleted: removing a file from LICENSES/ is a licensing action reserved to the owner. See REUSE.toml."
+
+[playbook.rollback]
+strategy = "git revert; this repository ships no runtime service and holds no persistent state, so there is nothing to migrate back"
+build-artefacts = "build/ and benchmarks/build/ are disposable — `just clean`"
+installed-library = "`idris2 --install` writes into ~/.idris2; reinstall from a known-good commit to roll back"
+
+[playbook.escalation]
+owner = "Jonathan D.A. Jewell (@hyperpolymath)"
+security-contact = "j.d.a.jewell@open.ac.uk"
+security-sla = "acknowledgement 48h, assessment 7d, fix or mitigation 90d"
+
+[provenance]
+last-modified-by = "claude-opus-5"
+last-modified-at = "2026-08-03"
+modification-summary = "Initial creation. Added as part of completing the 6-file A2ML set."

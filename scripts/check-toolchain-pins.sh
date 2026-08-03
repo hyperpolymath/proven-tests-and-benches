@@ -19,7 +19,7 @@
 # Exit codes: 0 = all pins agree, 1 = drift detected, 2 = a pin is missing.
 
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || { echo "FAIL: cannot reach repository root" >&2; exit 2; }
 
 EXPECTED=""
 declare -a MISSING=()

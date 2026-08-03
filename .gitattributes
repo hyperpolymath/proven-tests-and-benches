@@ -4,6 +4,11 @@
 * text=auto eol=lf
 
 # Source
+# Idris2 is this repository's source language; both entries were missing.
+# linguist-language keeps GitHub's language bar reporting Idris rather than
+# guessing from the shell scripts and AsciiDoc.
+*.idr   text eol=lf linguist-language=Idris
+*.ipkg  text eol=lf linguist-language=Idris
 *.rs    text eol=lf diff=rust
 *.ex    text eol=lf diff=elixir
 *.exs   text eol=lf diff=elixir
@@ -51,5 +56,5 @@ Containerfile  text eol=lf
 *.gz    binary
 
 # Lock files
-Cargo.lock  text eol=lf -diff
-flake.lock  text eol=lf -diff
+# Cargo.lock/flake.lock entries removed 2026-08-03: neither file exists in
+# this repository, and Nix was retired estate-wide in favour of Guix.

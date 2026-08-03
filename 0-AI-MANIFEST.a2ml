@@ -30,5 +30,9 @@ items = [
   { agent = "CLAUDE", task = "proofs, compilers, repo-local implementation, CI/CD, formal verification, Rust/Idris2/Zig" },
   { agent = "CHATGPT", task = "prose, papers, publication review, standards docs, outreach drafts, letters" },
   { agent = "GEMINI", task = "estate audits, cross-repo sweeps, long-context triage, pattern detection" },
-  { agent = "VIBE", role = "UI/frontend, PanLL panels, ReScript components, theming, rapid prototyping" },
+  # `role =` here was a schema bug: the other three entries key on `task`, so a
+  # consumer reading items[].task got nothing for VIBE. Corrected 2026-08-03.
+  # ReScript also replaced with AffineScript — ReScript has been banned in new
+  # estate code since 2026-04-30.
+  { agent = "VIBE", task = "UI/frontend, PanLL panels, AffineScript components, theming, rapid prototyping" },
 ]
