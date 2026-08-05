@@ -2,7 +2,7 @@
 //
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
-= {{PROJECT_NAME}} Container Templates
+= Proven-Tests: Type-Safe and Beyond Testing Framework Container Templates
 :toc: left
 :toclevels: 3
 :sectnums:

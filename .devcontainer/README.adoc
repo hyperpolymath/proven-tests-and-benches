@@ -3,7 +3,7 @@
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
 = Dev Container Usage
-:author: {{AUTHOR}} <{{AUTHOR_EMAIL}}>
+:author: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 == Overview
 
@@ -27,4 +27,4 @@ This dev container uses `cgr.dev/chainguard/wolfi-base` with git, curl, bash, an
 
 == Customization
 
-Replace `{{PROJECT_NAME}}` placeholders in both `devcontainer.json` and `Containerfile` with your actual project name. Run `just deps` to verify the environment after first launch.
+Replace `Proven-Tests: Type-Safe and Beyond Testing Framework` placeholders in both `devcontainer.json` and `Containerfile` with your actual project name. Run `just deps` to verify the environment after first launch.

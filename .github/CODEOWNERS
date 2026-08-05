@@ -1,8 +1,4 @@
 # SPDX-License-Identifier: MPL-2.0
-# Code Owners for hyperpolymath/proven-tests-and-benches
-#
-# Was `* @metadatastician`, which owns no part of this repository — every SPDX
-# header, MAINTAINERS.adoc and the remote all name @hyperpolymath. Corrected
-# 2026-08-03.
-
-* @hyperpolymath
+# Solo-maintained hyperpolymath repo: no owner lines by policy.
+# See hyperpolymath/standards CODEOWNERS-POLICY.adoc (Rule 1).
+# Sole-maintainer review is moot; SPDX headers carry attribution.
