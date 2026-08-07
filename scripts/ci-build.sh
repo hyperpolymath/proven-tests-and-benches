@@ -27,6 +27,15 @@ idris2 --install proven-tests.ipkg
 echo "--- building type-safe test suite package ---"
 idris2 --build proven-tests-suite.ipkg
 
+# NOTE (2026-08-07): proven-spec-suite was built and run by NOTHING — not this
+# script, not a just recipe, not a workflow step. It carries 75 tests across
+# ProvenLawsTests, AffineScriptTests, HigherOrderTests and SetTheoryTests,
+# including the 12 Actually-Proven theorems that PROOFS.adoc headlines as this
+# repository's top-tier evidence. Those theorems were the strongest claim in the
+# repo and nothing had ever confirmed they still compile. They gate now.
+echo "--- building spec suite package (Proven laws, AffineScript, HigherOrder, SetTheory) ---"
+idris2 --build proven-spec-suite.ipkg
+
 echo "--- building benchmark ---"
 idris2 --build benchmarks/benchmark.ipkg
 
@@ -36,6 +45,9 @@ mkdir -p build/report
 
 echo "--- running type-safe test suite (exits non-zero on failure) ---"
 ./build/exec/proven-tests-suite
+
+echo "--- running spec suite (exits non-zero on failure) ---"
+./build/exec/proven-spec-suite
 
 echo "--- running benchmark ---"
 ./benchmarks/build/exec/proven-bench

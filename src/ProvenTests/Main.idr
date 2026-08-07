@@ -17,10 +17,15 @@ import Data.List
 -- =============================================================================
 -- MAIN ENTRY POINT
 -- =============================================================================
--- Thin driver over the library. Runs the comprehensive suite (printing the
--- human report + coverage map) and, with `--report <path>`, also writes the
--- machine-readable JSON run report consumed by estate tooling (panic-attack
--- aggregate; see docs/INTEROP-PANIC-ATTACK.adoc).
+-- Thin driver over the library. Runs the comprehensive suite, prints the human
+-- report and the derived coverage map, and — with `--report <path>` — also
+-- writes the machine-readable JSON run report consumed by estate tooling
+-- (panic-attack aggregate; see docs/INTEROP-PANIC-ATTACK.adoc).
+--
+-- NOTE (2026-08-07): this comment used to describe printing that did not
+-- happen. `main` called the silent runner, so the executable produced NO output
+-- at all without `--report`, and the coverage map was computed and discarded on
+-- every run. Printing is now real; `--quiet` suppresses it for scripted use.
 
 --/ Extract a `--report <path>` argument, if present.
 reportPath : List String -> Maybe String
@@ -28,10 +33,15 @@ reportPath ("--report" :: p :: _) = Just p
 reportPath (_ :: rest)            = reportPath rest
 reportPath []                     = Nothing
 
+--/ Suppress the human report (the JSON report, if requested, is unaffected).
+quiet : List String -> Bool
+quiet args = elem "--quiet" args
+
 main : IO ()
 main = do
   args <- getArgs
   (ok, entries, covered) <- runComprehensiveSuiteData
+  if quiet args then pure () else printRunReport entries covered
   case reportPath args of
     Nothing => pure ()
     Just path => do

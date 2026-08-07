@@ -29,21 +29,46 @@ testRelationReflexive =
   )
 
 -- Test: Relation is symmetric
+-- Called at (2,2), where the relation HOLDS, so `rel x y == rel y x` compares
+-- True with True. At (1,2) — as this test read until 2026-08-07 — it compared
+-- False with False and passed without ever touching the symmetric case.
 public export
 testRelationSymmetric : ProvisionallyProvenTest
-testRelationSymmetric = 
-  provisionalTest (dyadicTestId 2) "Relation is symmetric" (
-    assertTrue (relationSymmetric equalityRelation 1 2) 
-      "Equality relation should be symmetric"
+testRelationSymmetric =
+  provisionalTest (dyadicTestId 2) "Relation is symmetric (antecedent discharged)" (
+    assertTrue (relationSymmetric equalityRelation 2 2)
+      "Equality relation should be symmetric where it holds"
   )
 
 -- Test: Relation is transitive
+-- Called at (2,2,2), where `rel x y && rel y z` is TRUE, so the consequent
+-- `rel x z` must actually be evaluated. At (1,2,3) the antecedent is False and
+-- the implication `not (...) || rel x z` short-circuits to True — vacuously.
 public export
 testRelationTransitive : ProvisionallyProvenTest
-testRelationTransitive = 
-  provisionalTest (dyadicTestId 3) "Relation is transitive" (
-    assertTrue (relationTransitive equalityRelation 1 2 3) 
-      "Equality relation should be transitive"
+testRelationTransitive =
+  provisionalTest (dyadicTestId 3) "Relation is transitive (antecedent discharged)" (
+    assertTrue (relationTransitive equalityRelation 2 2 2)
+      "Equality relation should be transitive where the antecedent holds"
+  )
+
+-- Test: a relation that declares a property it does not have is REJECTED.
+-- `lessThanRelation` declares `reflexive = True` for (<); `x < x` never holds.
+public export
+testDishonestDeclarationRejected : ProvisionallyProvenTest
+testDishonestDeclarationRejected =
+  provisionalTest (dyadicTestId 6) "False reflexivity declaration is rejected" (
+    assertTrue dishonestRelationRejected
+      "lessThanRelation declares reflexivity for (<) and must be rejected"
+  )
+
+-- Test: a relation declaring all three properties it lacks is REJECTED.
+public export
+testOverclaimingRelationRejected : ProvisionallyProvenTest
+testOverclaimingRelationRejected =
+  provisionalTest (dyadicTestId 7) "Overclaiming relation is rejected" (
+    assertTrue overclaimingRelationRejected
+      "A relation declaring reflexive+symmetric+transitive for (<) must be rejected"
   )
 
 -- Test: Relation is equivalence
@@ -72,5 +97,7 @@ allDyadicTests = [
     testRelationSymmetric,
     testRelationTransitive,
     testRelationIsEquivalence,
-    testDyadicAllTestsPass
+    testDyadicAllTestsPass,
+    testDishonestDeclarationRejected,
+    testOverclaimingRelationRejected
   ]

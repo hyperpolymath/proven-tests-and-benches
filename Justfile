@@ -28,7 +28,11 @@ build:
 install: build
     idris2 --install proven-tests.ipkg
 
-# Build and run the framework self-test suite and the type-safe test suite
+# Build and run every test package: the framework self-test, the type-safe
+# category suite, and the spec suite (Proven laws, AffineScript, HigherOrder,
+# SetTheory). The spec suite was absent from this recipe — and from the CI gate
+# — until 2026-08-07, so its 75 tests and 12 Actually-Proven theorems were
+# exercised by nothing automated.
 test: install
     #!/usr/bin/env bash
     set -euo pipefail
@@ -36,8 +40,20 @@ test: install
         export LD_LIBRARY_PATH="$libdir:${LD_LIBRARY_PATH:-}"
     done
     idris2 --build proven-tests-suite.ipkg
+    idris2 --build proven-spec-suite.ipkg
     ./build/exec/proven-tests
     ./build/exec/proven-tests-suite
+    ./build/exec/proven-spec-suite
+
+# Run only the spec suite package (Proven laws, AffineScript, HigherOrder, SetTheory)
+test-spec: install
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for libdir in "$HOME"/.idris2/idris2-*/lib; do
+        export LD_LIBRARY_PATH="$libdir:${LD_LIBRARY_PATH:-}"
+    done
+    idris2 --build proven-spec-suite.ipkg
+    ./build/exec/proven-spec-suite
 
 # Run only the type-safe category suite package
 test-typesafe: install
@@ -72,18 +88,15 @@ clean:
 # on the CLEAN case, and the dirty case exited 0 as well. It gated nothing.
 # Inverted: a hit is now a failure, absence is the success path.
 #
+# NOTE (2026-08-07): the grep used to live inline here AND inline in
+# .github/workflows/ci.yml, and both copies covered only four of the six
+# patterns AGENTIC.a2ml bans — `idris_crash` and hole syntax (?name) were
+# prohibited by the manifest and matched by neither. One copy now, in
+# scripts/check-escape-hatches.sh, called by both.
+#
 # Fail if any proof escape hatch appears in Idris2 sources (the honesty lint)
 lint:
-    #!/usr/bin/env bash
-    set -uo pipefail
-    echo "Scanning for proof escape hatches..."
-    if grep -rn "believe_me\|assert_total\|%partial\|unsafePerformIO" \
-         src/ tests/ benchmarks/ integrations/ --include="*.idr"; then
-        echo
-        echo "FAIL: proof escape hatch found. Actually-Proven content may not use these."
-        exit 1
-    fi
-    echo "OK: no proof escape hatches in src/ tests/ benchmarks/ integrations/"
+    bash scripts/check-escape-hatches.sh
 
 # Print the shields.io badge URL for the current CRG grade
 crg-badge:
