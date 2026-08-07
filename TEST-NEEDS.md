@@ -6,7 +6,12 @@ SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewe
 
 **Standard:** [Testing & Benchmarking Taxonomy v1.0.0](https://github.com/hyperpolymath/standards/blob/main/testing-and-benchmarking/TESTING-TAXONOMY.adoc)
 **Grading standard:** [Component Readiness Grades v2.2](https://github.com/hyperpolymath/standards/tree/main/component-readiness-grades)
-**Last measured:** 2026-08-03, by a full `scripts/ci-build.sh` run on Idris2 0.7.0.
+**Last measured:** 2026-08-07, by a full `scripts/ci-build.sh` run (exit 0) on
+Idris2 0.7.0, plus `just test-spec`.
+
+> Every figure below dated 2026-08-03 predated PRs #20-#26 (HigherOrder and
+> SetTheory suites, AffineScript borrow modelling, the 12 Actually-Proven
+> theorems, the secret scanner). They have been re-measured.
 
 ## Why this file is unusually load-bearing
 
@@ -37,10 +42,11 @@ Verified by running the gate, not by reading a document:
 | Quantity | Value | Source |
 |---|---|---|
 | Framework self-test cells | 36 (35 lattice cells + 1 self-classification) | `src/ProvenTests/Cells.idr` |
-| Type-safe category suite | **52 / 52 passing** | `./build/exec/proven-tests-suite`, 2026-08-03 |
+| Type-safe category suite | **56 / 56 passing** | `./build/exec/proven-tests-suite`, 2026-08-07 |
+| Spec suite (Proven laws, AffineScript, HigherOrder, SetTheory) | **75 / 75 passing**, of which **12 report Actually-Proven** | `./build/exec/proven-spec-suite`, 2026-08-07 — first gated run |
 | Benchmark harness | runs; 3 workloads, 2000 iterations each | `./benchmarks/build/exec/proven-bench` |
 | Category × aspect cells covered | 35 / 238 (14.7%) | `.machine_readable/6a2/STATE.a2ml` |
-| Aspect columns non-empty | 14 / 14 | see caveat under Reproducibility below |
+| Aspect columns non-empty | **14 / 14**, and now truthfully | `./build/exec/proven-tests`; the Reproducibility caveat below is resolved |
 | Proof escape hatches | **0** | `just lint`, exit 0 |
 | Toolchain pins in agreement | 7 / 7 artefacts + installed compiler | `just check-pins`, exit 0 |
 
@@ -60,31 +66,71 @@ occupancy. Occupancy is not strength; the Assessment column is what matters.
 | 7 | Lifecycle | 2 | REAL | |
 | 8 | Smoke | 2 | REAL | |
 | 9 | Property-Based / Generative | 2 | **THIN** | Properties are evaluated over small *fixed* lists, not generated inputs. Taxonomy expects 1000+ generated cases per property with shrinking and committed regression files. There is no generator and no shrinker. |
-| 10 | Mutation | 1 | **THIN** | `mutation-min-distinguished` asserts `oplus (Fin 5) (Fin 2) /= Fin 5` — a single inequality. No source is mutated, no mutants are generated, and no mutation score is computed. Taxonomy target is >80% mutants killed. |
-| 11 | Fuzz | 1 | **THIN** | `fuzz-min-le-operand` checks `minN a b <= a` over a fixed `natPairs` list. No random, malformed or adversarial input; nothing can crash. The taxonomy is explicit here: *"No fake fuzz placeholders… A placeholder fuzz file is worse than no fuzz at all."* Recorded as THIN rather than satisfied for exactly that reason. |
+| 10 | Mutation | 1 | **THIN** | `mutation-single-handwritten-mutant` (renamed from `mutation-min-distinguished`) asserts `oplus (Fin 5) (Fin 2) /= Fin 5` — a single inequality. No source is mutated, no mutants are generated, and no mutation score is computed. Taxonomy target is >80% mutants killed. |
+| 11 | Fuzz | 1 | **THIN** | `fuzz-fixed-vectors-min-le-operand` (renamed from `fuzz-min-le-operand`) checks `minN a b <= a` over a fixed `natPairs` list. No random, malformed or adversarial input; nothing can crash. The taxonomy is explicit here: *"No fake fuzz placeholders… A placeholder fuzz file is worse than no fuzz at all."* Recorded as THIN rather than satisfied for exactly that reason. |
 | 12 | Contract / Invariant | 2 | THIN | Asserts internal invariants. No contractile files (`Mustfile`, `Trustfile`, K9, ADJUST) exist in this repo to verify, so the taxonomy's actual subject matter is absent. |
 | 13 | Regression | 2 | THIN | Assertions are named `regression-*` but are not tied to a fixed bug, issue or commit. Taxonomy expects each fixed bug to become a permanent, traceable test. |
-| 14 | Chaos / Resilience | 1 | **THIN** | `chaos-cheapest-with-inf` exercises a `PosInf` value. No failure is injected — no process killed, no data corrupted, no resource exhausted. |
+| 14 | Chaos / Resilience | 1 | **THIN** | `chaos-inf-propagation-only` (renamed from `chaos-cheapest-with-inf`) exercises a `PosInf` value. No failure is injected — no process killed, no data corrupted, no resource exhausted. |
 | 15 | Compatibility | 2 | THIN | No versioned artefact or persisted data exists yet to be compatible *with*. |
 | 16 | Proof Regression | 1 | REAL | The Idris2 proofs in `Tropical.idr` and `Meta.idr` must typecheck for the build to succeed, so proof breakage genuinely fails the gate. |
-| 17 | Type-Safe *(repo-local extension)* | 9 | MIXED | 52/52 assertions pass. Several underlying predicates are `= True` by definition (see Gap B). |
+| 17 | Type-Safe *(repo-local extension)* | 9 | MIXED | 56/56 assertions pass. The vacuous predicates recorded in Gap B are fixed (PR #27) and negative fixtures added; the remaining `= True` cases in `Dependent.idr` are true *by type index*, and are now labelled as type-level guarantees rather than runtime tests. |
 
 ## Aspect coverage
 
 All 14 aspects have at least one covering cell. One of them does not deserve
 the credit:
 
-**Reproducibility — the covering cell cannot fail.** `Cells.idr` `reproCell`
-binds `run1 = battery` and `run2 = battery` — the *same pure value* — then
-reports success when `run1 == run2`. In a pure language that comparison is
-true by construction. It is the sole cell covering the Reproducibility aspect,
-which means the "14 / 14 aspect columns non-empty" figure in `STATE.a2ml`
-depends on it. Treat that figure as 13 / 14 until this cell compares two
-genuinely independent executions.
+**Reproducibility — RESOLVED 2026-08-07 (PR #27).** This section previously
+read: *"the covering cell cannot fail… treat that figure as 13 / 14"*. It is
+kept here in corrected form because the defect is instructive.
+
+`Cells.idr` `reproCell` bound `run1 = battery` and `run2 = battery` — two names
+for the *same pure value* — then reported success when `run1 == run2`. In a pure
+language that is reflexivity: true by construction, with the `Failed` branch
+unreachable. It was the sole cell covering the Reproducibility aspect, so
+`STATE.a2ml`'s `aspect-columns-nonempty = "14 / 14"` rested entirely on a cell
+that could not fail.
+
+The cell now runs the battery at two *different* workload sizes. Every predicate
+in it is invariant in that size — ⊕ is min and ⊗ (Fin k) (Fin 1) = Fin (k+1), so
+the fold's minimum sits at k = 1 for every n ≥ 1 — which makes agreement a real
+property rather than an identity, and makes the two executions impossible to
+collapse into one shared thunk.
+
+Verified by injecting a size-dependent predicate: the cell reported `Failed` and
+the executable exited 1. **14 / 14 is now earned.**
 
 ## Gaps, in priority order
 
+### Gap F — the strongest evidence in the repository was gated by nothing
+
+**Closed 2026-08-07 (PR #27).** `proven-spec-suite.ipkg` carries 75 tests across
+`ProvenLawsTests`, `AffineScriptTests`, `HigherOrderTests` and `SetTheoryTests`
+— including the **12 Actually-Proven theorems** that `PROOFS.adoc:134` headlines
+as this repository's top-tier claim. It was built by no `just` recipe, no line of
+`scripts/ci-build.sh`, and no workflow step. Nothing had ever confirmed those
+theorems still compile.
+
+This outranked Gaps A-E while it was open. The Actually-Proven tier is the one
+that *cannot* rot silently — a broken proof stops the build — but only if
+something builds it. An ungated proof suite has the failure mode of a
+documentation claim, not of a proof.
+
+It now runs in `just ci`, `just test` and `just test-spec`. First gated run:
+75/75, with exactly 12 reporting `[Actually-Proven]`, corroborating the
+documented figure precisely. The claim was true; nothing had checked it.
+
+**Rule this generalises to:** if you add a package, add it to the gate in the
+same commit. A suite nothing runs is indistinguishable from one that does not
+exist — except that it looks like coverage.
+
 ### Gap A — the CRG-C evidence never runs
+
+**CLOSED.** `scripts/ci-build.sh:55-67` now searches the paths a sibling checkout
+actually occupies, and `ci.yml` clones the subject. Verified running in CI on
+2026-08-07: 0 Actually / 41 Provisionally / 47 Unproven, reproducing
+`STATE.a2ml` exactly. It remains `continue-on-error`, so it informs and does not
+gate. The original analysis follows.
 `READINESS.adoc` rests its grade on `integrations/proven/` grading a real
 external subject. `scripts/ci-build.sh` runs that step only `if [ -f
 "$PROVEN_ROOT/MODULE-STATUS.txt" ]`, defaulting to `/home/user/proven` — a path
@@ -94,6 +140,12 @@ skip is reported as success. The headline evidence for the current grade has
 never been produced by the gate that claims it.
 
 ### Gap B — vacuous predicates in the type-safe suite
+
+**CLOSED 2026-08-07 (PR #27).** Fixed in `Dyadic.idr`, `Choreographic.idr`,
+`Decorative.idr` and `Dependent.idr`, with negative fixtures added throughout so
+that a checker returning `True` constantly can no longer pass. The suite went
+52/52 → 56/56. The original analysis follows.
+
 Several predicates the 52 passing assertions rest on are constant functions:
 `dependentPairCorrect (MkDepPair _ _) = True`, `vectHeadSafe (x :: _) = True`,
 `choreographicNoOrphanedChoices _ = True` for non-`Choice` values. Three of the
@@ -112,6 +164,12 @@ no history, and no regression gate**. Benchmarks currently print numbers that
 nothing compares against. CRG C requires "benchmarks baselined".
 
 ### Gap D — the framework's own report is discarded
+
+**CLOSED 2026-08-07 (PR #27).** `runComprehensiveSuite` (the printing runner) had
+zero call sites; `Main.idr` called the silent variant. Running and printing are
+now separated rather than duplicated, so the 17×14 grid prints on every run.
+`--quiet` restores the old silence for scripted use. The original analysis follows.
+
 `Main.idr` calls `runComprehensiveSuiteData`, which prints nothing.
 `runComprehensiveSuite`, which prints the per-test lines and the coverage grid,
 is never called from anywhere. The coverage map this project is organised
@@ -123,6 +181,24 @@ mutant generator and a score; fuzzing needs adversarial input and a crash
 oracle; chaos needs actual fault injection. Until then they are THIN above and
 must not be copied by other repos as reference implementations.
 
+**Partially addressed 2026-08-07 (PR #27)** — the *labelling*, not the
+implementations. All five cells used the `pc` constructor, stamping them
+ProvisionallyProven with a TypeSafetyCertificate at Kategoria level 6, which a
+fixed five-element vector cannot support. They are now `uc` (Unproven) and
+renamed to state what they actually assert:
+
+| Was | Now |
+|---|---|
+| `prop-oplus-comm` | `prop-fixed-vectors-oplus-comm` |
+| `prop-oplus-idem` | `prop-fixed-vectors-oplus-idem` |
+| `mutation-min-distinguished` | `mutation-single-handwritten-mutant` |
+| `fuzz-min-le-operand` | `fuzz-fixed-vectors-min-le-operand` |
+| `chaos-cheapest-with-inf` | `chaos-inf-propagation-only` |
+
+The tier now shows in the run output as `[Unproven]`, so the weakness is visible
+where a reader actually looks rather than only in this file. The four categories
+remain **THIN**. Building them properly is `ROADMAP.md` item 1.
+
 ## What this means for the grade
 
 Against **CRG v2.2** (not the four-rung ladder currently written into
@@ -131,8 +207,14 @@ Against **CRG v2.2** (not the four-rung ladder currently written into
 passing in home context, benchmarks baselined, deep annotation", plus "CI
 integration or equivalent automated validation in the home context".
 
-Two of those are not currently met: benchmarks are not baselined (Gap C), and
-there is no automated validation on push or PR (the GitHub workflow is
-`workflow_dispatch:`-only and no GitLab remote is configured). The grade claim
-should be reconciled against the real ladder by the owner rather than adjusted
-unilaterally here.
+**One** of those is not currently met: benchmarks are not baselined (Gap C).
+
+Automated validation on push and PR **is** now met — `ci.yml` has run on
+`push` and `pull_request` since 2026-08-03 and CodeQL was restored to the same
+triggers on 2026-08-07. This paragraph asserted the opposite until 2026-08-07,
+and so did `READINESS.adoc:50-52`, `docs/ZERO-MINUTE-CI.adoc`,
+`docs/STATE-OF-THINGS.adoc` and `CHANGELOG.md` — five documents falsified by
+one commit, none of which noticed. See `DEBT.md` D-1.
+
+The grade claim should still be reconciled against the real ladder by the owner
+rather than adjusted unilaterally here.

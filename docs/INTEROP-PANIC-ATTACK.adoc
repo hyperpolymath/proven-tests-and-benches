@@ -42,8 +42,23 @@ honest correspondence is *only* between Actually-Proven ladder files and the
 `proof_file` paths from the Actually-Proven entries of the JSON run report
 (`--report`, schema_version 1) and invokes
 `panic-attack aggregate --proof <file> --label <name>` for each. panic-attack
-already ingests `.idr` files, so this needs nothing new on its side. CI fails if
-any cited ladder file classifies `Holes`/`Refuted`.
+already ingests `.idr` files, so this needs nothing new on its side.
+
+[WARNING]
+====
+*This sentence used to read "CI fails if any cited ladder file classifies
+`Holes`/`Refuted`." That is not true and has never been true.*
+
+Measured 2026-08-07: `aggregate::run` returns `Ok(...)` unconditionally and
+`main.rs` prints the verdict then falls through to `Ok(())`, so a `Refuted`
+ladder file prints its bad verdict and *exits 0*. And nothing invokes
+`scripts/emit-aggregate-inputs.sh` — no workflow, no `just` recipe — so the
+script never runs at all.
+
+Read this section as a *design*, not a description of current behaviour. Making
+it true is `ROADMAP.md` item 3, and it is done when a deliberately `Refuted`
+ladder file fails the build.
+====
 
 === 2. Native run-report ingestion (one panic-attack change)
 

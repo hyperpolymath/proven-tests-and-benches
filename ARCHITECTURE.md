@@ -32,7 +32,7 @@ of them:
 
 ```
 .
-├── src/ProvenTests/            # The framework library (23 modules)
+├── src/ProvenTests/            # The framework library (32 modules)
 │   ├── Types.idr               # Provenance, TestCategory, TestAspect, evidence records
 │   ├── Tropical.idr            # Min-plus semiring + its laws, proved total
 │   ├── Coverage.idr            # Derives the coverage grid from executed tests
@@ -57,9 +57,9 @@ of them:
 not referenced by any pipeline. `container/README.adoc` says so itself. They are
 listed here so their presence is not mistaken for working infrastructure.
 
-## The four packages
+## The five packages
 
-This repository builds **four** Idris2 packages, not one. They are separate
+This repository builds **five** Idris2 packages, not one. They are separate
 because the dependency direction matters:
 
 | Manifest | Produces | Depends on |

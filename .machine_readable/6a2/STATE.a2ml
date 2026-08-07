@@ -3,15 +3,26 @@
 
 [metadata]
 project = "proven-tests-and-benches"
-last-updated = "2026-07-02"
-readiness-grade = "C"          # see READINESS.adoc (estate CRG v1.0)
+last-updated = "2026-08-07"
+readiness-grade = "C"          # see READINESS.adoc — the SINGLE SOURCE OF TRUTH.
+# The estate standard is CRG v2.2, not v1.0 as this line said until 2026-08-07.
+# The README badge must be generated from READINESS.adoc via `just crg-badge`;
+# the two disagreed (badge D, this file C) for five weeks because nothing tied
+# them together. See DEBT.md D-2.
+readiness-grade-standard = "Component Readiness Grades v2.2"
+readiness-grade-blocker = "benchmarks not baselined (DEBT.md I-1) — the last unmet CRG C criterion"
 
 [build]
 toolchain = "idris2-0.7.0"   # corrected 2026-08-03; gated by scripts/check-toolchain-pins.sh
 gate = "scripts/ci-build.sh"
-library-modules = 23
+library-modules = 32
 framework-suite = "36/36 passing"
-type-safe-suite = "52/52 passing"
+type-safe-suite = "56/56 passing"
+# Gated for the FIRST time on 2026-08-07 (PR #27). Until then proven-spec-suite
+# was built by no just recipe, no line of ci-build.sh and no workflow step —
+# including the 12 Actually-Proven theorems PROOFS.adoc headlines as this
+# repository's top-tier evidence. See TEST-NEEDS.md Gap F.
+spec-suite = "75/75 passing, of which 12 report Actually-Proven"
 benchmark = "runs (System.Clock, DCE-defeated)"
 
 [coverage]
@@ -21,12 +32,31 @@ cat-aspect-cells-total = 238
 lattice-coordinates-covered = 35
 lattice-size = 3570
 aspect-columns-nonempty = "14 / 14"
+# TRUE AS STATED since 2026-08-07. Until then the sole cell covering the
+# Reproducibility aspect compared a pure value with itself and could not fail,
+# so the honest figure was 13 / 14 — recorded in TEST-NEEDS.md but NOT here,
+# which is the file agents read as current state. The cell now runs the battery
+# at two different workload sizes and was verified to fail on injected
+# non-determinism.
+aspect-columns-earned = true
 
 [machine-checked]
 # Actually-Proven content (total Idris2 proofs, no escape hatches)
 tropical-semiring-laws = "src/ProvenTests/Tropical.idr"
 coverage-derivation-lemmas = "src/ProvenTests/Meta.idr"
 runtime-negative-test = "src/ProvenTests/Meta.idr metaFailingSuiteDetected"
+proven-laws = "src/ProvenTests/Proven/Laws.idr"   # 12 theorems (PR #24); gated from 2026-08-07
+
+[benchmarks]
+# Recorded because its ABSENCE is load-bearing: this is the last unmet CRG C
+# criterion, and STATE.a2ml carried no benchmarks section at all until 2026-08-07.
+harness = "benchmarks/Benchmark.idr — monotonic clock, index-varied workloads, XOR checksum defeating DCE"
+baseline = false
+thresholds = false
+history = false
+regression-gate = false
+status = "HONEST HARNESS, NO GATE: the numbers are printed and compared against nothing."
+tracked = "DEBT.md I-1; ROADMAP.md item 2a"
 
 [subject-grading]
 # integrations/proven — grading proven from its own ledgers
@@ -38,9 +68,15 @@ drift = 4
 finding = "proven's 4 proof-bearing modules all sit in its 256-axiom OWED ledger, disjoint from its 6 zero-OWED clean modules, so 0 modules meet strict Actually-Proven."
 
 [roadmap]
-done = ["evidence-carrying provenance", "self-deriving coverage", "typed axes", "meta-tests", "type-safe suite package", "proven subject report", "JSON run report", "panic-attack aggregate interop", "FFI-parity design + golden vectors"]
-in-progress = ["grow lattice coverage beyond 35/238"]
+# NOTE (2026-08-07): "panic-attack aggregate interop" was listed as DONE here and
+# in ECOSYSTEM.a2ml while NEUROSYM.a2ml:69 said the opposite in the same
+# directory. The pessimistic reading is correct: the parser is reachable from no
+# CLI flag, `aggregate` returns Ok unconditionally, and the script that would
+# feed it is invoked by nothing. Moved to blocked. See DEBT.md D-5, S-2.
+done = ["evidence-carrying provenance", "self-deriving coverage", "typed axes", "meta-tests", "type-safe suite package", "spec suite package gated", "proven subject report", "JSON run report", "FFI-parity design + golden vectors", "coverage grid actually printed", "reproducibility cell that can fail"]
+in-progress = ["grow lattice coverage beyond 35/238", "benchmark baselines + Six Sigma gate (ROADMAP 2a)", "check-doc-facts.sh anti-drift gate (ROADMAP 2b)"]
 blocked = [
+  { item = "panic-attack aggregate interop", on = "routing proven_tests.rs to a CLI flag and making aggregate exit non-zero on Holes/Refuted (ROADMAP item 3)" },
   { item = "FFI-parity runtime harness", on = "proven shipping a real Idris-backed libproven (proven ADR-003)" },
   { item = "runtime depends=proven subject tests", on = "proven's ipkg installing (47 non-compiling WIP modules)" },
 ]

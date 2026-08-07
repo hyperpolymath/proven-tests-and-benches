@@ -114,6 +114,40 @@ crg-badge:
     esac
     echo "https://img.shields.io/badge/CRG-${GRADE}-${COLOR}?style=flat-square"
 
+# Rewrite the README badge from READINESS.adoc, and FAIL if it was out of date.
+#
+# `crg-badge` only prints a URL, so calling the README badge "generated" was
+# aspirational: nothing wrote it, and it sat hand-frozen at D for five weeks
+# while READINESS.adoc and STATE.a2ml both said C. This recipe closes that —
+# it is idempotent, and in --check mode it is a gate that can fail.
+#
+#   just crg-badge-sync          rewrite README.adoc if needed
+#   just crg-badge-sync --check  exit 1 if README disagrees with READINESS.adoc
+crg-badge-sync *ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    WANT=$(just crg-badge)
+    HAVE=$(grep -oE 'https://img\.shields\.io/badge/CRG-[^[]*' README.adoc | head -1)
+    if [ "$WANT" = "$HAVE" ]; then
+        echo "OK: README badge agrees with READINESS.adoc ($WANT)"
+        exit 0
+    fi
+    if [ "{{ ARGS }}" = "--check" ]; then
+        echo "FAIL: README badge disagrees with READINESS.adoc."
+        echo "  README.adoc     : $HAVE"
+        echo "  READINESS.adoc  : $WANT"
+        echo "  Fix with: just crg-badge-sync"
+        exit 1
+    fi
+    python3 - "$WANT" <<'PY'
+    import re, sys, pathlib
+    want = sys.argv[1]
+    p = pathlib.Path("README.adoc"); s = p.read_text()
+    s2 = re.sub(r'https://img\.shields\.io/badge/CRG-[^\[]*', want, s, count=1)
+    p.write_text(s2)
+    PY
+    echo "Rewrote README badge -> $WANT"
+
 # Print the current Component Readiness Grade
 crg-grade:
     #!/usr/bin/env bash
