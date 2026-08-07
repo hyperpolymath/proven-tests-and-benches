@@ -71,19 +71,49 @@ testDecorated = MkDecorated 42 "Test metadata" "test" 1234567890
 -- TESTS AS TYPE-SAFE PROPERTIES
 -- =============================================================================
 
+--/ Same underlying value, a different annotation. This is the pair the
+--/ "decoration does not affect equality" property is actually about.
+public export
+reDecorate : Decorated Nat -> String -> Decorated Nat
+reDecorate (MkDecorated v _ s ts) md = MkDecorated v md s ts
+
+-- NOTE (2026-08-07): three of the four entries below ignored their argument `d`
+-- and re-read the module-level constant `testDecorated` — and since
+-- `runDecorativeTests` applies the list *to* `testDecorated`, the "test list
+-- applied to an input" shape was decorative. The fourth,
+-- `\d => decorationEquality Nat d d`, was reflexivity on (==): constant True for
+-- any lawful Eq instance. The entries are now genuinely parametric, and the
+-- equality property compares two DIFFERENTLY-decorated values.
 public export
 decorativeTests : List (Decorated Nat -> Bool)
 decorativeTests = [
-    (\_ => decorationHasMetadata testDecorated),
-    (\_ => decorationIsTimestamped testDecorated),
-    (\d => decorationEquality Nat d d),
+    decorationHasMetadata,
+    decorationIsTimestamped,
+    (\d => decorationEquality Nat d (reDecorate d "a different annotation")),
     (\_ => decoratorInstanceWorks)
   ]
 
--- Run all decorative tests
+--/ Different underlying values must NOT compare equal, however identical their
+--/ decoration. Without this, a `decorationEquality` that returned True
+--/ constantly would satisfy every test above.
+public export
+differentValuesNotEqual : Bool
+differentValuesNotEqual =
+  not (decorationEquality Nat testDecorated
+        (MkDecorated 43 "Test metadata" "test" 1234567890))
+
+--/ An undecorated value must be rejected by the metadata predicate.
+public export
+emptyMetadataRejected : Bool
+emptyMetadataRejected = not (decorationHasMetadata (reDecorate testDecorated ""))
+
+-- Run all decorative tests, plus the two negative fixtures.
 public export
 runDecorativeTests : Bool
-runDecorativeTests = all (\f => f testDecorated) decorativeTests
+runDecorativeTests =
+     all (\f => f testDecorated) decorativeTests
+  && differentValuesNotEqual
+  && emptyMetadataRejected
 
 -- =============================================================================
 -- INTEGRATION WITH PROVEN TESTS FRAMEWORK

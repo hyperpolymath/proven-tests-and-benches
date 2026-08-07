@@ -19,13 +19,35 @@ private
 choreographicTestId : Nat -> TestId
 choreographicTestId n = MkTestId "ProvenTests.TypeSafe.ChoreographicTests" ("test_" ++ show n) n
 
--- Test: Send followed by Recv is valid
+-- Test: Send followed by Recv is valid.
+-- `choreographicSendRecvValid` became a predicate on a session on 2026-08-07;
+-- it previously built its own input and matched it, so it took no argument and
+-- could not fail.
 public export
 testChoreographicSendRecvValid : ProvisionallyProvenTest
-testChoreographicSendRecvValid = 
+testChoreographicSendRecvValid =
   provisionalTest (choreographicTestId 1) "Send followed by Recv is valid" (
-    assertTrue (choreographicSendRecvValid) 
+    assertTrue (choreographicSendRecvValid dualSession)
       "Send followed by Recv should be a valid session"
+  )
+
+-- Test: a session that is NOT Send-then-Recv is rejected.
+public export
+testChoreographicSendRecvRejects : ProvisionallyProvenTest
+testChoreographicSendRecvRejects =
+  provisionalTest (choreographicTestId 5) "Non-Send/Recv session is rejected" (
+    assertTrue (not (choreographicSendRecvValid choiceSession))
+      "A Choice session should not satisfy the Send/Recv shape"
+  )
+
+-- Test: an orphaned Choice nested inside a Send is detected. The predicate did
+-- not descend into Send until 2026-08-07, so this fault was invisible to it.
+public export
+testNestedOrphanRejected : ProvisionallyProvenTest
+testNestedOrphanRejected =
+  provisionalTest (choreographicTestId 6) "Nested orphaned choice is detected" (
+    assertTrue nestedOrphanRejected
+      "A Choice with 2 labels and 1 branch inside a Send must be rejected"
   )
 
 -- Test: Session ends properly
@@ -60,7 +82,9 @@ public export
 allChoreographicTests : List (ProvisionallyProvenTest)
 allChoreographicTests = [
     testChoreographicSendRecvValid,
+    testChoreographicSendRecvRejects,
     testChoreographicEndsProperly,
     testChoreographicNoOrphanedChoices,
+    testNestedOrphanRejected,
     testChoreographicAllTestsPass
   ]

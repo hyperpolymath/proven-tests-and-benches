@@ -72,15 +72,12 @@ jobs:
       - name: Check toolchain pins agree
         run: bash scripts/check-toolchain-pins.sh
 
+      # One implementation, shared with `just lint`. This step used to carry its
+      # own copy of the grep, and both copies covered only four of the six
+      # patterns AGENTIC.a2ml bans — `idris_crash` and hole syntax were
+      # prohibited by the manifest and caught by neither gate.
       - name: Check for proof escape hatches
-        run: |
-          set -uo pipefail
-          if grep -rn "believe_me\|assert_total\|%partial\|unsafePerformIO" \
-               src/ tests/ benchmarks/ integrations/ --include="*.idr"; then
-            echo "::error::Proof escape hatch found. Actually-Proven content may not use these."
-            exit 1
-          fi
-          echo "OK: no proof escape hatches."
+        run: bash scripts/check-escape-hatches.sh
 
       - name: Shellcheck
         run: shellcheck -S warning scripts/*.sh

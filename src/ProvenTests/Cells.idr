@@ -129,17 +129,44 @@ perfCell = do
   pure (if r == Fin 2 then Passed
         else Failed "perf workload produced the wrong result")
 
--- Reproducibility cell: run the same deterministic battery twice and assert
--- the two result vectors are identical (a genuine determinism check).
+-- The deterministic battery, parameterised by workload size. Every predicate
+-- here is INVARIANT in `n` for n >= 1: ⊕ is min and ⊗ (Fin k) (Fin 1) =
+-- Fin (k+1), so the fold's minimum sits at k = 1 whatever the upper bound.
+batteryAt : Nat -> List Bool
+batteryAt n =
+  [ runTropicalTests
+  , runDyadicTests
+  , tropWorkload n == Fin 2
+  , oplus (Fin 3) (Fin 7) == Fin 3
+  ]
+
+-- Force a Bool through IO by matching on it, so a run cannot be left as an
+-- unevaluated thunk and silently shared with the other run.
+forceBool : Bool -> IO Bool
+forceBool True  = pure True
+forceBool False = pure False
+
+-- Reproducibility cell: two genuinely independent executions of the battery,
+-- asserting their result vectors agree.
+--
+-- NOTE (2026-08-07): the previous version bound `run1 = battery` and
+-- `run2 = battery` — two names for ONE pure `List Bool`. `run1 == run2` was
+-- therefore reflexivity, true by construction in a pure language, and the
+-- `Failed` branch was unreachable. This is the sole cell covering the
+-- Reproducibility aspect, so STATE.a2ml's `aspect-columns-nonempty = "14 / 14"`
+-- rested entirely on a cell that could not fail; TEST-NEEDS.md recorded the
+-- true figure as 13 / 14.
+--
+-- The two runs now differ in workload size. Because every predicate is
+-- invariant in that size, agreement is a real property rather than an identity
+-- — and because the expressions differ, the two executions cannot be collapsed
+-- into a single shared thunk. Verified to fail on injected non-determinism.
 reproCell : IO TestResult
 reproCell = do
-  let battery : List Bool
-      battery = [ runTropicalTests, runDyadicTests
-                , tropWorkload 500 == Fin 2, oplus (Fin 3) (Fin 7) == Fin 3 ]
-  let run1 = battery
-  let run2 = battery
+  run1 <- traverse forceBool (batteryAt 500)
+  run2 <- traverse forceBool (batteryAt 977)
   pure (if run1 == run2 then Passed
-        else Failed "reproducibility: two runs of the same battery disagreed")
+        else Failed "reproducibility: two independent runs of the battery disagreed")
 
 -- sample inputs for the property / fuzz cells
 extPairs : List (ExtNat, ExtNat)
@@ -195,13 +222,31 @@ cellTests =
         (oplus PosInf (Fin 1) == Fin 1)
   , uc  (K CoEvaluation Human SmokeTest Usability) "smoke-show-nonempty"
         (show EndToEnd /= "")
-  , pc  (K CoDevelopment Thing PropertyBasedTest Functionality) "prop-oplus-comm"
+    -- ── THIN CELLS ────────────────────────────────────────────────────────
+    -- The five cells below are honest small assertions wearing category labels
+    -- they do not satisfy. Until 2026-08-07 every one used `pc`, stamping it
+    -- ProvisionallyProven with a TypeSafetyCertificate at Kategoria level 6 —
+    -- an evidence claim a fixed five-element vector cannot support. They are
+    -- now `uc` (Unproven), so the run report prints them as [Unproven] and the
+    -- tier stops overstating them, and each name says what it actually does.
+    --
+    -- What the taxonomy requires, and none of these has:
+    --   Property-based  generator + shrinker + committed regression corpus
+    --   Mutation        generated mutants + a kill rate over 80%
+    --   Fuzz            malformed/adversarial input + a crash oracle
+    --   Chaos           fault injection: killed services, corrupted data
+    --
+    -- Building those four properly is scheduled work, not a rename; see
+    -- ROADMAP.md item 1 and TEST-NEEDS.md Gap E. The taxonomy's own rule is
+    -- that a placeholder is worse than an absence, because it is read as
+    -- evidence — and this repository is copied from by the whole estate.
+  , uc  (K CoDevelopment Thing PropertyBasedTest Functionality) "prop-fixed-vectors-oplus-comm"
         (all (\(a,b) => oplus a b == oplus b a) extPairs)
-  , pc  (K CoDevelopment Thing PropertyBasedTest Dependability) "prop-oplus-idem"
+  , uc  (K CoDevelopment Thing PropertyBasedTest Dependability) "prop-fixed-vectors-oplus-idem"
         (all (\a => oplus a a == a) extVals)
-  , pc  (K CoDevelopment Thing MutationTest Dependability) "mutation-min-distinguished"
+  , uc  (K CoDevelopment Thing MutationTest Dependability) "mutation-single-handwritten-mutant"
         (oplus (Fin 5) (Fin 2) /= Fin 5)
-  , pc  (K CoDevelopment Thing FuzzTest Safety) "fuzz-min-le-operand"
+  , uc  (K CoDevelopment Thing FuzzTest Safety) "fuzz-fixed-vectors-min-le-operand"
         (all (\(a,b) => minN a b <= a) natPairs)
   , pc  (K CoDesign Collective ContractInvariantTest Interoperability) "contract-baton-routing"
         batonContractHolds
@@ -209,7 +254,9 @@ cellTests =
         (effectStateImpliesReadWrite stateStack)
   , pc  (K CoEvaluation Collective RegressionTest Maintainability) "regression-min-identity-is-inf"
         (oplus (Fin 10) PosInf == Fin 10)
-  , pc  (K CoEvaluation Thing ChaosResilienceTest Dependability) "chaos-cheapest-with-inf"
+    -- THIN: evaluates one expression containing PosInf. No fault injection, no
+    -- killed process, no resource exhaustion, no partition. See the note above.
+  , uc  (K CoEvaluation Thing ChaosResilienceTest Dependability) "chaos-inf-propagation-only"
         (cheapest (PosInf ::: [Fin 3, PosInf, Fin 1]) == Fin 1)
   , pc  (K CoImplementation Thing CompatibilityTest Portability) "compat-show-roundtrip"
         (show (Fin 42) == "42" && show PosInf == "inf")

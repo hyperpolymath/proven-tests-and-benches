@@ -58,28 +58,23 @@ summaryLine rs =
   let verdict = if passed == count then "all passed" else "some failed" in
   "Passed: " ++ show passed ++ "/" ++ show count ++ "  (" ++ verdict ++ ")"
 
---/ Run the comprehensive suite with a summary; returns True iff all passed.
---/ Includes the framework's self-classification check (Reflexive) alongside
---/ the lattice cells. Coverage is derived only from cells that ran and passed.
-public export
-runComprehensiveSuite : IO Bool
-runComprehensiveSuite = do
-  putStrLn "=== Proven-Tests Framework ==="
-  putStrLn zigzagSummary
-  putStrLn ""
-  self <- runSelfClassification
-  cellResults <- runAllCells
-  let entries = self :: map (\(_, m, r) => (m, r)) cellResults
-  traverse_ printResult entries
-  putStrLn ""
-  putStrLn "=== Test Summary ==="
-  putStrLn (summaryLine entries)
-  putStrLn ""
-  putStr (coverageReportFrom (coveredFrom cellResults))
-  pure (all isPassed entries)
+-- NOTE (2026-08-07): there used to be two runners here — `runComprehensiveSuite`,
+-- which printed the results and the derived 17x14 coverage map, and
+-- `runComprehensiveSuiteData`, which returned the same data silently.
+-- `ProvenTests.Main` called the silent one, and `runComprehensiveSuite` had ZERO
+-- call sites anywhere in the repository. So `coverageGrid` — the artefact this
+-- whole project is organised around, and the thing STATE.a2ml's coverage figures
+-- describe — was computed on every run and thrown away, while `just test`
+-- printed nothing at all and a reader had to take the numbers on trust.
+--
+-- Running and printing are now separated rather than duplicated: one runner
+-- produces the data, one printer renders it. There is no second copy to fall
+-- out of step with the first.
 
---/ Run the suite and also return the data needed for a machine-readable report:
---/ the (metadata, result) entries and the derived covered coordinates.
+--/ Run the comprehensive suite and return everything a caller needs: whether all
+--/ passed, the (metadata, result) entries, and the derived covered coordinates.
+--/ Includes the framework's self-classification check (Reflexive) alongside the
+--/ lattice cells. Coverage is derived only from cells that ran and passed.
 public export
 runComprehensiveSuiteData :
      IO (Bool, List (TestMetadata, TestResult), List ZigzagCoord)
@@ -89,3 +84,18 @@ runComprehensiveSuiteData = do
   let entries = self :: map (\(_, m, r) => (m, r)) cellResults
   let covered = coveredFrom cellResults
   pure (all isPassed entries, entries, covered)
+
+--/ Render the human-readable run report: header, one line per result, the
+--/ pass/fail summary, and the derived category x aspect coverage map.
+public export
+printRunReport : List (TestMetadata, TestResult) -> List ZigzagCoord -> IO ()
+printRunReport entries covered = do
+  putStrLn "=== Proven-Tests Framework ==="
+  putStrLn zigzagSummary
+  putStrLn ""
+  traverse_ printResult entries
+  putStrLn ""
+  putStrLn "=== Test Summary ==="
+  putStrLn (summaryLine entries)
+  putStrLn ""
+  putStr (coverageReportFrom covered)

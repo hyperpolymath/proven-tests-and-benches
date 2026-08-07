@@ -24,30 +24,42 @@ data SessionType : Type where
   Choice : List String -> List SessionType -> SessionType
   End : SessionType
 
--- Test: Send followed by Recv is valid
+-- Test: Send followed by Recv is valid.
+--
+-- NOTE (2026-08-07): this used to construct its own input and immediately
+-- pattern-match it — a closed literal round-trip with no free variable, so it
+-- could only ever return True. It is now a predicate on a session, exercised
+-- below against both a conforming and a non-conforming fixture.
 public export
-choreographicSendRecvValid : Bool
-choreographicSendRecvValid = 
-  let session = Send "message" (Recv "ack" End)
-  in case session of
-       Send _ (Recv _ End) => True
-       _ => False
+choreographicSendRecvValid : SessionType -> Bool
+choreographicSendRecvValid (Send _ (Recv _ End)) = True
+choreographicSendRecvValid _ = False
 
--- Test: Session ends properly
+-- Test: Session ends properly.
+--
+-- NOTE: the four clauses below are exhaustive over SessionType's four
+-- constructors. A fifth catch-all `_ = False` sat here until 2026-08-07 —
+-- unreachable dead code that read as a rejection path.
 public export
 choreographicEndsProperly : SessionType -> Bool
 choreographicEndsProperly End = True
 choreographicEndsProperly (Send _ st) = choreographicEndsProperly st
 choreographicEndsProperly (Recv _ st) = choreographicEndsProperly st
 choreographicEndsProperly (Choice _ branches) = all choreographicEndsProperly branches
-choreographicEndsProperly _ = False
 
--- Test: No orphaned choices (all branches must exist)
+-- Test: No orphaned choices — every label has a branch, checked RECURSIVELY.
+--
+-- NOTE (2026-08-07): this used to return True for every non-Choice value and
+-- never descend. Two consequences: applying it to `dualSession` (a Send) was
+-- vacuous, and a malformed Choice nested inside a Send was invisible to it.
+-- `nestedOrphanedSession` below is exactly that case.
 public export
 choreographicNoOrphanedChoices : SessionType -> Bool
-choreographicNoOrphanedChoices (Choice labels branches) = 
-  length labels == length branches
-choreographicNoOrphanedChoices _ = True
+choreographicNoOrphanedChoices End = True
+choreographicNoOrphanedChoices (Send _ st) = choreographicNoOrphanedChoices st
+choreographicNoOrphanedChoices (Recv _ st) = choreographicNoOrphanedChoices st
+choreographicNoOrphanedChoices (Choice labels branches) =
+  length labels == length branches && all choreographicNoOrphanedChoices branches
 
 -- Test: Dual session (send and recv match)
 public export
@@ -69,16 +81,47 @@ choiceSession = Choice ["option1", "option2"] [
 public export
 choreographicTests : List (SessionType -> Bool)
 choreographicTests = [
-    (\_ => choreographicSendRecvValid),
     choreographicEndsProperly,
     choreographicNoOrphanedChoices
   ]
 
--- Run all choreographic tests
+-- =============================================================================
+-- NEGATIVE FIXTURES
+-- =============================================================================
+-- Sessions that must be REJECTED. Without these, a predicate that returned True
+-- constantly would pass every test above — which is precisely what
+-- `choreographicNoOrphanedChoices` did for any non-Choice input.
+
+--/ Two labels, one branch.
+public export
+orphanedChoiceSession : SessionType
+orphanedChoiceSession = Choice ["option1", "option2"] [ Send "choice1" End ]
+
+--/ The same fault, nested inside a Send. The old non-recursive predicate
+--/ returned True for this without ever looking at the Choice.
+public export
+nestedOrphanedSession : SessionType
+nestedOrphanedSession = Send "outer" (Choice ["a", "b"] [ End ])
+
+public export
+orphanedChoiceRejected : Bool
+orphanedChoiceRejected = not (choreographicNoOrphanedChoices orphanedChoiceSession)
+
+public export
+nestedOrphanRejected : Bool
+nestedOrphanRejected = not (choreographicNoOrphanedChoices nestedOrphanedSession)
+
+-- Run all choreographic tests: the parametric predicates against two conforming
+-- sessions, the Send/Recv shape check in both directions, and the two orphaned
+-- fixtures that must be rejected.
 public export
 runChoreographicTests : Bool
-runChoreographicTests = 
-  all (\f => f dualSession && f choiceSession) choreographicTests
+runChoreographicTests =
+     all (\f => f dualSession && f choiceSession) choreographicTests
+  && choreographicSendRecvValid dualSession
+  && not (choreographicSendRecvValid choiceSession)
+  && orphanedChoiceRejected
+  && nestedOrphanRejected
 
 -- =============================================================================
 -- INTEGRATION WITH PROVEN TESTS FRAMEWORK
