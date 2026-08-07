@@ -1,11 +1,25 @@
 # SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 #
-# CodeQL analysis — CURRENTLY CANNOT SUCCEED ON THIS REPOSITORY.
+# CodeQL analysis — RE-ENABLED 2026-08-07.
 #
-# STATUS (measured 2026-08-03)
-# ----------------------------
-# Every run of this workflow has failed. The cause is not the workflow:
+# STATUS (2026-08-07)
+# -------------------
+# Unblock condition (a) below has been met: this repository is now PUBLIC, so
+# code scanning is available without GitHub Advanced Security and the
+# entitlement failure described below no longer applies. The push,
+# pull_request and schedule triggers are restored.
+#
+# The CAUTION at the end of this header still stands: CodeQL *default setup*
+# must NOT be switched on while this advanced workflow exists.
+#
+# The historical diagnosis is kept below because it is the evidence for why
+# this file looked broken for a month, and because the same entitlement trap
+# applies to every other private repository in the estate.
+#
+# HISTORICAL STATUS (measured 2026-08-03, while the repository was PRIVATE)
+# ------------------------------------------------------------------------
+# Every run of this workflow had failed. The cause was not the workflow:
 #
 #   "Code scanning is not enabled for this repository.
 #    Please enable code scanning in the repository settings."
@@ -41,8 +55,19 @@
 name: CodeQL
 
 on:
-  # Disabled until code scanning is available for this repository. See above.
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Newly published queries can find faults in code that has not changed, which
+  # is the case a push-triggered scan never covers.
+  schedule:
+    - cron: "27 4 * * 1"
   workflow_dispatch:
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   actions: read
