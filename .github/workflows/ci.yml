@@ -79,6 +79,25 @@ jobs:
       - name: Check for proof escape hatches
         run: bash scripts/check-escape-hatches.sh
 
+      # The README badge is derived from READINESS.adoc, which is the single
+      # source of truth for the grade. They disagreed for five weeks — badge D,
+      # READINESS C — because nothing tied them together. This is that tie.
+      - name: Check the CRG badge matches READINESS.adoc
+        run: |
+          WANT=$(grep "Current Grade:" READINESS.adoc | head -1 \
+                 | sed 's/.*Current Grade:[^A-Z]*\([A-Z]\).*/\1/')
+          HAVE=$(grep -oE 'badge/CRG-[A-Z]-' README.adoc | head -1 \
+                 | sed 's|badge/CRG-\([A-Z]\)-|\1|')
+          if [ -z "$WANT" ]; then
+            echo "::error::No 'Current Grade:' in READINESS.adoc — NO CHECK WAS PERFORMED."
+            exit 2
+          fi
+          if [ "$WANT" != "$HAVE" ]; then
+            echo "::error::README badge is CRG-$HAVE but READINESS.adoc says CRG-$WANT. Run: just crg-badge-sync"
+            exit 1
+          fi
+          echo "OK: README badge and READINESS.adoc both say CRG-$WANT"
+
       - name: Shellcheck
         run: shellcheck -S warning scripts/*.sh
 
