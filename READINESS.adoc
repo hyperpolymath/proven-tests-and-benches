@@ -44,14 +44,27 @@ definitions differ materially from the four below:
 | Real-world external usage data and evidence of feedback incorporation.
 |===
 
-Two CRG C requirements are currently *not* met, which is why the grade below
-should not simply be carried across:
+One CRG C requirement is currently *not* met:
 
-* *No automated validation on push or PR.* `.github/workflows/ci.yml` is
-  `workflow_dispatch:`-only and no GitLab remote is configured in this
-  checkout, so the Idris2 gate runs only when a human triggers it.
-* *Benchmarks are not baselined.* There is a working harness but no baseline,
-  no thresholds, no history and no regression gate. See `TEST-NEEDS.md` Gap C.
+* *Benchmarks are not baselined.* There is a working harness — monotonic clock,
+  index-varied workloads, a checksum that defeats dead-code elimination — but
+  no baseline, no thresholds, no history and no regression gate, so the numbers
+  it prints are compared against nothing. See `TEST-NEEDS.md` Gap C.
+
+The second requirement is now met. *Automated validation on push and PR* —
+`.github/workflows/ci.yml` has run on `push` and `pull_request` since
+2026-08-03 and is green; CodeQL was restored to the same triggers on
+2026-08-07 once the repository became public. The gate compares toolchain pins
+across seven artefacts plus the installed compiler, scans for six banned proof
+escape hatches, shellchecks, then builds and runs the library, the type-safe
+suite, the spec suite and the benchmark harness.
+
+NOTE: this section asserted the opposite until 2026-08-07 — that `ci.yml` was
+`workflow_dispatch:`-only and that "the GitLab `idris2` job is the real gate".
+Neither had been true since 2026-08-03, and the GitLab claim was never true:
+there is no GitLab remote and no GitLab project. Re-enabling CI in one commit
+falsified statements in six documents at once, which is the drift this
+repository now gates against (see `DEBT.md` D-1).
 
 The four-rung ladder retained below is what the grade in _Current status_ was
 actually assessed against, and is kept verbatim so the assessment remains
@@ -71,7 +84,7 @@ interpretable rather than being silently re-scored.
 
 Current Grade: C
 
-*Evidence for D (Alpha):* the framework library (23 modules) compiles under
+*Evidence for D (Alpha):* the framework library (32 modules) compiles under
 Idris2, installs, and its self-test suite runs green via `scripts/ci-build.sh`
 (the CI gate). The type-safe suite package (`proven-tests-suite.ipkg`) builds
 against the installed library and passes. Machine-checked content includes
@@ -113,4 +126,23 @@ defects.
 
 | 2026-07-02 | D | Initial grading under estate CRG convention. Prior state
 was ungraded ("X") per `docs/STATE-OF-THINGS.adoc`.
+
+| 2026-07-03 | C | Promoted against the local four-rung ladder below, on the
+evidence of the `integrations/proven` subject report. Recorded in
+`docs/STATE-OF-THINGS.adoc` and `STATE.a2ml` but *never entered in this table*,
+so a reader of the history concluded D while the rest of the repository said C
+— and the README badge stayed frozen at D for five weeks. Logged as `DEBT.md`
+D-2.
+
+| 2026-08-07 | C | Held, pending re-score. Two blockers to a defensible CRG C
+under the *estate* v2.2 ladder are now cleared — automated push/PR validation
+is live, and the spec suite carrying the 12 Actually-Proven theorems is gated
+for the first time. One remains: benchmarks are not baselined. The grade is
+deliberately *not* raised here; re-scoring is an owner decision and is
+scheduled with its evidence in `ROADMAP.md`.
 |===
+
+CAUTION: the grade in this file is the single source of truth. The README badge
+must be generated from it — `just crg-badge` derives the shields.io URL from the
+`Current Grade:` line above. Do not hand-edit the badge; the two disagreed for
+five weeks precisely because nothing tied them together.

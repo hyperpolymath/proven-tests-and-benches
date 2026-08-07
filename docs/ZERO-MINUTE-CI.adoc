@@ -7,10 +7,33 @@
 :toclevels: 3
 :sectnums:
 
-== Why
+[IMPORTANT]
+====
+*SUPERSEDED 2026-08-07 — retained for self-hosted use only.*
 
-GitHub-hosted Actions are metered. This repository's `.github/workflows/ci.yml`
-is therefore *manual-only* (`workflow_dispatch`) and consumes no minutes on
+The premise of this document no longer holds. This repository is *public*, so
+GitHub-hosted Actions are free and unmetered, and `.github/workflows/ci.yml`
+runs on `push` and `pull_request` (since 2026-08-03), as does CodeQL (since
+2026-08-07). Every statement below that describes `ci.yml` as manual-only, or
+the GitLab `idris2` job as the hosted gate, is *false*. There is no GitLab
+project and nothing in `.gitlab-ci.yml` has ever executed.
+
+Two things are still worth having here: the owned-compute mechanism is correct
+and would work on self-hosted hardware, and it documents the trap below.
+
+WARNING: do not run `scripts/wire-zero-minute-gate.sh`. It would `PUT` branch
+protection with `required_pull_request_reviews: null` and `enforce_admins:
+false`, clearing any existing protection, and would require the
+`owned-compute/idris2` context — which no longer reports — while *not* requiring
+`CI (Idris2)`, which is what actually gates. It weakens protection while
+appearing to strengthen it. See `DEBT.md` I-2.
+====
+
+== Why (historical)
+
+GitHub-hosted Actions are metered *on private repositories*. When this document
+was written the repository was private and `.github/workflows/ci.yml`
+was *manual-only* (`workflow_dispatch`), consuming no minutes on
 push/PR. But a pull request can still be *gated* — by running the real checks on
 hardware you already own and publishing the verdict to GitHub as a commit
 status. A branch-protection rule that requires that status then blocks merges

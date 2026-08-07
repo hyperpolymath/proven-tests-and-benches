@@ -26,7 +26,10 @@ so a claimed-covered cell cannot be faked.
   (see `docs/CHARACTERISTICS.adoc` for the evidence-spectrum philosophy:
   example → property → proof)
 * A 17-category × 14-aspect test taxonomy, traversed as a co-creation lattice
-  (`docs/ZIGZAG-REGIMEN.adoc`)
+  (`docs/ZIGZAG-REGIMEN.adoc`). NOTE: the estate standard defines *16*
+  categories; the 17th, `TypeSafeTest`, is a *local extension* to this
+  repository and exists in no standard. The drift is intentional but unratified
+  — see `DEBT.md` S-4.
 * A machine-checked tropical (min-plus) semiring for cost-aware test routing
   (`src/ProvenTests/Tropical.idr` — total proofs, no escape hatches)
 * Honest status reporting: see `docs/STATE-OF-THINGS.adoc` (the self-audit)
@@ -89,7 +92,17 @@ proven-tests-and-benches/
 ├── Justfile                  # build/test/bench/ci recipes (real, working)
 ├── proven-tests.ipkg         # the framework library + self-test executable
 ├── proven-tests-suite.ipkg   # type-safe category test suite (depends = proven-tests)
-├── src/ProvenTests/          # 23 modules: the framework
+├── proven-spec-suite.ipkg    # Proven laws, AffineScript, HigherOrder, SetTheory
+├── benchmarks/benchmark.ipkg # the benchmark harness
+├── integrations/proven/…ipkg # the external-subject report
+│                             # (five packages in total, not one)
+├── DEBT.md                   # every known gap, with the command that found it
+├── ROADMAP.md                # what happens next, and why in that order
+├── TEST-NEEDS.md             # every category graded REAL / THIN / ABSENT
+├── PROOFS.adoc               # the proof catalogue, per suite
+├── ARCHITECTURE.md           # structure + a standing list of known defects
+├── AGENTS.md                 # read this before changing anything with an agent
+├── src/ProvenTests/          # 32 modules: the framework
 │   ├── Types.idr             # evidence-carrying provenance (the core idea)
 │   ├── Classification.idr    # tier constructors and honest promotion
 │   ├── Taxonomy.idr          # 17 categories × 14 aspects × 12 kategoria levels
@@ -145,6 +158,45 @@ just bench          # benchmark harness
 
 Code is licensed under MPL-2.0; documentation under CC-BY-SA-4.0.
 See `LICENSE` and `LICENSES/`.
+
+== Where to look next
+
+[cols="1,3"]
+|===
+| Document | What it answers
+
+| `ARCHITECTURE.md`
+| How the pieces fit — and a standing, maintained list of known architectural
+  defects. The most reliably honest document here.
+
+| `TEST-NEEDS.md`
+| How good the tests actually are. Every category graded REAL / THIN / ABSENT,
+  with the gaps in priority order. Four categories are THIN and say so.
+
+| `PROOFS.adoc`
+| The proof catalogue: what is machine-checked, per suite.
+
+| `READINESS.adoc`
+| The Component Readiness Grade, its evidence, and what is not yet met. The
+  single source of truth for the grade — the badge above is derived from it.
+
+| `DEBT.md`
+| Every known gap across licence, docs, code, proof, test, CI/CD and supply
+  chain, each with the command that produced the evidence.
+
+| `ROADMAP.md`
+| What happens next and why in that order.
+
+| `AGENTS.md`
+| The non-negotiables. Read before changing anything with an agent.
+
+| `docs/CHARACTERISTICS.adoc`
+| What makes a test or benchmark good: the example → property → proof spectrum.
+|===
+
+TIP: the project wiki carries the conceptual introductions — provenance tiers,
+the Zigzag lattice, what actually gates. It links to these files rather than
+restating them, so it cannot drift out of step with the repository.
 
 == References
 
