@@ -7,7 +7,12 @@
 :toc: left
 :toclevels: 4
 
-image::https://img.shields.io/badge/CRG-D-orange?style=flat-square[Component Readiness Grade]
+// GENERATED — do not hand-edit. Regenerate with `just crg-badge`, which derives
+// the grade from the `Current Grade:` line in READINESS.adoc (the single source
+// of truth). This badge was hand-frozen at D for five weeks while READINESS.adoc
+// and STATE.a2ml both said C, because nothing tied them together. Gating that
+// agreement in CI is ROADMAP.md item 2b; see DEBT.md D-2.
+image::https://img.shields.io/badge/CRG-C-yellowgreen?style=flat-square[Component Readiness Grade]
 
 == Overview
 
@@ -178,7 +183,9 @@ See `LICENSE` and `LICENSES/`.
 
 | `READINESS.adoc`
 | The Component Readiness Grade, its evidence, and what is not yet met. The
-  single source of truth for the grade — the badge above is derived from it.
+  single source of truth for the grade. The badge above is generated from it by
+  `just crg-badge` and must not be hand-edited; CI does not yet *enforce* that
+  agreement, which is ROADMAP.md item 2b.
 
 | `DEBT.md`
 | Every known gap across licence, docs, code, proof, test, CI/CD and supply
