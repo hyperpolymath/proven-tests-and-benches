@@ -5,11 +5,21 @@
 #
 [metadata]
 version = "0.1.0"
-last-updated = "2026-06-08"
+last-updated = "2026-08-07"
 
 [project]
 name = "proven-tests-and-benches"
-purpose = "Type-Safe Testing Framework & Benchmarks for Hyperpolymath. Provides comprehensive testing infrastructure with provenance classification, 9 type-safe categories, and full test taxonomy implementation."
+# NOTE (2026-08-07): this said "full test taxonomy implementation", which
+# AUDIT.adoc:30-31 forbids ("READMEs must not outrun the proofs") and
+# TEST-NEEDS.md:62-67 flatly contradicts — four of the seventeen categories
+# (property-based, mutation, fuzz, chaos) are THIN, and this file is the FIRST
+# thing AGENTS.md:3 tells an agent to read. It was also the stalest metadata in
+# the repository: `last-updated = "2026-06-08"`.
+purpose = "Type-safe testing framework and benchmarks. Evidence-carrying test classification over three provenance tiers (Actually-Proven / Provisionally-Proven / Unproven), 9 type-safe categories, and a 17x14 category-by-aspect coverage lattice that is derived from tests that ran and passed rather than declared. Taxonomy coverage is partial and graded honestly in TEST-NEEDS.md; four categories are THIN and are recorded as such."
+
+# The single most important fact about working in this repository, per
+# AGENTS.md:5 — and absent from this file until 2026-08-07.
+upstream-of-the-estate = "The estate testing standard (standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc) directs every repository to draw tests from here FIRST. A vacuous test added here is copied outward and read downstream as evidence. Defects in this repository are estate-wide defects by design."
 
 [ai-allocation]
 agents = [
