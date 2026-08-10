@@ -63,7 +63,7 @@ ladder file fails the build.
 === 2. Native run-report ingestion (one panic-attack change)
 
 panic-attack's `aggregate` gains an input kind that parses the proven-tests JSON
-run report directly (`src/aggregate/proven_tests.rs`), so a whole run — its tier
+run report directly (panic-attack's `src/aggregate/proven_tests.rs`), so a whole run — its tier
 counts and coverage — can be folded into an assail/assault report as a
 trust-tagged, hash-pinned record, with the tier→verdict mapping above applied in
 code. This is the reciprocal of surface 1: instead of exporting proof files to

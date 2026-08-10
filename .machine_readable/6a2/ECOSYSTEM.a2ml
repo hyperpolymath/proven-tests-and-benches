@@ -15,11 +15,11 @@ relations = [
   { project = "proven", relation = "subject", detail = "graded by three-tier provenance from its own ledgers (integrations/proven); the natural first real subject. See proven/.machine_readable/6a2/ECOSYSTEM.a2ml for the reciprocal link." },
   # CORRECTED 2026-08-07. This entry claimed the integration works; NEUROSYM.a2ml:69
   # said it does not, in the same directory. The pessimistic reading is correct:
-  # src/aggregate/proven_tests.rs implements the schema faithfully and has passing
+  # panic-attack's src/aggregate/proven_tests.rs (its tree, not ours) implements the schema faithfully and has passing
   # unit tests, but it is reachable from NO CLI flag, `aggregate` returns Ok
   # unconditionally, and scripts/emit-aggregate-inputs.sh is invoked by nothing.
   # See DEBT.md D-5 / S-2 and ROADMAP.md item 3.
-  { project = "panic-attack", relation = "aggregator", status = "HALF-WIRED", detail = "DESIGNED, NOT WORKING. panic-attack implements this repository\u0027s report schema in src/aggregate/proven_tests.rs, field for field, with passing unit tests — but no CLI flag routes to it, aggregate never exits non-zero on a bad verdict, and nothing invokes the feeder script. Treat any claim that this works as describing an intention. See docs/INTEROP-PANIC-ATTACK.adoc." },
+  { project = "panic-attack", relation = "aggregator", status = "HALF-WIRED", detail = "DESIGNED, NOT WORKING. panic-attack implements this repository\u0027s report schema in its own tree at panic-attack:src/aggregate/proven_tests.rs, field for field, with passing unit tests — but no CLI flag routes to it, aggregate never exits non-zero on a bad verdict, and nothing invokes the feeder script. Treat any claim that this works as describing an intention. See docs/INTEROP-PANIC-ATTACK.adoc." },
   { project = "proven-servers", relation = "abi-pattern-source", detail = "its single-sourced ABI (tools/gen-abi.sh + comptime drift guard) is the model the FFI-parity harness generalizes (docs/FFI-PARITY-DESIGN.adoc E6)." },
   { project = "bag-of-actions", relation = "aspirational", detail = "the Baton contract (coord + provenance + tropical cost) is the cross-repo CI-mesh interface; consumer side not yet present." },
   { project = "echo-types", relation = "aspirational", detail = "TypeSafe/Bridge.idr is a stand-in contract only; no dependency yet." },

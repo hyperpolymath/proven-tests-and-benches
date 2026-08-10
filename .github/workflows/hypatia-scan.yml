@@ -1,6 +1,6 @@
-# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+# This workflow is managed by gh actions-lock.
 #
 # Hypatia estate scan. Immaculate Guide Edict 7: "A release that has not been
 # scanned is not a release. It is a guess." Pinned to the NEWEST standards SHA
