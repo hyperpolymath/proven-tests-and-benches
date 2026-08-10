@@ -96,6 +96,7 @@ repository had while five of the defects below were live.
 | **I-7** | LOW | `.github/funding.yml` was lowercase. GitHub reads only `.github/FUNDING.yml`, so the sponsor button had never rendered. | GitHub docs; file listing | **Fixed** in this PR. |
 | **I-8** | LOW | No `ISSUE_TEMPLATE/`, no `PULL_REQUEST_TEMPLATE.md`, no `SUPPORT.md`, no release automation. `CHANGELOG.md` has a `[0.1.0]` entry and there is **no tag**. | `git tag` → empty | Now that the repo is public these matter. `ROADMAP.md` item 6. |
 | **I-9** | LOW | No `CITATION.cff`, `.zenodo.json` or `codemeta.json`, on a research-adjacent repository that cites standards. | file listing | Add `CITATION.cff`. |
+| **I-10** | MEDIUM | **Dependabot-actor PR runs are policy-refused on this account.** PR #29's three workflows all hit `startup_failure` in 0s (zero steps, no logs) on the `pull_request` event — including Secret Scanner, which the diff did not touch — while the identical content ran green pushed to main (12:36, 2026-08-10) and on a `workflow_dispatch` minutes later. Dependabot actions-PRs therefore merge unvalidated. | `gh api .../runs` timeline 2026-08-10; run 31388969899 | **Decided:** `gh actions-lock` is the bump mechanism; Dependabot is a notifier only (see `.github/dependabot.yml` header). Close its actions PRs and re-lock. |
 
 ## Supply chain & metadata — S
 
