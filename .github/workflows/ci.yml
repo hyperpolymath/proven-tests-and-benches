@@ -1,3 +1,4 @@
+# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 # This workflow is managed by gh actions-lock.
@@ -128,6 +129,20 @@ jobs:
 
       - name: Shellcheck
         run: shellcheck -S warning scripts/*.sh
+
+      # Workflows carry symbolic version refs (this account startup-refuses
+      # bare-SHA uses:), so runtime immutability rests on this step: verify the
+      # tags still resolve to the SHAs recorded in actions.lock. A re-pointed
+      # tag fails here — the drift detection a raw tag ref lacks (PR #30).
+      - name: Verify action refs against actions.lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install github/gh-actions-lock 2>/dev/null || true
+          if ! gh actions-lock --no-fix; then
+            echo "::error::A workflow ref no longer matches the SHA recorded in actions.lock — possible re-pointed tag. Run gh actions-lock locally and review the diff."
+            exit 1
+          fi
 
       # --- Toolchain ---
 

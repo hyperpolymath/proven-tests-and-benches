@@ -111,6 +111,16 @@ SPDX-License-Identifier = "CC-BY-SA-4.0"
 
 # --- Sample git hook --------------------------------------------------------
 [[annotations]]
+# Machine artefacts: the empty hypatia baseline (JSON forbids comments) and the
+# GENERATED root READINESS.md (its content is derived from READINESS.adoc by
+# `just crg-readiness-md`; it carries its own SPDX header but is listed here so
+# regeneration can never silently drop coverage).
+path = [".hypatia-baseline.json", "READINESS.md"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
+
+[[annotations]]
 # .mailmap is a git identity-normalisation table; git honours # comments but an
 # SPDX header inside it would be read as a (bogus) mapping by some tooling, so
 # it is declared here instead of in-file.
