@@ -43,11 +43,11 @@ Verified by running the gate, not by reading a document:
 
 | Quantity | Value | Source |
 |---|---|---|
-| Framework self-test cells | 36 (35 lattice cells + 1 self-classification) | `src/ProvenTests/Cells.idr` |
+| Framework self-test cells | 41 (40 lattice cells + 1 self-classification) | `src/ProvenTests/Cells.idr` |
 | Type-safe category suite | **56 / 56 passing** | `./build/exec/proven-tests-suite`, 2026-08-07 |
 | Spec suite (Proven laws, AffineScript, HigherOrder, SetTheory) | **75 / 75 passing**, of which **12 report Actually-Proven** | `./build/exec/proven-spec-suite`, 2026-08-07 — first gated run |
-| Benchmark harness | runs; 3 workloads, 2000 iterations each | `./benchmarks/build/exec/proven-bench` |
-| Category × aspect cells covered | 35 / 238 (14.7%) | `.machine_readable/6a2/STATE.a2ml` |
+| Benchmark harness | runs; 4 workloads, 5 samples each, calibrated iteration counts, `--json` emission | `./benchmarks/build/exec/proven-bench --json`, 2026-08-10 |
+| Category × aspect cells covered | 40 / 238 (16.8%) | `./build/exec/proven-tests` run output, 2026-08-10 |
 | Aspect columns non-empty | **14 / 14**, and now truthfully | `./build/exec/proven-tests`; the Reproducibility caveat below is resolved |
 | Proof escape hatches | **0** | `just lint`, exit 0 |
 | Toolchain pins in agreement | 7 / 7 artefacts + installed compiler | `just check-pins`, exit 0 |
@@ -59,12 +59,12 @@ occupancy. Occupancy is not strength; the Assessment column is what matters.
 
 | # | Category (taxonomy) | Cells | Assessment | Notes |
 |---|---|---|---|---|
-| 1 | Unit | 1 | REAL | |
+| 1 | Unit | 3 | REAL | +2 boundary cells (empty report, empty coverage) salvaged 2026-08-10. |
 | 2 | Point-to-Point | 1 | THIN | One seam only. The repo's real seam — the `integrations/proven` ledger parse — is not exercised in CI (see Gap A). |
 | 3 | End-to-End | 2 | REAL | |
 | 4 | Build | 2 | REAL | `scripts/ci-build.sh` builds library, suite and benchmark from clean. |
 | 5 | Execution & Runtime | 2 | REAL | |
-| 6 | Reflexive | 3 | REAL | The framework classifies itself; `Meta.idr` proves the derivation. |
+| 6 | Reflexive | 6 | REAL | The framework classifies itself; `Meta.idr` proves the derivation. +3 classify→isX round-trip cells (salvaged 2026-08-10; originally mislabelled P2P — a round-trip of the framework's own machinery is reflexive). |
 | 7 | Lifecycle | 2 | REAL | |
 | 8 | Smoke | 2 | REAL | |
 | 9 | Property-Based / Generative | 2 | **THIN** | Properties are evaluated over small *fixed* lists, not generated inputs. Taxonomy expects 1000+ generated cases per property with shrinking and committed regression files. There is no generator and no shrinker. |

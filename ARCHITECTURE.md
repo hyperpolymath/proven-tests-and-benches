@@ -37,7 +37,7 @@ of them:
 │   ├── Tropical.idr            # Min-plus semiring + its laws, proved total
 │   ├── Coverage.idr            # Derives the coverage grid from executed tests
 │   ├── Meta.idr                # Proves the derivation in Coverage.idr is sound
-│   ├── Cells.idr               # The 35 lattice cells + 1 self-classification
+│   ├── Cells.idr               # The 40 lattice cells + 1 self-classification
 │   ├── Zigzag.idr              # The 3570-coordinate lattice
 │   ├── Runners.idr             # Suite execution
 │   ├── Report.idr              # JSON run report, schema_version 1

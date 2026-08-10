@@ -16,7 +16,7 @@ readiness-grade-blocker = "benchmarks not baselined (DEBT.md I-1) — the last u
 toolchain = "idris2-0.7.0"   # corrected 2026-08-03; gated by scripts/check-toolchain-pins.sh
 gate = "scripts/ci-build.sh"
 library-modules = 32
-framework-suite = "36/36 passing"
+framework-suite = "41/41 passing"
 type-safe-suite = "56/56 passing"
 # Gated for the FIRST time on 2026-08-07 (PR #27). Until then proven-spec-suite
 # was built by no just recipe, no line of ci-build.sh and no workflow step —
@@ -27,9 +27,9 @@ benchmark = "runs (System.Clock, DCE-defeated)"
 
 [coverage]
 # self-derived from tests that ran and passed (src/ProvenTests/Coverage.idr)
-cat-aspect-cells-covered = 35
+cat-aspect-cells-covered = 40
 cat-aspect-cells-total = 238
-lattice-coordinates-covered = 35
+lattice-coordinates-covered = 40
 lattice-size = 3570
 aspect-columns-nonempty = "14 / 14"
 # TRUE AS STATED since 2026-08-07. Until then the sole cell covering the

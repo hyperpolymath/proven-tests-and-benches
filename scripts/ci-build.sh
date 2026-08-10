@@ -49,8 +49,9 @@ echo "--- running type-safe test suite (exits non-zero on failure) ---"
 echo "--- running spec suite (exits non-zero on failure) ---"
 ./build/exec/proven-spec-suite
 
-echo "--- running benchmark ---"
-./benchmarks/build/exec/proven-bench
+echo "--- running benchmark (JSON emitted for baseline history) ---"
+mkdir -p build/report
+./benchmarks/build/exec/proven-bench --json build/report/proven-bench.json
 
 # The proven subject report grades a real external subject. It needs only
 # proven's ledger files (no code dependency), so it runs whenever a proven

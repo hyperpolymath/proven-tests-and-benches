@@ -197,6 +197,22 @@ PY
   say "computed: framework suite = ${passed}/${total} (run report)"
   grep -q "framework-suite = \"${passed}/${total} passing\"" .machine_readable/6a2/STATE.a2ml \
     || bad "STATE.a2ml framework-suite != ${passed}/${total}"
+  # Coverage counts, from the same report's summary (runReportJSON writes them).
+  local covered
+  covered=$(python3 - "$REPORT" <<'PY2'
+import json,sys
+d=json.load(open(sys.argv[1]))
+v=(d.get("summary") or {}).get("covered_cells")
+print(v if v is not None else "")
+PY2
+  )
+  if [ -n "$covered" ]; then
+    say "computed: covered cat-aspect cells = ${covered} (run report)"
+    grep -q "cat-aspect-cells-covered = ${covered}" .machine_readable/6a2/STATE.a2ml \
+      || bad "STATE.a2ml cat-aspect-cells-covered != ${covered}"
+  else
+    dead "run report carries no coverage count — cannot verify STATE.a2ml coverage"
+  fi
 }
 
 # ---------------------------------------------------------------------------
