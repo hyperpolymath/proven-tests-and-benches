@@ -26,6 +26,16 @@ would have to come from somewhere, and the two candidate sources both fail:
 statement of what is preserved, under what operations, or what a violation looks
 like.
 
+**CORRECTION (2026-08-10): the claim below is now STALE — and the honesty
+discipline this file models demands saying so here rather than deleting it.**
+As of a survey dated 2026-08-10, `hyperpolymath/echo-types` carries ~205 Agda
+modules under `proofs/agda/` compiled `--safe --without-K`, a postulate-free
+main suite (two quarantined, named exceptions), and a CI guardrail that
+mechanically rejects escape hatches. The stand-in below MAY remain the right
+engineering choice — an Agda→Idris2 port is real work, and no Idris2 artefacts
+exist upstream — but the *reason* is now "port cost", not "nothing to port".
+The paragraph below records what was true when written (2026-07-28):
+
 **`hyperpolymath/echo-types` has no formal artefacts.** It is a large and
 serious repo — Pillars A–D landed, gates F1–F5 passed, a Buchholz rank-monotone
 ordinal umbrella closing 11/13 constructors, a retraction ledger — but measured

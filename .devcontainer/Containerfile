@@ -20,8 +20,11 @@ RUN apk update && apk add --no-cache \
     && rm -rf /var/cache/apk/*
 
 # Create non-root dev user (matches devcontainer.json remoteUser)
-RUN groupadd -g 1000 nonroot || true \
-    && useradd -m -u 1000 -g 1000 -s /bin/bash nonroot || true
+# Idempotent WITHOUT `|| true` (DEBT C-4): the estate bans that gate shape
+# because it also swallows "command not found" — on this Wolfi base, groupadd
+# may not exist at all, and that must fail loudly, not silently.
+RUN getent group nonroot >/dev/null 2>&1 || groupadd -g 1000 nonroot
+RUN id -u nonroot >/dev/null 2>&1 || useradd -m -u 1000 -g 1000 -s /bin/bash nonroot
 
 # Set workspace directory
 WORKDIR /workspaces/{{PROJECT_NAME}}

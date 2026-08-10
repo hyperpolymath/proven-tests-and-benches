@@ -111,6 +111,15 @@ SPDX-License-Identifier = "CC-BY-SA-4.0"
 
 # --- Sample git hook --------------------------------------------------------
 [[annotations]]
+# .mailmap is a git identity-normalisation table; git honours # comments but an
+# SPDX header inside it would be read as a (bogus) mapping by some tooling, so
+# it is declared here instead of in-file.
+path = ".mailmap"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
+
+[[annotations]]
 path = "scripts/git-hooks/pre-push.sample"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"

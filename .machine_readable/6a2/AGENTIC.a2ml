@@ -50,6 +50,7 @@ banned-gate-shapes = [
   "skip-if-absent guards that exit 0 when the subject is missing",
 ]
 gate-rule = "Before adding any check, run it against deliberately broken input and confirm a non-zero exit. A check never observed to fail is not a gate."
+test-doctrine = "docs/TEST-DOCTRINE.adoc: harness must never trigger; payload must always trigger for its declared class. A test FAILS the meta-check if the harness fires or the payload stays silent on its class. Silence + firing fixtures mandatory; missing either = inadmissible. Outcomes are 0/1/2 and a crash is 2 (NO CHECK), never silence."
 missing-input-convention = "exit 2 and say NO CHECK WAS PERFORMED; never exit 0"
 
 licence-edits = "manual, owner-only"

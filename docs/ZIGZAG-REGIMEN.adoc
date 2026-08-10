@@ -38,6 +38,17 @@ ordered way to walk it.
 Proven-Tests already defines rich axes, but they are *disconnected* from real
 tests (see `src/ProvenTests/Taxonomy.idr`, `src/ProvenTests/Types.idr`):
 
+[NOTE]
+====
+*Historical (audit of 2026-06; every finding below has since been FIXED).*
+ADR-003 made both axes typed (`Maybe TestCategory` / `Maybe TestAspect`); the
+E2E category has a real cell; the co-phase and actor axes exist; and the matrix
+holds 35 of 238 cells (see `STATE.a2ml [coverage]`, gated by
+`scripts/check-doc-facts.sh`). The audit is retained in the past tense it
+should have been rewritten into, because it motivates the design — not as a
+description of the present. (DEBT D-4)
+====
+
 . *The Aspect axis is decorative.* `TestAspect` is a clean 14-constructor type,
   but `TestMetadata.aspect` is a `Maybe String` (not `Maybe TestAspect`) and
   every classifier sets it to `Nothing`. No test declares an aspect.

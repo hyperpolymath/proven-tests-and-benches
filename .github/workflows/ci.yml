@@ -83,24 +83,48 @@ jobs:
       - name: Check for proof escape hatches
         run: bash scripts/check-escape-hatches.sh
 
-      # The README badge is derived from READINESS.adoc, which is the single
-      # source of truth for the grade. They disagreed for five weeks — badge D,
-      # READINESS C — because nothing tied them together. This is that tie.
-      - name: Check the CRG badge matches READINESS.adoc
+      # The anti-drift gate: every fact a document asserts (module counts,
+      # package counts, lattice cells, taxonomy axes, the CRG grade+badge, the
+      # DEBT register's own size) is COMPUTED from its source of truth and
+      # compared against every restatement. One commit once falsified six
+      # documents at a stroke and nothing noticed for four days; this step is
+      # what notices. (Absorbs the previous inline badge check.)
+      - name: Check documented facts against computed reality
+        run: bash scripts/check-doc-facts.sh source
+
+      # REUSE compliance was claimed in REUSE.toml and gated nowhere (DEBT L-4).
+      # One tolerance, scoped and named: LICENSES/AGPL-3.0-or-later.txt is
+      # deliberately unused pending an owner-only licensing decision (DEBT L-1,
+      # REUSE.toml:27-37). Gating raw `reuse lint` would be permanently red on
+      # that item — a gate whose red is routinely overridden is a false-positive
+      # generator. Everything else (bad/missing licences, files without
+      # copyright/licence info) fails hard.
+      - name: REUSE compliance (tolerating only the documented L-1 item)
         run: |
-          WANT=$(grep "Current Grade:" READINESS.adoc | head -1 \
-                 | sed 's/.*Current Grade:[^A-Z]*\([A-Z]\).*/\1/')
-          HAVE=$(grep -oE 'badge/CRG-[A-Z]-' README.adoc | head -1 \
-                 | sed 's|badge/CRG-\([A-Z]\)-|\1|')
-          if [ -z "$WANT" ]; then
-            echo "::error::No 'Current Grade:' in READINESS.adoc — NO CHECK WAS PERFORMED."
-            exit 2
-          fi
-          if [ "$WANT" != "$HAVE" ]; then
-            echo "::error::README badge is CRG-$HAVE but READINESS.adoc says CRG-$WANT. Run: just crg-badge-sync"
-            exit 1
-          fi
-          echo "OK: README badge and READINESS.adoc both say CRG-$WANT"
+          pipx install reuse >/dev/null 2>&1 || pip install --quiet reuse
+          reuse lint --json > /tmp/reuse.json || true
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open("/tmp/reuse.json"))
+          nc = d.get("non_compliant", {})
+          problems = []
+          for key, val in nc.items():
+              if key == "unused_licenses":
+                  extra = [u.get("license", u) if isinstance(u, dict) else u
+                           for u in val]
+                  extra = [e for e in extra if "AGPL-3.0-or-later" not in str(e)]
+                  if extra:
+                      problems.append(f"unused licences beyond the tolerated one: {extra}")
+              elif val:
+                  problems.append(f"{key}: {val}")
+          if problems:
+              print("REUSE non-compliance beyond the documented L-1 tolerance:")
+              [print("  -", p) for p in problems]
+              sys.exit(1)
+          files = d.get("summary", {}).get("files_total") or d.get("files_count") or "?"
+          print(f"OK: REUSE compliant across {files} files "
+                "(sole tolerated issue: unused AGPL-3.0-or-later, DEBT L-1)")
+          PY
 
       - name: Shellcheck
         run: shellcheck -S warning scripts/*.sh
@@ -129,6 +153,12 @@ jobs:
 
       - name: Build, test and benchmark
         run: bash scripts/ci-build.sh
+
+      # Second doc-facts invocation: facts only a real run produces (suite pass
+      # counts) checked against the report the run just wrote. Split from the
+      # pre-bootstrap source-mode call so cheap drift still fails in seconds.
+      - name: Check run-report facts against documented claims
+        run: bash scripts/check-doc-facts.sh report build/report/proven-tests-report.json
 
       # --- Subject grading ---
       # scripts/ci-build.sh grades the external `proven` subject when a checkout

@@ -31,7 +31,9 @@ the second into the first:
 | **THIN** | A genuine assertion, but far weaker than the taxonomy's definition of that category. Not a template for other repos. |
 | **ABSENT** | Not implemented. Recorded as N/A with justification, per §Scope. |
 
-The taxonomy's own instruction governs the distinction: *"A test written to make
+Admissibility is governed by [`docs/TEST-DOCTRINE.adoc`](docs/TEST-DOCTRINE.adoc)
+(harness/payload separation, silence + firing fixtures); grading below is about
+strength, and the taxonomy's own instruction governs the distinction: *"A test written to make
 a gate go green, rather than to establish a fact, is worse than no test — it is
 read as evidence."*
 

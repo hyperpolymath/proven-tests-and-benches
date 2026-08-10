@@ -4,7 +4,10 @@ SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewe
 -->
 # DEBT — proven-tests-and-benches
 
-**Compiled:** 2026-08-07, against `0bc912c`.
+**Compiled:** 2026-08-07, against `0bc912c`; **last re-measured 2026-08-10** (I-10
+added; I-3/I-4/I-7 remain closed). The register holds **45 items** — a figure now
+GATED by `scripts/check-doc-facts.sh`, because the original header claimed 36 while
+the tables held 44 and nothing noticed for three days.
 **Method:** every item below carries the command that produced its evidence.
 Anything not confirmed by running something is labelled **DIAGNOSIS
 (unconfirmed)** and is not asserted.

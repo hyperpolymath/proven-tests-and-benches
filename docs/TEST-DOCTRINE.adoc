@@ -1,0 +1,164 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+//
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+//
+= The Test Doctrine: harness and payload
+:toc: left
+:toclevels: 2
+:sectnums:
+
+Stated by the owner on 2026-08-10; binding on every test in this repository,
+and on every test copied out of it. This document is the canonical statement.
+`docs/CHARACTERISTICS.adoc` explains what makes a test *good*; this document
+states when a test is *admissible at all*.
+
+== The two-part anatomy
+
+Every test divides into exactly two parts:
+
+Harness::
+  The machinery: generators, runners, corpus loaders, classifiers, clocks,
+  comparators — everything that carries the test to its subject and its
+  verdict back. **The harness must be perfect and must never trigger.** A
+  harness defect must never be able to read as a subject failure. Wherever
+  Idris2 allows, harness correctness is *proven* (Actually-Proven tier), not
+  tested: a generator's range coverage, a shrinker's termination, a
+  comparator's reflexivity are theorems, not hopes.
+
+Payload::
+  The discriminating assertion: the one thing this test exists to detect.
+  **The payload must always trigger for the class of defect it is designed
+  for** — perfect recall on its *declared* class. A payload that misses a
+  member of its own class is faulty, however green it runs.
+
+== The pass/fail criterion
+
+[IMPORTANT]
+====
+*A test FAILS the check if the harness is faulty and triggers, OR if the
+payload is faulty and does not trigger the specific thing for which it is
+designed.*
+====
+
+This is mechanised, not aspirational. Every test ships **two committed
+fixtures**, and CI runs both:
+
+[cols="1,3,2"]
+|===
+| Fixture | What it does | Outcome required
+
+| *Silence fixture*
+| Runs the harness over clean input containing no member of the declared
+  defect class.
+| **No fire.** Any fire is a harness fault: the test fails the meta-check.
+
+| *Firing fixture*
+| Presents a committed specimen of the declared defect class.
+| **Fire.** Silence is a payload fault: the test fails the meta-check.
+|===
+
+A test missing either fixture is *inadmissible* — it does not enter the suite,
+whatever it asserts. Each test declares its target class in its metadata so
+the meta-check knows what "the specific thing" is.
+
+=== Three outcomes, not two
+
+A harness that *crashes* during the silence fixture produces no fire — and
+would read as "correctly silent". That is a false pass. Every meta-check
+therefore distinguishes three outcomes, following this repository's standing
+exit-code convention:
+
+* `0` — the check ran and the required outcome was observed
+* `1` — the check ran and the wrong outcome was observed (fire in silence /
+  silence in firing)
+* `2` — **NO CHECK WAS PERFORMED** — a crash, a missing fixture, an absent
+  input. Never reported as success, never conflated with `1`.
+
+== How tests themselves fail: the deceptive/faithful split
+
+A test can be weak in two categorically different ways, and the vocabulary for
+the distinction comes from the estate's trope-particularity work
+(`trope-particularity-workbench`, the nine particularity effects):
+
+Faithful-but-lossy::
+  The test observes less than it could — attenuated coverage, a projected
+  slice, a dropped dimension. Honest weakness. Recorded as THIN in
+  `TEST-NEEDS.md` and tiered down; never disguised.
+
+Deceptive::
+  The test *misinforms*. Three shapes, each named, each strictly worse than
+  absence:
+  * *Falsifying* — reports a wrong verdict (the vacuous-antecedent
+    transitivity test this repository shipped for a year: green under an
+    implication whose antecedent never held).
+  * *Misbinding* — attributes a real failure to the wrong component (a
+    harness fault surfacing as a subject failure — the exact thing the
+    harness half of this doctrine exists to prevent).
+  * *Conflating* — merges two distinct failures into one signal (a suite
+    that reports "1 failure" for two independent defects sharing an assert).
+
+The harness/payload meta-check is precisely a *deception detector for tests*:
+the silence fixture catches misbinding at its source, the firing fixture
+catches falsifying-by-omission.
+
+== Certified absence
+
+Some claims are not "this test passed" but "this defect class *cannot
+occur*". Those are stronger, and they carry stricter obligations, adopted from
+the estate's `absolute-zero` OND discipline (independently converged on by
+`trope-checker`'s exhaustiveness caveat and `echo-types`'
+no-canonical-disaggregation theorem):
+
+1. **A declared fault model** (the input): the precise class over which the
+   absence is claimed. No model, no claim.
+2. **A residue list** (the output): the enumerated defect classes
+   *deliberately out of scope* of the claim. The residue list is not an
+   apology — it is the formal specification of the gap between the proof and
+   reality. *An absence claim without a residue list is not an absence claim.*
+3. **No silent composition.** Absence certificates do not conjoin:
+   `absolute-zero` machine-checks that two operations individually
+   "silent" can leak in sequence (`OND.v` non-composition theorem). A
+   suite-level absence claim needs its own proof at suite scope, never an
+   aggregation of per-test certificates.
+
+== Scanner excludability
+
+This repository *deliberately* contains what security and quality scanners
+hunt: malformed inputs, seeded faults, mutants, secret-shaped strings,
+vacuous-shape negative fixtures. All of it lives under marked trees —
+
+* `tests/corpus/` — generated-input corpora and regression cases
+* `tests/fixtures-negative/` — firing fixtures: committed defect specimens
+* `mutants/` — mutation-testing mutant definitions and artifacts
+
+— declared in the machine-readable manifest
+`.machine_readable/testing/adversarial-content.a2ml`, which scanners
+(panic-attack, pons, gitleaks via repo-local allowlist entries) consume to
+exclude these paths from findings. Adversarial content outside the marked
+trees is a defect; scanner findings inside them are noise. Both directions are
+checkable.
+
+== The quality bar
+
+Tests here must be **as good as or better than anything out there** — this
+repository is the estate's canonical source, so its tests are copied outward
+and read as evidence by repositories that never re-examine them.
+
+"As good as" is measured against the state of the art: property testing
+against QuickCheck/Hedgehog/proptest (integrated shrinking, deterministic
+replay); mutation against cargo-mutants/mutmut (mutant taxonomy,
+equivalent-mutant documentation); fuzz against AFL/libFuzzer corpus
+discipline. "Better" is what dependent types add: where Idris2 can *prove* the
+harness — generator domain coverage, shrinker termination, tier assignment by
+construction — the proof replaces the convention, and that is this
+repository's edge.
+
+== Cross-references
+
+* `docs/CHARACTERISTICS.adoc` — the evidence spectrum: example → property → proof
+* `TEST-NEEDS.md` — every category graded REAL / THIN / ABSENT
+* `DEBT.md` — every known gap, with the command that produced the evidence
+* `AGENTS.md` and `.machine_readable/6a2/AGENTIC.a2ml` — the non-negotiables
+  (the two must agree; this doctrine is named in both)
+* `scripts/check-doc-facts.sh` — the anti-drift gate, itself written to this
+  doctrine's three-outcome rule

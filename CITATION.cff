@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+cff-version: 1.2.0
+message: "If you use this framework or its test doctrine, please cite it."
+title: "proven-tests-and-benches: tests that carry their own evidence"
+type: software
+authors:
+  - family-names: Jewell
+    given-names: Jonathan D.A.
+    email: jonathan.jewell@open.ac.uk
+repository-code: "https://github.com/hyperpolymath/proven-tests-and-benches"
+license: MPL-2.0
+keywords:
+  - evidence-carrying-tests
+  - provenance-tiers
+  - test-taxonomy
+  - idris2
+  - dependent-types
+abstract: >-
+  An Idris2 testing framework in which a test's warrant — the strength of
+  evidence behind it — is a first-class, machine-checked value across three
+  provenance tiers (Actually-Proven / Provisionally-Proven / Unproven), with
+  coverage derived from executed tests at typed coordinates rather than
+  declared, and a harness/payload doctrine under which the harness must never
+  trigger and the payload must always trigger for its declared defect class.

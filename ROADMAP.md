@@ -178,9 +178,11 @@ These block nothing mechanically and distort the record until settled.
 
 ## Not on this roadmap, deliberately
 
-**`echo-types` — `Safety.idr` and `Invariance.idr` stay unwritten.** Neither the
-specification nor the upstream repository supplies the semantics, and inventing
-them would produce modules that compile, pass, and mean nothing. The reasoning
+**`echo-types` — `Safety.idr` and `Invariance.idr` stay unwritten** (updated
+2026-08-10: upstream now has ~205 proved Agda modules, so the old "no formal
+artefacts" rationale is stale — but none are Idris2, so the semantics are still
+not *citable* from here without a port, and inventing an unfaithful Idris2
+rendering would produce modules that compile, pass, and mean nothing). The reasoning
 is recorded in `src/ProvenTests/EchoTypes/README.adoc`, which is worth reading
 as a model for leaving something undone on purpose.
 
