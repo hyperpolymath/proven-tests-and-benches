@@ -21,11 +21,29 @@
 # scripts/check-toolchain-pins.sh, and .ipkg dependencies are vendored through
 # the Idris2 package path rather than resolved from a registry.
 
+# BUMP MECHANISM (decided 2026-08-10)
+# -----------------------------------
+# `gh actions-lock` is the bump mechanism for action pins, not Dependabot.
+# Workflows carry readable version refs; .github/workflows/actions.lock carries
+# the resolved SHAs (the estate lockfile model). Dependabot stays enabled as an
+# UPDATE NOTIFIER only, for two measured reasons:
+#
+#   1. Its PR #29 (2026-08-10) arrived with every workflow in startup_failure
+#      (0 seconds, zero steps, no logs) on the pull_request event — including
+#      Secret Scanner, which the diff did not touch — while the identical
+#      content ran green when pushed to main. Dependabot-actor PR runs are
+#      policy-refused on this account; its actions PRs cannot validate
+#      themselves before merge.
+#
+#   2. Its inline-SHA bumps mislabel pins: #29 moved actions/checkout to the
+#      v7.0.1 commit while leaving the comment `# v4.2.2` — a false label this
+#      repository's whole doctrine exists to catch.
+#
+# On a Dependabot actions PR: close it, run `gh actions-lock`, and land the
+# lockfile change with truthful refs instead.
 version: 2
 updates:
   # GitHub Actions — the only dependency ecosystem present in this repository.
-  # Actions are SHA-pinned (see .github/workflows/*), so these PRs are how the
-  # pins get moved deliberately rather than drifting.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
