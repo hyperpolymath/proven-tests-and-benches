@@ -1,4 +1,3 @@
-# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # This workflow is managed by gh actions-lock.
 # Dormant push-email notification. ARMED by setting the repo variable
@@ -16,6 +15,7 @@ jobs:
     name: Email on push
     if: ${{ vars.PUSH_EMAIL_ENABLED == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Send push notification email
         uses: dawidd6/action-send-mail@v3.12.0

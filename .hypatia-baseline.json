@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "severity": "medium",
+    "rule_module": "supply_chain",
+    "type": "DependencyPinning",
+    "file": ".",
+    "note": "MEASURED CONFLICT between two estate mechanisms, 2026-08-10 (PR #30 A/B): this account startup-refuses workflows whose uses: refs are bare 40-char SHAs (12:51 run, 0s, zero steps), so workflows MUST carry symbolic version refs with the resolved SHAs held in .github/workflows/actions.lock — which this rule then flags as tag-pinning. Runtime drift IS gated: ci.yml runs `gh actions-lock --no-fix` on every push/PR, failing on any ref that stops matching its recorded SHA. Remove this entry when the estate reconciles the scanner with the lockfile model.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches DEBT.md I-10 / ADR-010",
+    "expires_at": "2026-11-10"
+  }
+]
