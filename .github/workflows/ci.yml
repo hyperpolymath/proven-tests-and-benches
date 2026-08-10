@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
 
       # --- Cheap gates first: these need no toolchain, so drift and escape
       # --- hatches fail in seconds rather than after a 15-minute bootstrap.
@@ -109,7 +109,7 @@ jobs:
 
       - name: Cache Idris2 toolchain
         id: cache-idris2
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.idris2
           key: idris2-v${{ env.IDRIS2_VERSION }}-${{ runner.os }}
