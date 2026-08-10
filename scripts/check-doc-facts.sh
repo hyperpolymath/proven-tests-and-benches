@@ -142,6 +142,15 @@ check_grade() {
   state=$(grep -oE 'readiness-grade = "[A-Z]"' .machine_readable/6a2/STATE.a2ml | grep -oE '[A-Z]"' | tr -d '"')
   [ "$want" = "$state" ] \
     || bad "STATE.a2ml readiness-grade is ${state} but READINESS.adoc says ${want}"
+  # Root READINESS.md is GENERATED from READINESS.adoc (just crg-readiness-md)
+  # for the estate parser convention; the pair must agree.
+  if [ -f READINESS.md ]; then
+    md=$(grep -oE '\*\*Current Grade:\*\* [A-Z]' READINESS.md | tail -1 | grep -oE '[A-Z]$')
+    [ "$want" = "$md" ] \
+      || bad "READINESS.md (generated) says ${md} but READINESS.adoc says ${want} (run: just crg-readiness-md)"
+  else
+    dead "READINESS.md is missing — generate it with: just crg-readiness-md"
+  fi
 }
 
 # ---------------------------------------------------------------------------
