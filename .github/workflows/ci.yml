@@ -169,10 +169,19 @@ jobs:
         run: bash scripts/ci-build.sh
 
       # Second doc-facts invocation: facts only a real run produces (suite pass
-      # counts) checked against the report the run just wrote. Split from the
-      # pre-bootstrap source-mode call so cheap drift still fails in seconds.
+      # counts, coverage counts) checked against the report the run just wrote.
       - name: Check run-report facts against documented claims
         run: bash scripts/check-doc-facts.sh report build/report/proven-tests-report.json
+
+      # Benchmark history: every run's JSON is retained as an artifact. The
+      # Phase 3b baseline is computed as the mean of the last 10 main-run
+      # medians (taxonomy L447), from these artifacts — never asserted.
+      - name: Upload benchmark result artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: proven-bench-${{ github.run_id }}
+          path: build/report/proven-bench.json
+          retention-days: 90
 
       # --- Subject grading ---
       # scripts/ci-build.sh grades the external `proven` subject when a checkout

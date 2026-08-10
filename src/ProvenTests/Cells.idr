@@ -12,6 +12,8 @@ import ProvenTests.Zigzag
 import ProvenTests.Tropical
 import ProvenTests.Baton
 import ProvenTests.E2E
+import ProvenTests.Coverage
+import ProvenTests.Report
 import ProvenTests.TypeSafe.Tropical
 import ProvenTests.TypeSafe.Epistemic
 import ProvenTests.TypeSafe.Choreographic
@@ -272,6 +274,24 @@ cellTests =
         perfCell
   , ioc (K CoEvaluation Collective RegressionTest Reproducibility) "repro-battery-determinism"
         reproCell
+    -- Salvaged from the expand-coverage branch (2026-08-10), with two
+    -- corrections recorded in DEBT/TEST-NEEDS: the branch's
+    -- `prop-coverage-monotonicity` cell asserted `coveredCatAspect [...] >= 0`
+    -- — a Nat is >= 0 BY TYPE, a vacuous cell of exactly the class PR #27
+    -- removed — and is deliberately NOT salvaged. Its three `p2p-classify-*`
+    -- cells were relabelled Reflexive: a classify->isX round-trip exercises
+    -- the framework's own classification machinery (cf. the existing
+    -- self-classification cell), not a point-to-point seam.
+  , pc  (K CoEvaluation Thing UnitTest Observability) "unit-report-empty"
+        (totalCount (generateClassificationSummary []) == 0)
+  , pc  (K CoEvaluation Thing UnitTest Maintainability) "unit-coverage-empty"
+        (coveredCatAspect [] == 0)
+  , pc  (K CoEvaluation Thing ReflexiveTest Versability) "reflexive-classify-unproven"
+        (isUnproven (classifyUnproven (mkId "x") "x"))
+  , pc  (K CoEvaluation Collective ReflexiveTest Security) "reflexive-classify-provisional"
+        (isProvisionallyProven (classifyProvisionallyProven (mkId "x") "x" provenTestsFrameworkProof (cert "x")))
+  , pc  (K CoEvaluation Collective ReflexiveTest Safety) "reflexive-classify-actual"
+        (isActuallyProven (classifyActuallyProven (mkId "x") "x" metaLadder (designProof "x" "y" [] []) (cert "x")))
   ]
 
 --/ Run every cell, returning its coordinate, metadata, and result.
