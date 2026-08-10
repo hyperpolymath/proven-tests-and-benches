@@ -102,7 +102,7 @@ integration is two-sided and should not be described as done:
   bad verdict, so the CI gate the design assumes cannot actually fail, and no
   workflow or `just` recipe invokes the script.
 - *Native run-report ingestion* does not work. `panic-attack`'s
-  `src/aggregate/proven_tests.rs` parses this repo's report schema correctly
+  panic-attack's `src/aggregate/proven_tests.rs` (in the `panic-attack` repo, not this tree) parses this repo's report schema correctly
   and is unit-tested, but it is declared once in `aggregate/mod.rs` and reachable
   from no CLI flag.
 

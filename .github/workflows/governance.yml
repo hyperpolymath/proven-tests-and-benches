@@ -1,6 +1,6 @@
-# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+# This workflow is managed by gh actions-lock.
 #
 # Estate governance: the 11-job reusable gate from hyperpolymath/standards
 # (workflow staleness, allowlist preflight, hypatia-baseline validation,

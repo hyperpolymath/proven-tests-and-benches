@@ -66,7 +66,7 @@ rationale = "This is a proof and measurement framework. Nothing in it is statist
 [neurosym-config.integration]
 mode = "symbolic-only"
 downstream-consumer = "panic-attack aggregate — parses this repo's JSON run report (schema_version 1) into its Closed/Holes/Refuted verdict lattice"
-downstream-status = "PARTIAL: panic-attack src/aggregate/proven_tests.rs implements and unit-tests the parser, but it is declared only at aggregate/mod.rs and reachable from no CLI flag. Ladder-file aggregation via --proof works; native run-report ingestion does not."
+downstream-status = "PARTIAL: panic-attack (its tree: panic-attack:src/aggregate/proven_tests.rs) implements and unit-tests the parser, but it is declared only at panic-attack:src/aggregate/mod.rs and reachable from no CLI flag. Ladder-file aggregation via --proof works; native run-report ingestion does not."
 
 [provenance]
 last-modified-by = "claude-opus-5"
