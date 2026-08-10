@@ -14,6 +14,25 @@
 #
 # Usage: scripts/wire-zero-minute-gate.sh [--dry-run] [--repo=O/R] [--branch=main] [--context=CTX]
 
+
+# ============================================================================
+# REFUSAL GUARD (DEBT I-2, 2026-08-10) — this script is SUPERSEDED and would
+# WEAKEN branch protection if run today:
+#   - it PUTs protection with required_pull_request_reviews: null and
+#     enforce_admins: false, clearing the live ruleset's protections;
+#   - it requires the `owned-compute/idris2` context, which no longer reports;
+#   - it does NOT require `Build, test and benchmark`, which is the context
+#     that actually gates (required since 2026-08-10).
+# It is retained because the owned-compute mechanism is correct for
+# self-hosted use. To run it anyway, set WIRE_ZERO_MINUTE_I_UNDERSTAND=1 and
+# update the required contexts below to the CURRENT gating set first.
+# ============================================================================
+if [ "${WIRE_ZERO_MINUTE_I_UNDERSTAND:-0}" != "1" ]; then
+  echo "REFUSED: scripts/wire-zero-minute-gate.sh is superseded and would weaken" >&2
+  echo "         branch protection (see DEBT.md I-2 and the header above)." >&2
+  exit 2
+fi
+
 set -uo pipefail
 
 CONTEXT="${GATE_CONTEXT:-owned-compute/idris2}"

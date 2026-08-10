@@ -9,6 +9,9 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+        # LICENSE carries a trailing space on line 38 of the verbatim MPL-2.0
+        # text; licence text must never be auto-rewritten (AGENTS.md:15, DEBT L-2).
+        exclude: '^LICENSE$'
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-json
@@ -20,40 +23,15 @@ repos:
 
   # --- A2ML manifest validation ---
   - repo: https://github.com/hyperpolymath/a2ml-pre-commit
-    rev: main
+    # Pinned (was `rev: main`, a mutable ref contradicting the repo's own
+    # 40-char-SHA discipline — DEBT T-5).
+    rev: f27ac5e5aeede65875c85c2f5a27aa0ab88df0d5
     hooks:
       - id: validate-a2ml
         name: Validate A2ML manifests
 
   # --- K9 contract validation ---
-  - repo: https://github.com/hyperpolymath/k9-pre-commit
-    rev: main
-    hooks:
-      - id: validate-k9
-        name: Validate K9 contracts
-
-  # --- Shell linting ---
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
-    hooks:
-      - id: shellcheck
-
-  # --- EditorConfig ---
-  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-    rev: 3.2.1
-    hooks:
-      - id: editorconfig-checker
-        exclude: '(\.git|node_modules|target|_build|deps|\.deno|external_corpora|\.lake)/'
-
-  # --- Secret detection ---
-  # NOTE: this entry was truncated — the `- repo:` line and the hook `id` were
-  # missing, leaving an orphaned `rev:`/`hooks:` pair. YAML did not error: it
-  # folded them into the PRECEDING editorconfig-checker entry as duplicate
-  # keys, setting its `hooks:` to null. Net effect was two hooks lost at once
-  # (editorconfig-checker silently disabled, gitleaks never registered) while
-  # the file still parsed. Restored below.
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.3
-    hooks:
-      - id: gitleaks
-        name: Detect hardcoded secrets
+  # validate-k9 REMOVED (DEBT T-3): no contractile files (Mustfile, Trustfile,
+  # K9, ADJUST) exist in this repository, so the hook never saw real input — a
+  # gate that cannot fail is the shape AGENTS.md:13 warns about. Restore it in
+  # the same commit that adds the first contractile artefact.

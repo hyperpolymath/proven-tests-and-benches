@@ -3,6 +3,11 @@
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
 = Characteristics of Great Tests and Great Benchmarks
+
+NOTE: this document says what makes a test *good*;
+`TEST-DOCTRINE.adoc` (same directory) says when a test is *admissible at
+all* — the harness/payload contract. Read both before writing a test.
+
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -233,7 +238,13 @@ characteristics above are the _rubric_ those axes are scored against:
 * *Aspects* (the quality attributes: Performance, Security, Reproducibility, …)
   are _what_ is being claimed about.
 * *Kategoria levels* (L1–L12) grade the strength of the type-level guarantee
-  backing an Actually-Proven test.
+  backing an Actually-Proven test. CAUTION (2026-08-10): the `kategoria` repo
+  implements **L1–L9 only**; L10 is documented there as a proven architectural
+  wall ("QTT ≠ cubical"), and L11/L12 exist in no repository. Certificates at
+  L10+ are therefore claims with no implemented backing — grounding L11 in
+  `tropical-types` and L12 in `epistemic-types` is proposed in `ROADMAP.md`.
+  (DEBT S-4 family; the `compat-kategoria-levels` cell is corrected in the
+  THIN→REAL phase.)
 
 A test's tier should be derivable from evidence, not asserted. Property-based and
 contract tests start no lower than Provisionally-Proven; proof-regression tests

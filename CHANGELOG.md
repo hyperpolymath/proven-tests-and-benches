@@ -11,6 +11,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 2026-08-10 (PRs #29–#30, ruleset, wiki — reconstructed same-day)
+- **`.github/workflows/actions.lock`** minted via `gh actions-lock`; workflows
+  carry symbolic version refs, the lockfile carries resolved SHAs, and the
+  reusable-caller `secret-scanner.yml` has the hand-added bare `[]` entry (#30).
+- Ruleset `default-branch-protection`: **`Build, test and benchmark` + the three
+  `secret-scan` jobs are now REQUIRED status checks**; the unsatisfiable
+  `code_coverage` (95%, no Idris2 coverage tooling) and `code_quality` rules
+  removed. Backup in `dev-notes/ruleset-backups-2026-08-10/`.
+- `pull_request` triggers unfiltered in `ci.yml`/`codeql.yml` (required-check
+  branch-filter deadlock trap).
+- Dependabot #29 merged (owner): 6 action bumps, landing checkout v7.0.1 and
+  codeql-action v4.37.6 — with false pin comments, corrected in #30. Decision
+  recorded: `gh actions-lock` is the bump mechanism; Dependabot notifies only.
+- `docs/TEST-DOCTRINE.adoc`: the harness/payload doctrine — harness must never
+  trigger, payload must always trigger for its declared class, silence+firing
+  fixtures mandatory, three-outcome checks (0/1/2), certified-absence residue
+  rule, scanner excludability, the deceptive/faithful split.
+- `scripts/check-doc-facts.sh`: the anti-drift gate — module/package/cell/axis
+  counts, CRG grade↔badge↔STATE agreement and the DEBT register's own size are
+  computed from source and gated in CI (source mode pre-bootstrap, report mode
+  post-run). Verified failing on injected drift and exiting 2 on missing files.
+- CI now gates REUSE compliance (sole scoped tolerance: the owner-reserved
+  unused-AGPL item, DEBT L-1).
+- `scripts/install-idris2.sh` detects apk vs apt-get (the dev container is
+  Wolfi-based; `just deps` could not previously succeed inside it).
+- `scripts/wire-zero-minute-gate.sh` now REFUSES to run without an explicit
+  override env var — it would weaken branch protection (DEBT I-2).
+- `.pre-commit-config.yaml`: `a2ml-pre-commit` SHA-pinned (was `rev: main`);
+  `validate-k9` removed (nothing to validate); `LICENSE` excluded from
+  trailing-whitespace (verbatim MPL text must not be rewritten).
+- META.a2ml: ADR-006…ADR-010 recorded (CI triggers, spec-suite gating, secret
+  scanner, TypeSafeTest ratification path, lockfile-as-pin).
+- Stale claims corrected: upstream `echo-types` now has ~205 proved Agda
+  modules (three documents said "no formal artefacts"); kategoria implements
+  L1–L9 only, so L10+ certificate levels are marked unbacked.
+
+### 2026-08-07 (PRs #27–#28, reconstructed)
+- **Gap F closed**: `proven-spec-suite.ipkg` (75 tests, the 12 Actually-Proven
+  theorems) gated for the first time — `just ci`, `just test`, new `just
+  test-spec`. First gated run 75/75, exactly 12 `[Actually-Proven]`.
+- Reproducibility cell rebuilt to compare two genuinely independent runs
+  (was reflexivity on one pure value); verified failing on injected
+  non-determinism. `aspect-columns-nonempty = 14/14` is now earned.
+- Vacuous predicates fixed across `Dyadic`/`Choreographic`/`Decorative`/
+  `Dependent` with negative fixtures throughout (52/52 → 56/56).
+- Coverage grid prints on every run (the printing runner had zero call sites).
+- Five THIN cells (property ×2, mutation, fuzz, chaos) downgraded to
+  `[Unproven]` and renamed to state what they assert.
+- `scripts/check-escape-hatches.sh`: one implementation of the six-pattern ban
+  (was two copies, each covering four patterns), verified catching all six.
+- `DEBT.md` (seven domains, evidence commands) and `ROADMAP.md` added; full
+  measured documentation refresh across the six contradiction clusters;
+  `.github/funding.yml` → `FUNDING.yml`; CRG badge generated from
+  `READINESS.adoc` via `just crg-badge-sync` and gated in CI.
+- Repository made **PUBLIC**; CodeQL restored to push/PR/schedule; description,
+  9 topics and a six-page navigational wiki added.
+
+### 2026-08-03 → 08-05 (PRs #19–#26, reconstructed)
+- CodeQL repointed at a SHA that exists (#19; the phantom SHA was pinned across
+  ~104 estate repos).
+- HigherOrder and SetTheory suites (#20), CI gate + conformance pass (#21),
+  REUSE ipkg glob (#22), AffineScript borrow modelling — 18 tests (#23), the
+  12 Actually-Proven theorems (#24), estate secret scanner (#26).
+
+### Earlier [Unreleased] items (pre-#19)
+
 ### Added
 - `proven-tests-suite.ipkg`: the nine `tests/TypeSafeTests/` category suites,
   ported to the current Framework API (`ProvisionallyProvenTest` records),

@@ -31,3 +31,12 @@ Do not add a `settings.yml`. Probot's `name:` field self-renames the repository 
 ## Reporting
 
 Record what you measured, not what you expect. If a suite was skipped, say it was skipped and why; if a number came from a document rather than a run, attribute it to the document. `integrations/proven/` grades an external subject from its own ledgers and is skipped when no `proven` checkout is present — a skip there is not a pass, and the grade claims resting on it are only as good as the last run that actually happened.
+
+## The test doctrine (2026-08-10)
+
+Every test divides into harness and payload (`docs/TEST-DOCTRINE.adoc`). **A
+test fails the meta-check if the harness is faulty and triggers, OR if the
+payload is faulty and does not trigger the specific thing it is designed
+for.** Silence + firing fixtures are mandatory; a test missing either is
+inadmissible. Checks report three outcomes — 0 correct, 1 wrong outcome,
+2 NO CHECK WAS PERFORMED — and a crash is 2, never silence.

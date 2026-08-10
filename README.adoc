@@ -199,6 +199,12 @@ See `LICENSE` and `LICENSES/`.
 
 | `docs/CHARACTERISTICS.adoc`
 | What makes a test or benchmark good: the example → property → proof spectrum.
+
+| `docs/TEST-DOCTRINE.adoc`
+| When a test is admissible at all: the harness/payload split — the harness
+  must never trigger, the payload must always trigger for its declared class —
+  with the silence/firing fixtures, three-outcome checks, certified-absence
+  residue rule and scanner excludability.
 |===
 
 TIP: the project wiki carries the conceptual introductions — provenance tiers,

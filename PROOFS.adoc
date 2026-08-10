@@ -255,9 +255,11 @@ That vacuity is stated in the source rather than hidden behind a passing tick.
 
 `EchoTypes/Safety.idr` and `EchoTypes/Invariance.idr` are named in the spec and
 are **not** written. There is no formal definition of an echo type to encode:
-the spec names the phrase without defining it, and `hyperpolymath/echo-types`
-contains **0** `.idr`, **0** `.lean` and **0** `.v` files, so its formal content
-is prose and audit trail rather than machine-checked definitions.
+the spec names the phrase without defining it. (CORRECTED 2026-08-10: upstream
+`echo-types` now carries ~205 `--safe` Agda modules — the earlier "0 proof
+files" reading is stale. It still contains no *Idris2* artefacts, so encoding
+its semantics here remains a port, not a citation; see
+`src/ProvenTests/EchoTypes/README.adoc` for the current statement.)
 
 Full reasoning and the three things that would unblock it:
 `src/ProvenTests/EchoTypes/README.adoc`.
