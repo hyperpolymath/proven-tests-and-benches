@@ -13,9 +13,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
   contents: read
-
+  security-events: write
+  id-token: write
 jobs:
   scorecard:
     # Job-level permissions on the CALL (workflow_audit requires them explicit
