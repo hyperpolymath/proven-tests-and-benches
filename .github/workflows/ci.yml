@@ -177,7 +177,7 @@ jobs:
       # Phase 3b baseline is computed as the mean of the last 10 main-run
       # medians (taxonomy L447), from these artifacts — never asserted.
       - name: Upload benchmark result artifact
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: proven-bench-${{ github.run_id }}
           path: build/report/proven-bench.json
