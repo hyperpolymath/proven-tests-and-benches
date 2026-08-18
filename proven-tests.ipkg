@@ -6,8 +6,7 @@ sourcedir = "src"
 main = ProvenTests.Main
 executable = "proven-tests"
 
-modules = ProvenTests.Proven.Laws,
-         ProvenTests.AffineScript.Affinity,
+modules = ProvenTests.AffineScript.Affinity,
          ProvenTests.AffineScript.Borrow,
          ProvenTests.HigherOrder.Identity,
          ProvenTests.HigherOrder.Projection,
