@@ -1,77 +1,13 @@
 # SPDX-License-Identifier: MPL-2.0
-# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
-# This workflow is managed by gh actions-lock.
-#
-# CodeQL analysis — RE-ENABLED 2026-08-07.
-#
-# STATUS (2026-08-07)
-# -------------------
-# Unblock condition (a) below has been met: this repository is now PUBLIC, so
-# code scanning is available without GitHub Advanced Security and the
-# entitlement failure described below no longer applies. The push,
-# pull_request and schedule triggers are restored.
-#
-# The CAUTION at the end of this header still stands: CodeQL *default setup*
-# must NOT be switched on while this advanced workflow exists.
-#
-# The historical diagnosis is kept below because it is the evidence for why
-# this file looked broken for a month, and because the same entitlement trap
-# applies to every other private repository in the estate.
-#
-# HISTORICAL STATUS (measured 2026-08-03, while the repository was PRIVATE)
-# ------------------------------------------------------------------------
-# Every run of this workflow had failed. The cause was not the workflow:
-#
-#   "Code scanning is not enabled for this repository.
-#    Please enable code scanning in the repository settings."
-#
-# This repository is PRIVATE, and code scanning on a private repository
-# requires GitHub Advanced Security. Without it, CodeQL completes its analysis
-# and then fails at the upload step, every time — runs 30725558250 (weekly
-# cron, 2m59s), 30815363922 (pull request, 3m6s) and the 2026-07-28 push run
-# all failed this way.
-#
-# Note that a previous fix here was necessary but not sufficient: the action
-# was pinned to github/codeql-action@29b1f65c1f735799893313399435a59f54045865,
-# a SHA that exists in NO repository (the GitHub API returns 422 for it, and
-# the same phantom SHA was pinned across ~104 estate repositories). That is now
-# corrected to a SHA that resolves — but a valid pin cannot fix an
-# entitlement problem, so the runs still fail.
-#
-# WHY IT IS NO LONGER ON push/pull_request/schedule
-# -------------------------------------------------
-# Left on those triggers it burned billed Actions minutes on a guaranteed
-# failure and kept main permanently red, which trains readers to ignore a red
-# mark. It is retained rather than deleted because it becomes correct the
-# moment either unblock condition below is met.
-#
-# TO RE-ENABLE — either is sufficient:
-#   (a) Make the repository public. Code scanning is free for public repos.
-#   (b) Enable GitHub Advanced Security on this private repository.
-# Then restore the push/pull_request/schedule triggers below.
-#
-# CAUTION when re-enabling: do NOT also turn on CodeQL *default setup*.
-# Default setup plus an advanced workflow like this one is a mode conflict —
-# SARIF upload is rejected on every push and no SHA re-pin can fix it.
 name: CodeQL
 
 on:
   push:
     branches: [main]
-  # No branches: filter on pull_request — a REQUIRED check whose workflow is
-  # branch-filtered never reports on PRs targeting other bases, which blocks
-  # them forever at "Expected - Waiting for status". (hypatia-scan.yml:8-11
-  # documents this trap; this repo's CI became a required context on 2026-08-10.)
   pull_request:
-  # Newly published queries can find faults in code that has not changed, which
-  # is the case a push-triggered scan never covers.
+    branches: [main]
   schedule:
-    - cron: "27 4 * * 1"
-  workflow_dispatch:
-
-concurrency:
-  group: codeql-${{ github.ref }}
-  cancel-in-progress: true
+    - cron: '0 0 * * 0'
 
 permissions:
   actions: read
@@ -82,7 +18,6 @@ jobs:
   analyze:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     permissions:
       actions: read
       contents: read
@@ -95,16 +30,16 @@ jobs:
             build-mode: none
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4.37.7
+        uses: github/codeql-action/init@29b1f65c1f735799893313399435a59f54045865 # v3
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v4.37.7
+        uses: github/codeql-action/autobuild@29b1f65c1f735799893313399435a59f54045865 # v3
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4.37.7
+        uses: github/codeql-action/analyze@29b1f65c1f735799893313399435a59f54045865 # v3
