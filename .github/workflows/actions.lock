@@ -10,12 +10,12 @@ workflows:
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
         - 'github/codeql-action@v4.37.6'
+    '.github/workflows/mirror.yml': []
+    '.github/workflows/scorecard.yml': []
     '.github/workflows/governance.yml': []
     '.github/workflows/hypatia-scan.yml': []
-    '.github/workflows/mirror.yml': []
     '.github/workflows/push-email-notify.yml':
         - 'dawidd6/action-send-mail@v3.12.0'
-    '.github/workflows/scorecard.yml': []
     '.github/workflows/secret-scanner.yml': []
 dependencies:
     'actions/cache@v6.1.0':
