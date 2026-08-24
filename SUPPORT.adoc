@@ -1,0 +1,11 @@
+== Support
+
+* *Questions / discussion:* open a GitHub issue (no template needed).
+* *Defects — including overclaims:* the _Defect_ issue template. A
+document asserting what nothing computes is as much a bug here as a
+crash.
+* *Offering a test back* (the taxonomy’s contribution flow): the _Test
+contribution_ template, with the harness/payload split filled in.
+* *Security:* see `+SECURITY.md+` — do not open a public issue.
+* *Orientation:* `+README.adoc+` → the "`Where to look next`" table;
+agents read `+AGENTS.md+` first.
