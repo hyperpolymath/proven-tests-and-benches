@@ -142,14 +142,17 @@ check_grade() {
   state=$(grep -oE 'readiness-grade = "[A-Z]"' .machine_readable/6a2/STATE.a2ml | grep -oE '[A-Z]"' | tr -d '"')
   [ "$want" = "$state" ] \
     || bad "STATE.a2ml readiness-grade is ${state} but READINESS.adoc says ${want}"
-  # Root READINESS.adoc is GENERATED from READINESS.adoc (just crg-readiness-md)
-  # for the estate parser convention; the pair must agree.
-  if [ -f READINESS.adoc ]; then
-    md=$(grep -oE '\*\*Current Grade:\*\* [A-Z]' READINESS.adoc | tail -1 | grep -oE '[A-Z]$')
+  # Root READINESS.md is GENERATED from READINESS.adoc (just crg-readiness-md)
+  # for the estate CRG parser convention; the pair must agree.
+  # NOTE: the .md here is DELIBERATE — do not repoint it at .adoc. Comparing
+  # the generated file against itself makes this check a tautology that can
+  # never fail.
+  if [ -f READINESS.md ]; then
+    md=$(grep -oE '\*\*Current Grade:\*\* [A-Z]' READINESS.md | tail -1 | grep -oE '[A-Z]$')
     [ "$want" = "$md" ] \
-      || bad "READINESS.adoc (generated) says ${md} but READINESS.adoc says ${want} (run: just crg-readiness-md)"
+      || bad "READINESS.md (generated) says ${md} but READINESS.adoc says ${want} (run: just crg-readiness-md)"
   else
-    dead "READINESS.adoc is missing — generate it with: just crg-readiness-md"
+    dead "READINESS.md is missing — generate it with: just crg-readiness-md"
   fi
 }
 
