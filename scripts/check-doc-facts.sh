@@ -60,8 +60,8 @@ check_module_count() {
   # Asserted in:
   grep -q "# ${n} modules: the framework" README.adoc \
     || bad "README.adoc structure block does not say '${n} modules'"
-  grep -q "The framework library (${n} modules)" ARCHITECTURE.md \
-    || bad "ARCHITECTURE.md does not say '(${n} modules)'"
+  grep -q "The framework library (${n} modules)" ARCHITECTURE.adoc \
+    || bad "ARCHITECTURE.adoc does not say '(${n} modules)'"
   grep -q "framework library (${n} modules)" READINESS.adoc \
     || bad "READINESS.adoc does not say '(${n} modules)'"
   grep -q "library-modules = ${n}" .machine_readable/6a2/STATE.a2ml \
@@ -80,8 +80,8 @@ check_package_count() {
   say "computed: packages = $n (git ls-files '*.ipkg')"
   words=(zero one two three four five six seven eight nine)
   w=${words[$n]:-$n}
-  grep -qi "builds \*\*${w}\*\* Idris2 packages" ARCHITECTURE.md \
-    || bad "ARCHITECTURE.md does not say 'builds **${w}** Idris2 packages'"
+  grep -qi "builds \*\*${w}\*\* Idris2 packages" ARCHITECTURE.adoc \
+    || bad "ARCHITECTURE.adoc does not say 'builds **${w}** Idris2 packages'"
 }
 
 # ---------------------------------------------------------------------------
@@ -94,10 +94,10 @@ check_cell_count() {
       | grep -cE '\(K (Co)')
   [ "$n" -gt 0 ] || { dead "could not count cellTests coordinates in Cells.idr"; return; }
   say "computed: lattice cells = $n (Cells.idr cellTests)"
-  grep -qE "The ${n} lattice cells" ARCHITECTURE.md \
-    || bad "ARCHITECTURE.md does not describe 'The ${n} lattice cells'"
-  grep -q "(${n} lattice cells + 1 self-classification)" TEST-NEEDS.md \
-    || bad "TEST-NEEDS.md does not say '(${n} lattice cells + 1 self-classification)'"
+  grep -qE "The ${n} lattice cells" ARCHITECTURE.adoc \
+    || bad "ARCHITECTURE.adoc does not describe 'The ${n} lattice cells'"
+  grep -q "(${n} lattice cells + 1 self-classification)" TEST-NEEDS.adoc \
+    || bad "TEST-NEEDS.adoc does not say '(${n} lattice cells + 1 self-classification)'"
 }
 
 # ---------------------------------------------------------------------------
@@ -143,7 +143,10 @@ check_grade() {
   [ "$want" = "$state" ] \
     || bad "STATE.a2ml readiness-grade is ${state} but READINESS.adoc says ${want}"
   # Root READINESS.md is GENERATED from READINESS.adoc (just crg-readiness-md)
-  # for the estate parser convention; the pair must agree.
+  # for the estate CRG parser convention; the pair must agree.
+  # NOTE: the .md here is DELIBERATE — do not repoint it at .adoc. Comparing
+  # the generated file against itself makes this check a tautology that can
+  # never fail.
   if [ -f READINESS.md ]; then
     md=$(grep -oE '\*\*Current Grade:\*\* [A-Z]' READINESS.md | tail -1 | grep -oE '[A-Z]$')
     [ "$want" = "$md" ] \
@@ -158,13 +161,13 @@ check_grade() {
 # (The header claimed 36 items while the tables held 44 — found 2026-08-10.)
 # ---------------------------------------------------------------------------
 check_debt_count() {
-  need DEBT.md || return
+  need DEBT.adoc || return
   local n
-  n=$(grep -coE '^\| \*\*[A-Z]+-[0-9]+\*\*' DEBT.md)
+  n=$(grep -coE '^\| \*\*[A-Z]+-[0-9]+\*\*' DEBT.adoc)
   [ "$n" -gt 0 ] || { dead "could not count DEBT item IDs"; return; }
-  say "computed: DEBT items = $n (ID rows in DEBT.md)"
-  grep -qE "\b${n} (debt )?items\b|with ${n} items|${n} items across" DEBT.md \
-    || bad "DEBT.md never states its own true item count (${n}); its header/prose disagrees"
+  say "computed: DEBT items = $n (ID rows in DEBT.adoc)"
+  grep -qE "\b${n} (debt )?items\b|with ${n} items|${n} items across" DEBT.adoc \
+    || bad "DEBT.adoc never states its own true item count (${n}); its header/prose disagrees"
 }
 
 # ---------------------------------------------------------------------------
@@ -224,7 +227,7 @@ say "== check-doc-facts (${MODE}) =="
 # an absent file "not matching" is the crash-reads-as-silence failure mode the
 # test doctrine forbids (docs/TEST-DOCTRINE.adoc).
 if [ "$MODE" = "source" ]; then
-  for f in README.adoc ARCHITECTURE.md READINESS.adoc TEST-NEEDS.md DEBT.md \
+  for f in README.adoc ARCHITECTURE.adoc READINESS.adoc TEST-NEEDS.adoc DEBT.adoc \
            docs/STATE-OF-THINGS.adoc .machine_readable/6a2/STATE.a2ml; do
     need "$f" >/dev/null || true
   done

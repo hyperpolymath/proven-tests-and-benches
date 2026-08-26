@@ -29,7 +29,7 @@
 # ============================================================================
 if [ "${WIRE_ZERO_MINUTE_I_UNDERSTAND:-0}" != "1" ]; then
   echo "REFUSED: scripts/wire-zero-minute-gate.sh is superseded and would weaken" >&2
-  echo "         branch protection (see DEBT.md I-2 and the header above)." >&2
+  echo "         branch protection (see DEBT.adoc I-2 and the header above)." >&2
   exit 2
 fi
 
