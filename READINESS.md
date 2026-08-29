@@ -12,5 +12,5 @@ scripts/check-doc-facts.sh.
 
 **Current Grade:** C
 
-The grade, its evidence, the criteria met and unmet, and the promotion
-history live in [READINESS.adoc](READINESS.adoc).
+The grade, its evidence, promotion blockers, and evidence sources live in
+[READINESS.adoc](READINESS.adoc).

@@ -8,9 +8,9 @@ readiness-grade = "C"          # see READINESS.adoc — the SINGLE SOURCE OF TRU
 # The estate standard is CRG v2.2, not v1.0 as this line said until 2026-08-07.
 # The README badge must be generated from READINESS.adoc via `just crg-badge`;
 # the two disagreed (badge D, this file C) for five weeks because nothing tied
-# them together. See DEBT.md D-2.
+# them together. See DEBT.adoc D-2.
 readiness-grade-standard = "Component Readiness Grades v2.2"
-readiness-grade-blocker = "benchmarks not baselined (DEBT.md I-1) — the last unmet CRG C criterion"
+readiness-grade-blocker = "benchmarks not baselined (DEBT.adoc I-1) — the last unmet CRG C criterion"
 
 [build]
 toolchain = "idris2-0.7.0"   # corrected 2026-08-03; gated by scripts/check-toolchain-pins.sh
@@ -56,7 +56,7 @@ thresholds = false
 history = false
 regression-gate = false
 status = "HONEST HARNESS, NO GATE: the numbers are printed and compared against nothing."
-tracked = "DEBT.md I-1; ROADMAP.md item 2a"
+tracked = "DEBT.adoc I-1; ROADMAP.adoc item 2a"
 
 [subject-grading]
 # integrations/proven — grading proven from its own ledgers
@@ -72,9 +72,9 @@ finding = "proven's 4 proof-bearing modules all sit in its 256-axiom OWED ledger
 # in ECOSYSTEM.a2ml while NEUROSYM.a2ml:69 said the opposite in the same
 # directory. The pessimistic reading is correct: the parser is reachable from no
 # CLI flag, `aggregate` returns Ok unconditionally, and the script that would
-# feed it is invoked by nothing. Moved to blocked. See DEBT.md D-5, S-2.
+# feed it is invoked by nothing. Moved to blocked. See DEBT.adoc D-5, S-2.
 done = ["evidence-carrying provenance", "self-deriving coverage", "typed axes", "meta-tests", "type-safe suite package", "spec suite package gated", "proven subject report", "JSON run report", "FFI-parity design + golden vectors", "coverage grid actually printed", "reproducibility cell that can fail"]
-in-progress = ["grow lattice coverage beyond 35/238", "benchmark baselines + Six Sigma gate (ROADMAP 2a)", "check-doc-facts.sh anti-drift gate (ROADMAP 2b)"]
+in-progress = ["grow lattice coverage beyond 40/238", "benchmark baselines + Six Sigma gate (ROADMAP 2a)", "check-doc-facts.sh anti-drift gate (ROADMAP 2b)"]
 blocked = [
   { item = "panic-attack aggregate interop", on = "routing proven_tests.rs to a CLI flag and making aggregate exit non-zero on Holes/Refuted (ROADMAP item 3)" },
   { item = "FFI-parity runtime harness", on = "proven shipping a real Idris-backed libproven (proven ADR-003)" },

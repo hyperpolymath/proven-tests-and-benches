@@ -42,26 +42,35 @@ resolveRoot args = do
     (Nothing, (_ :: r :: _)) => r
     _                    => "/home/user/proven"
 
-readOr : String -> IO (Maybe String)
-readOr path = do
-  Right contents <- readFile path
-    | Left _ => pure Nothing
-  pure (Just contents)
+readRequired : String -> IO String
+readRequired path = do
+  result <- readFile path
+  case result of
+    Right contents => pure contents
+    Left err => do
+      putStrLn ("ERROR: cannot read " ++ path ++ ": " ++ show err)
+      exitFailure
 
 readOwed : String -> IO (String, String)
 readOwed root = do
-  canonical <- readOr (root ++ "/.machine_readable/descriptiles/STATE.a2ml")
+  let canonicalPath = root ++ "/.machine_readable/descriptiles/STATE.a2ml"
+  let legacyPath = root ++ "/.machine_readable/6a2/STATE.a2ml"
+  canonical <- readFile canonicalPath
   case canonical of
-    Just contents => pure (".machine_readable/descriptiles/STATE.a2ml", contents)
-    Nothing => do
+    Right contents => pure (".machine_readable/descriptiles/STATE.a2ml", contents)
+    Left FileNotFound => do
       -- Compatibility for subjects not yet migrated to the canonical
       -- descriptile location. This path already exists in the current proven
       -- checkout and must remain readable until that repository migrates.
-      Just contents <- readOr (root ++ "/.machine_readable/6a2/STATE.a2ml")
-        | Nothing => do
-            putStrLn "ERROR: cannot read proven's STATE.a2ml from the canonical or legacy location"
-            exitFailure
-      pure (".machine_readable/6a2/STATE.a2ml (legacy)", contents)
+      legacy <- readFile legacyPath
+      case legacy of
+        Right contents => pure (".machine_readable/6a2/STATE.a2ml (legacy)", contents)
+        Left err => do
+          putStrLn ("ERROR: cannot read " ++ legacyPath ++ ": " ++ show err)
+          exitFailure
+    Left err => do
+      putStrLn ("ERROR: cannot read " ++ canonicalPath ++ ": " ++ show err)
+      exitFailure
 
 showGraded : Graded -> String
 showGraded g =
@@ -84,9 +93,7 @@ runReport args = do
   putStr trustDisclaimer
   putStrLn ""
 
-  Just statusTxt <- readOr (root ++ "/MODULE-STATUS.txt")
-    | Nothing => do putStrLn ("ERROR: cannot read " ++ root ++ "/MODULE-STATUS.txt")
-                    exitFailure
+  statusTxt <- readRequired (root ++ "/MODULE-STATUS.txt")
   (owedPath, owedTxt) <- readOwed root
   let led = parseOwedLedger owedTxt
 

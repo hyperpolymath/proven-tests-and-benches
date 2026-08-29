@@ -340,18 +340,15 @@ headerless TOML, `+0-AI-MANIFEST.a2ml+` is versioned TOML,
 |`+head -5+` each; `+.pre-commit-config.yaml:22-26+` |Pick one dialect.
 Estate-wide issue, tracked in the A2ML/IANA work.
 
-|*S-2* |MEDIUM |`+STATE.a2ml:41+` and `+ECOSYSTEM.a2ml:15+` claim the
-panic-attack integration works. `+NEUROSYM.a2ml:69+` says it does not,
-in the same directory.
-|`+grep -rn "panic-attack" .machine_readable/descriptiles/+` |The pessimistic
-reading is correct (D-5). Correct both overclaims.
+|*S-2* |RESOLVED |The descriptile set formerly disagreed about whether the
+panic-attack integration worked.
+|`+STATE.a2ml+` now places it in `+blocked+`; `+ECOSYSTEM.a2ml+` records
+`+HALF-WIRED+` and “DESIGNED, NOT WORKING”. |Resolved; D-5 remains the active
+implementation debt.
 
-|*S-3* |MEDIUM |`+META.a2ml+` stops at ADR-005. `+GOVERNANCE.md:47-51+`
-requires an ADR for every architectural change; re-enabling CI, adding
-`+proven-spec-suite+`, adding the secret scanner and ratifying
-`+TypeSafeTest+` as a local extension all lack one.
-|`+grep -c "^\[architecture-decisions" .machine_readable/descriptiles/META.a2ml+`
-|Write the four missing ADRs.
+|*S-3* |RESOLVED |Four architectural changes formerly lacked ADRs.
+|`+META.a2ml+` now contains ADR-006 through ADR-009 for CI, the specification
+suite, secret scanning, and the local `+TypeSafeTest+` extension. |Resolved.
 
 |*S-4* |MEDIUM |*Taxonomy drift, unratified.* This repo implements *17*
 categories; the estate standard defines *16*. `+TypeSafeTest+` exists in
@@ -361,9 +358,8 @@ defines 17. |`+grep -rn "taxonomy-drift" .machine_readable/+` |*Needs an
 owner ruling:* the standard adopts it, or this repo marks it a local
 extension everywhere.
 
-|*S-5* |LOW |`+ECOSYSTEM.a2ml+` has no `+last-updated+` key at all.
-|`+grep -c last-updated .machine_readable/descriptiles/ECOSYSTEM.a2ml+` → 0 |Add
-one.
+|*S-5* |RESOLVED |`+ECOSYSTEM.a2ml+` formerly had no `+last-updated+` key.
+|`+ECOSYSTEM.a2ml:7+` records `+last-updated = "2026-08-07"+`. |Resolved.
 
 |*S-6* |LOW |`+.github/workflows/main-estate-audit.yml+` was found
 untracked in the working tree — an estate-sweep artefact, not repository

@@ -172,8 +172,8 @@ crg-readiness-md:
 
     **Current Grade:** $GRADE
 
-    The grade, its evidence, the criteria met and unmet, and the promotion
-    history live in [READINESS.adoc](READINESS.adoc).
+    The grade, its evidence, promotion blockers, and evidence sources live in
+    [READINESS.adoc](READINESS.adoc).
     MD
     echo "Generated READINESS.md (grade $GRADE)"
 
