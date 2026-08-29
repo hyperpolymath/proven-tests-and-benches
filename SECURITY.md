@@ -8,8 +8,8 @@ current `main` branch and the latest published release only.
 ## Reporting a vulnerability
 
 Do not disclose suspected vulnerabilities in a public issue. Use GitHub's
-**Security → Report a vulnerability** form for this repository. If private
-vulnerability reporting is unavailable, email `j.d.a.jewell@open.ac.uk`.
+**Security → Report a vulnerability** form for this repository. Private
+vulnerability reporting is enabled for this repository.
 
 Include the affected revision, relevant file paths, reproduction steps, impact,
 and a minimal proof of concept where safe. Remove credentials, private source,

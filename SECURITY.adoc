@@ -2,7 +2,9 @@
 
 === Reporting a Vulnerability
 
-*Email:* j.d.a.jewell@open.ac.uk
+Do not disclose suspected vulnerabilities in a public issue. Use this
+repository's GitHub *Security → Report a vulnerability* form; private
+vulnerability reporting is enabled for this repository.
 
 *Response timeline:* - Acknowledgement within 48 hours - Initial
 assessment within 7 days - Fix or mitigation within 90 days
