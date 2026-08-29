@@ -196,9 +196,6 @@ cleared; benchmarks remain. Held at C pending item 2a. (D-2)
 * *Rule on `+ZigzagTests.idr+`.* It defines a second `+Aspect+` type and
 a second Zigzag model. Reconcile, rename, or drop — but not silently
 land. (C-1)
-* *The unused AGPL licence file.* Removing a file from `+LICENSES/+` is
-a licensing action. (L-1)
-
 === Not on this roadmap, deliberately
 
 *`+echo-types+` — `+Safety.idr+` and `+Invariance.idr+` stay unwritten*

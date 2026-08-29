@@ -43,10 +43,9 @@ estate linter reads only the first line, so a header on line 3 registers
 as missing). If you are unsure, add the file and let the maintainer
 place the declaration.
 
-`+reuse lint+` should report 100% on both dimensions. It currently
-reports one issue — an unused `+LICENSES/AGPL-3.0-or-later.txt+` — which
-is a deliberate open item, not something for you to fix
-(link:DEBT.md[`+DEBT.md+`] L-1).
+`+reuse lint+` must report 100% on both dimensions with no unused licences.
+The former unused AGPL migration remnant was removed by owner decision; see
+link:DEBT.adoc[`+DEBT.adoc+`] L-1.
 
 === Two rules that will get a PR sent back
 

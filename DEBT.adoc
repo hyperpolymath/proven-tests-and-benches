@@ -36,11 +36,11 @@ purpose.
 [width="100%",cols="20%,20%,20%,20%,20%",options="header",]
 |===
 |ID |Sev |Item |Evidence |Next move
-|*L-1* |LOW |`+LICENSES/AGPL-3.0-or-later.txt+` is unused; no file
-declares AGPL. `+reuse lint+` reports one issue forever because of it.
-|`+reuse lint+` → `+Unused licenses: AGPL-3.0-or-later+` |*Owner only.*
-Removing a file from `+LICENSES/+` is a licensing action. Deliberately
-not actioned.
+|*L-1* |RESOLVED |An unused `+LICENSES/AGPL-3.0-or-later.txt+` migration
+remnant made `+reuse lint+` report an unused licence even though no file was
+licensed AGPL.
+|Owner confirmed MPL-2.0 for code/configuration and CC-BY-SA-4.0 for prose on
+2026-08-29; `+reuse lint+` is clean after removal. |Resolved by owner decision.
 
 |*L-2* |LOW |`+LICENSE+` is not byte-identical to
 `+LICENSES/MPL-2.0.txt+` — a trailing space on line 38 and `+http+` vs
