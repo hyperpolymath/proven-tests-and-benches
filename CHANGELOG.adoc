@@ -35,8 +35,8 @@ module/package/cell/axis counts, CRG grade↔badge↔STATE agreement and the
 DEBT register’s own size are computed from source and gated in CI
 (source mode pre-bootstrap, report mode post-run). Verified failing on
 injected drift and exiting 2 on missing files.
-* CI now gates REUSE compliance (sole scoped tolerance: the
-owner-reserved unused-AGPL item, DEBT L-1).
+* CI now gates complete REUSE compliance; the owner confirmed the MPL-2.0 /
+CC-BY-SA-4.0 split and removed the unused AGPL migration remnant (DEBT L-1).
 * `+scripts/install-idris2.sh+` detects apk vs apt-get (the dev
 container is Wolfi-based; `+just deps+` could not previously succeed
 inside it).

@@ -21,20 +21,9 @@ SPDX-PackageDownloadLocation = "https://github.com/hyperpolymath/proven-tests-an
 #   code, config, CI, manifests -> MPL-2.0
 #   prose and documentation     -> CC-BY-SA-4.0
 #
-# ---------------------------------------------------------------------------
-# OUTSTANDING — needs an owner decision, deliberately NOT actioned here
-# ---------------------------------------------------------------------------
-# LICENSES/AGPL-3.0-or-later.txt is an UNUSED licence: no file in this
-# repository declares AGPL, and CHANGELOG.md records that stray AGPL
-# identifiers were removed — but the licence text itself was left behind.
-# `reuse lint` will continue to report "Unused licenses: AGPL-3.0-or-later"
-# until it is removed.
-#
-# It has NOT been deleted here. Removing a file from LICENSES/ is a licensing
-# action, and estate policy reserves those to the owner. AGPL-3.0-or-later is
-# the estate's licence for repositories co-maintained with the owner's son; if
-# that was ever the intent for this repository, deleting the text would be the
-# wrong call. Flagging instead of guessing.
+# Owner decision (2026-08-29): this repository uses MPL-2.0 for code and
+# configuration and CC-BY-SA-4.0 for prose. The unused AGPL-3.0-or-later
+# licence text was a migration remnant and has been removed.
 
 # --- Build manifests and package definitions (code) ------------------------
 # Globbed rather than listed by name: PR #20 added a fifth manifest
