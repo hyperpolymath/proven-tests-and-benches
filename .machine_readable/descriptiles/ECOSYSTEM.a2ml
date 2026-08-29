@@ -12,7 +12,7 @@ role = "canonical Idris2 testing + benchmarking framework; provenance-grades oth
 
 [relations]
 relations = [
-  { project = "proven", relation = "subject", detail = "graded by three-tier provenance from its own ledgers (integrations/proven); the natural first real subject. See proven/.machine_readable/6a2/ECOSYSTEM.a2ml for the reciprocal link." },
+  { project = "proven", relation = "subject", detail = "graded by three-tier provenance from its own ledgers (integrations/proven); the natural first real subject. See proven/.machine_readable/descriptiles/ECOSYSTEM.a2ml for the reciprocal link." },
   # CORRECTED 2026-08-07. This entry claimed the integration works; NEUROSYM.a2ml:69
   # said it does not, in the same directory. The pessimistic reading is correct:
   # panic-attack's src/aggregate/proven_tests.rs (its tree, not ours) implements the schema faithfully and has passing

@@ -99,10 +99,18 @@ SPDX-License-Identifier = "MPL-2.0"
 # --- Documentation and prose (share-alike) ---------------------------------
 [[annotations]]
 path = [
-  "AGENTS.md",
-  "ARCHITECTURE.md",
-  "GOVERNANCE.md",
-  "TEST-NEEDS.md",
+  "AGENTS.adoc",
+  "ARCHITECTURE.adoc",
+  "CHANGELOG.adoc",
+  "CODE_OF_CONDUCT.adoc",
+  "CONTRIBUTING.adoc",
+  "DEBT.adoc",
+  "GOVERNANCE.adoc",
+  "ROADMAP.adoc",
+  "SECURITY.adoc",
+  "SECURITY.md",
+  "SUPPORT.adoc",
+  "TEST-NEEDS.adoc",
   ".well-known/**",
 ]
 precedence = "aggregate"
@@ -111,11 +119,10 @@ SPDX-License-Identifier = "CC-BY-SA-4.0"
 
 # --- Sample git hook --------------------------------------------------------
 [[annotations]]
-# Machine artefacts: the empty hypatia baseline (JSON forbids comments) and the
-# GENERATED root READINESS.md (its content is derived from READINESS.adoc by
-# `just crg-readiness-md`; it carries its own SPDX header but is listed here so
-# regeneration can never silently drop coverage).
-path = [".hypatia-baseline.json", "READINESS.md"]
+# Machine artefact: the hypatia baseline is JSON and cannot carry comments.
+# The generated READINESS.md carries its own CC-BY-SA-4.0 SPDX header, so it
+# must not be aggregated into this MPL-2.0 annotation.
+path = ".hypatia-baseline.json"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 SPDX-License-Identifier = "MPL-2.0"

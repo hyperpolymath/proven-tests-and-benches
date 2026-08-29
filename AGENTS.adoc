@@ -2,7 +2,7 @@
 
 This repository is the Hyperpolymath estate’s Idris2 testing and
 benchmarking framework. Read `+0-AI-MANIFEST.a2ml+`, `+README.adoc+`,
-`+docs/STATE-OF-THINGS.adoc+` and `+.machine_readable/6a2/STATE.a2ml+`
+`+docs/STATE-OF-THINGS.adoc+` and `+.machine_readable/descriptiles/STATE.a2ml+`
 in that order before changing anything. `+docs/STATE-OF-THINGS.adoc+` is
 the standing self-audit and is deliberately unflattering; treat it as
 the current account of what is real here, not as marketing.
