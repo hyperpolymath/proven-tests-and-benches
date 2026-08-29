@@ -46,7 +46,7 @@ looking better than it is.
 ├── integrations/proven/        # Grades an EXTERNAL subject from its own ledgers
 ├── scripts/                    # Toolchain install, CI gate, pin check, gate wiring
 ├── docs/                       # Design and self-audit documents
-├── .machine_readable/6a2/      # The 6 A2ML metadata files
+├── .machine_readable/descriptiles/      # The 6 A2ML metadata files
 ├── .well-known/                # security.txt, ai.txt, humans.txt
 ├── container/                  # UNINSTANTIATED template — not wired to anything
 └── .devcontainer/              # UNINSTANTIATED template

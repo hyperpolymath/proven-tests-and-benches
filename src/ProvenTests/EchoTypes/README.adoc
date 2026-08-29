@@ -8,7 +8,7 @@ The Proven Tests specification
 calls for two modules here:
 
 ....
-src/EchoTypes/
+src/ProvenTests/EchoTypes/
 ├── Safety.idr       # Echo-type safety
 └── Invariance.idr   # Echo-type invariance
 ....

@@ -20,7 +20,7 @@ import Data.Maybe
 -- itself, so this report cannot claim more than proven already admits.
 --
 --   * MODULE-STATUS.txt   — per-module tier (FIRST/SECOND/WIP) + counts
---   * .machine_readable/6a2/STATE.a2ml — the OWED-axiom ledger (aggregate)
+--   * .machine_readable/descriptiles/STATE.a2ml — the OWED-axiom ledger (aggregate)
 
 public export
 data Tier = FirstClass | SecondClass | Wip

@@ -12,7 +12,7 @@
     "severity": "medium",
     "rule_module": "structural_drift",
     "type": "SD022",
-    "file": ".machine_readable/6a2/ECOSYSTEM.a2ml",
+    "file": ".machine_readable/descriptiles/ECOSYSTEM.a2ml",
     "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. The SD022 pattern matches the substring `src/aggregate/` even when the reference is explicitly qualified as another repo's tree (verified: qualifying as panic-attack:src/aggregate/ still fires). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 \u2014 the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Remove these entries when SD022 learns to skip refs qualified with a repo prefix.",
     "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
     "expires_at": "2026-11-10"
@@ -21,7 +21,7 @@
     "severity": "medium",
     "rule_module": "structural_drift",
     "type": "SD022",
-    "file": ".machine_readable/6a2/NEUROSYM.a2ml",
+    "file": ".machine_readable/descriptiles/NEUROSYM.a2ml",
     "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. The SD022 pattern matches the substring `src/aggregate/` even when the reference is explicitly qualified as another repo's tree (verified: qualifying as panic-attack:src/aggregate/ still fires). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 \u2014 the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Remove these entries when SD022 learns to skip refs qualified with a repo prefix.",
     "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
     "expires_at": "2026-11-10"
@@ -30,7 +30,7 @@
     "severity": "medium",
     "rule_module": "structural_drift",
     "type": "SD022",
-    "file": "ARCHITECTURE.md",
+    "file": "ARCHITECTURE.adoc",
     "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. The SD022 pattern matches the substring `src/aggregate/` even when the reference is explicitly qualified as another repo's tree (verified: qualifying as panic-attack:src/aggregate/ still fires). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 \u2014 the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Remove these entries when SD022 learns to skip refs qualified with a repo prefix.",
     "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
     "expires_at": "2026-11-10"
@@ -40,15 +40,6 @@
     "rule_module": "structural_drift",
     "type": "SD022",
     "file": "docs/INTEROP-PANIC-ATTACK.adoc",
-    "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. The SD022 pattern matches the substring `src/aggregate/` even when the reference is explicitly qualified as another repo's tree (verified: qualifying as panic-attack:src/aggregate/ still fires). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 \u2014 the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Remove these entries when SD022 learns to skip refs qualified with a repo prefix.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
-    "expires_at": "2026-11-10"
-  },
-  {
-    "severity": "medium",
-    "rule_module": "structural_drift",
-    "type": "SD022",
-    "file": "src/ProvenTests/EchoTypes/README.adoc",
     "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. The SD022 pattern matches the substring `src/aggregate/` even when the reference is explicitly qualified as another repo's tree (verified: qualifying as panic-attack:src/aggregate/ still fires). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 \u2014 the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Remove these entries when SD022 learns to skip refs qualified with a repo prefix.",
     "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
     "expires_at": "2026-11-10"

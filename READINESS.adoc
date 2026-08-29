@@ -1,6 +1,27 @@
-== Readiness
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Component Readiness Grade (CRG)
+:toc: left
 
 *Current Grade:* C
 
-The grade, its evidence, the criteria met and unmet, and the promotion
-history live in READINESS.adoc.
+== Evidence
+
+The framework library (32 modules) builds and its current framework, type-safe,
+and specification suites run as blocking checks. Coverage is derived from tests
+that ran and passed; it is not a hand-maintained claim.
+
+== Promotion blockers
+
+The benchmark harness is honest but its results are not yet baselined and no
+regression threshold is enforced. The external-subject integration grades one
+real repository; grade B requires evidence across at least six genuinely
+different external targets. These gaps are tracked in `+DEBT.adoc+` and
+`+ROADMAP.adoc+`.
+
+== Sources of truth
+
+* `+scripts/ci-build.sh+` — executable build and test gate
+* `+.machine_readable/descriptiles/STATE.a2ml+` — current measured state
+* `+docs/STATE-OF-THINGS.adoc+` — honest gap analysis
+* `+DEBT.adoc+` — evidenced debt register

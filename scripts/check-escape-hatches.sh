@@ -9,7 +9,7 @@
 # -------------------------------------------------
 # Until 2026-08-07 this check existed twice — once in `Justfile:lint` and once
 # inline in `.github/workflows/ci.yml` — and BOTH copies grepped only four of
-# the six patterns that `.machine_readable/6a2/AGENTIC.a2ml` bans. `idris_crash`
+# the six patterns that `.machine_readable/descriptiles/AGENTIC.a2ml` bans. `idris_crash`
 # and hole syntax (`?name`) were prohibited by the manifest and matched by
 # neither gate. Two copies of a rule drift from the rule and from each other;
 # there is now one copy, and both callers invoke it.

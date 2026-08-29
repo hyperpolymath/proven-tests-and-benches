@@ -41,7 +41,7 @@ Maintain existing tests - Update documentation as needed
 
 * Require discussion in an issue or pull request *before* implementation
 * Include new features, architectural changes, API changes
-* Must be recorded as an ADR in `+.machine_readable/6a2/META.a2ml+`
+* Must be recorded as an ADR in `+.machine_readable/descriptiles/META.a2ml+`
 * With one maintainer there is no second approver, so the written
 rationale is the review: a major change that lands with no ADR has
 skipped the process
