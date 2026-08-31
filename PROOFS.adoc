@@ -9,18 +9,18 @@ Required by the Proven Tests specification
 
 [IMPORTANT]
 ====
-**Nothing in this repository is currently Actually-Proven.**
+**12 properties are now Actually-Proven.** The tier was empty until 2026-07-28.
 
-The framework defines three tiers and implements all three. Measured on
-2026-07-28:
+The framework defines three tiers and implements all three. Measured after the
+first Actually-Proven suite landed:
 
 [cols="2,1,4"]
 !===
 ! Tier ! Uses ! Meaning
 
 ! `ActuallyProven`
-! **0**
-! Carries a proof term. The property holds for all inputs.
+! **12**
+! Carries a proof term. The property holds for all inputs, checked by the typechecker under `%default total`.
 
 ! `ProvisionallyProven`
 ! **115**
@@ -31,12 +31,55 @@ The framework defines three tiers and implements all three. Measured on
 ! Declared but not checked.
 !===
 
-Every test in this repo is a `Bool` evaluated on concrete example data. That is
-a real check — the suites exit non-zero when a property fails, verified by
+The other 115 tests are a `Bool` evaluated on concrete example data. That is a
+real check — the suites exit non-zero when a property fails, verified by
 injection — but it is **not** a proof, and this document does not describe it as
-one. The `[Provisionally-Proven]` label printed on every line of suite output is
-accurate and should stay.
+one. The `[Provisionally-Proven]` label on those lines is accurate and stays.
 ====
+
+== The two tiers fail differently, and that is the point
+
+[cols="2,3,2"]
+|===
+| Tier | Detects a false claim | When
+
+| Provisionally-Proven
+| Only if a chosen witness happens to expose it
+| Run time
+
+| Actually-Proven
+| Always, for every input
+| **Compile time**
+|===
+
+Demonstrated rather than asserted. Changing `mapIdentityProof` to claim
+`map id xs = []` — a false statement — makes the build fail:
+
+[source,console]
+----
+$ idris2 --typecheck proven-tests.ipkg
+Error: While processing right hand side of mapIdentityProof.
+       Mismatch between: [] and [x].
+exit 1
+----
+
+No test runs. A provisional test with badly-chosen witnesses could pass on a
+false property indefinitely; these twelve cannot exist while false.
+
+`%default total` is load-bearing in `Proven/Laws.idr`: without it a proof could
+be inhabited by a non-terminating term and Idris2 would accept it, which would
+make every claim in the module worthless.
+
+=== A limit worth stating plainly
+
+`ProofStep` is **metadata** — description, file, line, theorem name. It does not
+carry the proof and the framework cannot verify it. A ladder naming a theorem
+that does not exist would yield a test labelled `[Actually-Proven]` on the
+strength of a string.
+
+The rule adopted in `tests/ProvenLawsTests/LawsTests.idr` is therefore: every
+`theorem` field names a function defined and total in `Proven/Laws.idr`. If you
+cannot point at one, use `provisionalTest`.
 
 == Why the distinction is kept sharp
 
@@ -88,7 +131,52 @@ injected failure, **51/52, exit 1**.
 | `Bridge` | cross-representation bridging
 |===
 
-=== `proven-spec-suite` — AffineScript + HigherOrder + SetTheory (63 tests)
+=== `proven-spec-suite` — Proven + AffineScript + HigherOrder + SetTheory (75 tests)
+
+==== Actually-Proven laws (12 theorems)
+
+`src/ProvenTests/Proven/Laws.idr`, exercised by `tests/ProvenLawsTests/`. Each
+is quantified over all inputs with a term inhabiting it.
+
+[cols="3,3"]
+!===
+! Theorem ! Proof
+
+! `id . f = f`, `f . id = f`, `id . id = id`
+! Definitional (`Refl`)
+
+! `map id = id` (List)
+! Induction; cons case rewrites by the IH
+
+! `map g . map f = map (g . f)`
+! Induction
+
+! `length (map f xs) = length xs`
+! Induction
+
+! `map id = id` (Maybe)
+! Case split, both definitional
+
+! `xs ++ [] = xs`
+! Induction — the left unit is definitional, this is not
+
+! `length (xs ++ ys) = length xs + length ys`
+! Induction
+
+! `reverse [x] = [x]`
+! Definitional
+
+! Unused variable has use-count 0
+! Definitional — for ALL variables, where AffinityTests samples one
+
+! `length (filter p xs) <= length xs`
+! Induction with a with-split; the bound that makes affinity's use-count meaningful
+!===
+
+The last two matter most: they are the AffineScript affinity properties
+*proved* rather than sampled.
+
+==== Provisionally-Proven (63 tests)
 
 Added 2026-07-28 to reconcile the repo with §3.1 of the spec and to cover
 AffineScript. Verified: **63/63 pass, exit 0**; with an injected failure,
@@ -167,9 +255,11 @@ That vacuity is stated in the source rather than hidden behind a passing tick.
 
 `EchoTypes/Safety.idr` and `EchoTypes/Invariance.idr` are named in the spec and
 are **not** written. There is no formal definition of an echo type to encode:
-the spec names the phrase without defining it, and `hyperpolymath/echo-types`
-contains **0** `.idr`, **0** `.lean` and **0** `.v` files, so its formal content
-is prose and audit trail rather than machine-checked definitions.
+the spec names the phrase without defining it. (CORRECTED 2026-08-10: upstream
+`echo-types` now carries ~205 `--safe` Agda modules — the earlier "0 proof
+files" reading is stale. It still contains no *Idris2* artefacts, so encoding
+its semantics here remains a port, not a citation; see
+`src/ProvenTests/EchoTypes/README.adoc` for the current statement.)
 
 Full reasoning and the three things that would unblock it:
 `src/ProvenTests/EchoTypes/README.adoc`.
