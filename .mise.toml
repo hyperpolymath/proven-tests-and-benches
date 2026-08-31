@@ -1,6 +1,7 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+
 [tools]
-# = "SPDX-License-Identifier: MPL-2.0"
-# = "SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 # = "Toolchain pins for proven-tests-and-benches."
 # = "Required by the Hyperpolymath Immaculate Guide (CRG grade D evidence:"
 # = ".tool-versions pins all tools)."
