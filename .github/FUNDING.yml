@@ -1,8 +1,20 @@
 # SPDX-License-Identifier: MPL-2.0
-# Funding configuration.
-# See: https://docs.github.com/en/repositories/managing-your-repositorys-custom-fields/displaying-a-sponsor-button-in-your-repository
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+
+# These are supported funding model platforms
 #
 # Was `github: metadatastician` — donor-template identity leak. Corrected
 # 2026-08-03 to match the repository owner.
 
+buy_me_a_coffee: jonathan.jewell
+community_bridge: jonathan-jewell
 github: hyperpolymath
+indieweb:
+issuehunt: hyperpolymath
+ko_fi: hyperpolymath
+lfx_crowdfunding: hyperpolymath
+liberapay: hyperpolymath
+open_collective: jonathan-jewell
+patreon: cc_studio
+polar: hyperpolymath
+thanks_dev: hyperpolymath

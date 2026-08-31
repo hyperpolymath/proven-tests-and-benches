@@ -54,7 +54,7 @@ concurrency:
 
 env:
   # Single source of truth for CI. scripts/check-toolchain-pins.sh fails the
-  # build if this disagrees with .tool-versions, the installer, .gitlab-ci.yml,
+  # build if this disagrees with .mise.toml, the installer, .gitlab-ci.yml,
   # META.a2ml, STATE.a2ml or the README.
   IDRIS2_VERSION: 0.7.0
 
