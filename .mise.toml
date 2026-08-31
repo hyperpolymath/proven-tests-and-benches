@@ -13,7 +13,7 @@
 # = "Idris2 from source against the Chez Scheme backend (needs `chezscheme` and"
 # = "`libgmp-dev`). `just deps` wraps it."
 # = "Every one of these must state the same version; CI enforces it:"
-# = ".tool-versions (this file)"
+# = ".mise.toml (this file)"
 # = "scripts/install-idris2.sh IDRIS2_VERSION"
 # = ".github/workflows/ci.yml IDRIS2_VERSION"
 # = ".gitlab-ci.yml cache key"

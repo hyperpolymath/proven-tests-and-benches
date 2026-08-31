@@ -45,9 +45,9 @@ extract() {
     FOUND+=("$version|$label|$file")
 }
 
-extract ".tool-versions" \
-    ".tool-versions" \
-    's/^idris2[[:space:]]\+\([0-9][0-9.]*\).*/\1/p'
+extract ".mise.toml" \
+    ".mise.toml" \
+    's/^idris2[[:space:]]*=[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p'
 
 extract "installer default" \
     "scripts/install-idris2.sh" \
