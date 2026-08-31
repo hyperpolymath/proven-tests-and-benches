@@ -26,7 +26,7 @@ agents = [
   { name = "CLAUDE", role = "proofs, compilers, repo-local implementation, CI/CD, formal verification, Rust/Idris2/Zig" },
   { name = "CHATGPT", role = "prose, papers, publication review, standards docs, outreach drafts, letters" },
   { name = "GEMINI", role = "estate audits, cross-repo sweeps, long-context triage, pattern detection" },
-  { name = "VIBE", role = "UI/frontend, PanLL panels, ReScript components, theming, rapid prototyping" },
+  { name = "VIBE", role = "UI/frontend, PanLL panels,  components, theming, rapid prototyping" },
 ]
 
 [policy]
@@ -42,7 +42,7 @@ items = [
   { agent = "GEMINI", task = "estate audits, cross-repo sweeps, long-context triage, pattern detection" },
   # `role =` here was a schema bug: the other three entries key on `task`, so a
   # consumer reading items[].task got nothing for VIBE. Corrected 2026-08-03.
-  # ReScript also replaced with AffineScript — ReScript has been banned in new
+  #  also replaced with AffineScript —  has been banned in new
   # estate code since 2026-04-30.
   { agent = "VIBE", task = "UI/frontend, PanLL panels, AffineScript components, theming, rapid prototyping" },
 ]

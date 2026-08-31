@@ -2,7 +2,6 @@
 # RSR-compliant .gitattributes
 
 * text=auto eol=lf
-
 # Source
 # Idris2 is this repository's source language; both entries were missing.
 # linguist-language keeps GitHub's language bar reporting Idris rather than
@@ -24,28 +23,23 @@
 *.a2ml  text eol=lf linguist-language=TOML
 *.ncl   text eol=lf
 *.nix   text eol=lf
-
 # Docs
 *.md    text eol=lf diff=markdown
 *.adoc  text eol=lf
 *.txt   text eol=lf
-
 # Data
 *.json  text eol=lf
 *.yaml  text eol=lf
 *.yml   text eol=lf
 *.toml  text eol=lf
-
 # Config
 .gitignore     text eol=lf
 .gitattributes text eol=lf
 Justfile       text eol=lf
 Makefile       text eol=lf
 Containerfile  text eol=lf
-
 # Scripts
 *.sh   text eol=lf
-
 # Binary
 *.png   binary
 *.jpg   binary
@@ -54,7 +48,12 @@ Containerfile  text eol=lf
 *.woff2 binary
 *.zip   binary
 *.gz    binary
-
 # Lock files
 # Cargo.lock/flake.lock entries removed 2026-08-03: neither file exists in
 # this repository, and Nix was retired estate-wide in favour of Guix.
+*.zig   text eol=lf
+.editorconfig  text eol=lf
+.tool-versions text eol=lf
+justfile       text eol=lf
+Cargo.lock  text eol=lf -diff
+flake.lock  text eol=lf -diff

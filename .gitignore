@@ -11,31 +11,102 @@ build/
 *~
 .TS_unfinished
 .TS_work
-
 # Ignore OS files
 .DS_Store
 Thumbs.db
-
 # Ignore test output
 *.output
 *.result
-
 # Ignore Idris2 cache
 .idris2/
-
 # Ignore environment files
 .env
 .env.local
 .env.*.local
-
 # Ignore logs
 *.log
 logs/
-
 # Ignore node modules (if any benchmark requires it)
 node_modules/
-
 # Ignore template files from rsr-template-repo
 *.template
 reports/
-build/
+# SPDX-License-Identifier: MPL-2.0
+# RSR-compliant .gitignore
+# OS & Editor
+.idea/
+.vscode/
+# Build (unanchored to match nested monorepo paths)
+target/
+_build/
+/build/
+/dist/
+/out/
+zig-out/
+zig-cache/
+.zig-cache/
+# Dependencies
+/node_modules/
+/vendor/
+/deps/
+/.elixir_ls/
+# Rust
+# Cargo.lock  # Keep for binaries
+# Elixir
+/cover/
+/doc/
+*.ez
+erl_crash.dump
+# Julia
+*.jl.cov
+*.jl.mem
+/Manifest.toml
+# ReScript
+/lib/bs/
+/.bsb.lock
+# Python (SaltStack only)
+__pycache__/
+*.py[cod]
+.venv/
+# Ada/SPARK
+*.ali
+/obj/
+/bin/
+# Haskell
+/.stack-work/
+/dist-newstyle/
+# Chapel
+*.chpl.tmp.*
+# Secrets
+.env.*
+*.pem
+*.key
+secrets/
+# Test/Coverage
+/coverage/
+htmlcov/
+# Logs
+/logs/
+# Machine-readable locks
+.machine_readable/.locks/
+# Temp
+/tmp/
+*.tmp
+*.bak
+# ReScript/OCaml compiler artifacts
+*.cmt
+*.cmti
+*.cmi
+# asdf version manager
+.tool-versions
+# Rust build artefacts (innervation tools)
+inline-annotations/extractor/target/
+k9-coordination-protocol/tools/k9-init/target/
+hooks/playbook-to-recipe/target/
+inline-annotations/extractor/Cargo.lock
+k9-coordination-protocol/tools/k9-init/Cargo.lock
+hooks/playbook-to-recipe/Cargo.lock
+.verisimdb/ecosystem-ingest/target/
+.verisimdb/ecosystem-ingest/Cargo.lock
+# Backup/scratch files (never commit)
+*.backup

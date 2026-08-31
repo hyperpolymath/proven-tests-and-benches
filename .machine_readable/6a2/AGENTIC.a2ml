@@ -23,7 +23,7 @@ documentation = "both"            # inline Idris2 comments + .adoc under docs/
 
 [agentic-config.constraints]
 languages = ["idris2", "bash"]
-banned = ["typescript", "rescript", "go", "python", "makefile", "vlang", "ats2"]
+banned = ["typescript", "", "go", "python", "makefile", "vlang", "ats2"]
 # Idris2 is the only implementation language here. Bash is permitted for
 # scripts/ and CI only, and must pass shellcheck at -S warning.
 
