@@ -1,0 +1,83 @@
+== Contributing
+
+=== Before you start
+
+Read link:AGENTS.md[`+AGENTS.md+`]. It is written for coding agents but
+the non-negotiables apply to everyone, and they are unusual enough to be
+worth five minutes.
+
+The one fact that explains the rest: the estate testing standard directs
+*every* repository to draw its tests from here _first_. A weak test
+added here is copied outward and read as evidence in repositories that
+will never re-examine it. That makes overclaiming more expensive here
+than almost anywhere else.
+
+=== The workflow
+
+[arabic]
+. Fork the repository and create a feature branch.
+. Make your change.
+. Run the gate — `+just ci+` must exit 0. It is the same script the
+hosted pipeline runs, so if it passes locally it will pass in CI.
+. Submit a pull request.
+
+=== What the gate will check
+
+[source,bash]
+----
+just check-pins   # every artefact declares the same Idris2 version, including the installed compiler
+just lint         # no proof escape hatches
+just ci           # library, type-safe suite, spec suite, benchmark, subject grading
+----
+
+=== Licence headers — do NOT add them by hand
+
+*This section previously said "`ensure SPDX headers on all files`". That
+was wrong*, and following it would have violated estate policy.
+
+Existing files are declared through link:REUSE.toml[`+REUSE.toml+`], not
+by editing them. Bulk SPDX sweeps are explicitly forbidden — they have
+duplicated headers and mis-licensed files elsewhere in the estate. If
+you add a _new_ file, put a correct SPDX identifier on *line 1* (the
+estate linter reads only the first line, so a header on line 3 registers
+as missing). If you are unsure, add the file and let the maintainer
+place the declaration.
+
+`+reuse lint+` must report 100% on both dimensions with no unused licences.
+The former unused AGPL migration remnant was removed by owner decision; see
+link:DEBT.adoc[`+DEBT.adoc+`] L-1.
+
+=== Two rules that will get a PR sent back
+
+*A gate must be able to fail.* Before adding any check, run it against
+deliberately broken input and confirm a non-zero exit. Say so in the PR.
+A check never observed to fail is not a gate — this repository has
+shipped three of those, and each one is documented in
+link:DEBT.md[`+DEBT.md+`].
+
+*A tier must be earned.* If the evidence does not support the provenance
+tier, the tier moves down. It is not a ratchet, and a downgrade is a
+perfectly good contribution.
+
+=== If you add a test package
+
+Add it to `+scripts/ci-build.sh+` and the `+Justfile+` *in the same
+commit*. A suite that nothing runs is indistinguishable from one that
+does not exist, except that it looks like coverage. The 75-test spec
+suite carrying this repository’s 12 machine-checked theorems was gated
+by nothing for weeks.
+
+=== Where things are
+
+* link:ARCHITECTURE.md[`+ARCHITECTURE.md+`] — structure, and a standing
+list of known defects
+* link:TEST-NEEDS.md[`+TEST-NEEDS.md+`] — every category graded REAL /
+THIN / ABSENT
+* link:DEBT.md[`+DEBT.md+`] — every known gap, with the command that
+found it
+* link:ROADMAP.md[`+ROADMAP.md+`] — what happens next and why in that
+order
+
+'''''
+
+*Maintainer:* Jonathan D.A. Jewell jonathan.jewell@open.ac.uk

@@ -28,7 +28,7 @@ trustDisclaimer : String
 trustDisclaimer = unlines
   [ "-- TRUST NOTE ----------------------------------------------------------------"
   , "This report is derived entirely from proven's OWN self-audit artifacts"
-  , "(MODULE-STATUS.txt + .machine_readable/6a2/STATE.a2ml). The proofs are NOT"
+  , "(MODULE-STATUS.txt + .machine_readable/descriptiles/STATE.a2ml). The proofs are NOT"
   , "re-checked here; the grading only reflects what proven already states about"
   , "itself. 'Actually-Proven' under the strict reading additionally requires a"
   , "module to sit in proven's own zero-OWED clean set."
@@ -42,11 +42,35 @@ resolveRoot args = do
     (Nothing, (_ :: r :: _)) => r
     _                    => "/home/user/proven"
 
-readOr : String -> IO (Maybe String)
-readOr path = do
-  Right contents <- readFile path
-    | Left _ => pure Nothing
-  pure (Just contents)
+readRequired : String -> IO String
+readRequired path = do
+  result <- readFile path
+  case result of
+    Right contents => pure contents
+    Left err => do
+      putStrLn ("ERROR: cannot read " ++ path ++ ": " ++ show err)
+      exitFailure
+
+readOwed : String -> IO (String, String)
+readOwed root = do
+  let canonicalPath = root ++ "/.machine_readable/descriptiles/STATE.a2ml"
+  let legacyPath = root ++ "/.machine_readable/6a2/STATE.a2ml"
+  canonical <- readFile canonicalPath
+  case canonical of
+    Right contents => pure (".machine_readable/descriptiles/STATE.a2ml", contents)
+    Left FileNotFound => do
+      -- Compatibility for subjects not yet migrated to the canonical
+      -- descriptile location. This path already exists in the current proven
+      -- checkout and must remain readable until that repository migrates.
+      legacy <- readFile legacyPath
+      case legacy of
+        Right contents => pure (".machine_readable/6a2/STATE.a2ml (legacy)", contents)
+        Left err => do
+          putStrLn ("ERROR: cannot read " ++ legacyPath ++ ": " ++ show err)
+          exitFailure
+    Left err => do
+      putStrLn ("ERROR: cannot read " ++ canonicalPath ++ ": " ++ show err)
+      exitFailure
 
 showGraded : Graded -> String
 showGraded g =
@@ -69,13 +93,9 @@ runReport args = do
   putStr trustDisclaimer
   putStrLn ""
 
-  Just statusTxt <- readOr (root ++ "/MODULE-STATUS.txt")
-    | Nothing => do putStrLn ("ERROR: cannot read " ++ root ++ "/MODULE-STATUS.txt")
-                    exitFailure
-  mOwed <- readOr (root ++ "/.machine_readable/6a2/STATE.a2ml")
-  let led = case mOwed of
-              Just s  => parseOwedLedger s
-              Nothing => parseOwedLedger ""   -- degrades to zeros; noted below
+  statusTxt <- readRequired (root ++ "/MODULE-STATUS.txt")
+  (owedPath, owedTxt) <- readOwed root
+  let led = parseOwedLedger owedTxt
 
   let mods = parseModuleStatus statusTxt
   let declared = map gradeDeclared mods
@@ -84,11 +104,10 @@ runReport args = do
   let sc = countTiers strict
 
   putStrLn ("modules parsed: " ++ show (length mods))
-  case mOwed of
-    Just _  => putStrLn ("OWED ledger: " ++ show (bodylessTotal led) ++ " outstanding axioms, "
-                          ++ show (discharged led) ++ " discharged, "
-                          ++ show (cleanModules led) ++ " clean modules")
-    Nothing => putStrLn "OWED ledger: STATE.a2ml not found — strict grading used empty ledger"
+  putStrLn ("OWED ledger (" ++ owedPath ++ "): "
+              ++ show (bodylessTotal led) ++ " outstanding axioms, "
+              ++ show (discharged led) ++ " discharged, "
+              ++ show (cleanModules led) ++ " clean modules")
   putStrLn ""
 
   putStrLn "== As-declared reading (trust MODULE-STATUS tier verbatim) =="

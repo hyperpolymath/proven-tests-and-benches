@@ -1,0 +1,110 @@
+== Repository instructions
+
+This repository is the Hyperpolymath estate’s Idris2 testing and
+benchmarking framework. Read `+0-AI-MANIFEST.a2ml+`, `+README.adoc+`,
+`+docs/STATE-OF-THINGS.adoc+` and `+.machine_readable/descriptiles/STATE.a2ml+`
+in that order before changing anything. `+docs/STATE-OF-THINGS.adoc+` is
+the standing self-audit and is deliberately unflattering; treat it as
+the current account of what is real here, not as marketing.
+
+*This repository is upstream of every other repo’s tests.*
+`+standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc+` §Provenance
+directs every estate repo to draw tests from here _first_ — ahead of the
+standard’s own examples, ahead of a sibling repo, ahead of writing a new
+one. A vacuous test added here does not stay here; it is copied outward
+and read as evidence in repos that never re-examine it. That asymmetry
+is the single most important fact about working in this repository. The
+taxonomy states the corollary directly: _"`A test written to make a gate
+go green, rather than to establish a fact, is worse than no test — it is
+read as evidence.`"_ If no honest test exists for a category, mark it
+N/A with justification. That is a truthful state; a passing-but-vacuous
+test is not.
+
+=== Non-negotiables
+
+Do not introduce `+believe_me+`, `+assert_total+`, `+%partial+`,
+`+idris_crash+`, `+unsafePerformIO+` or metavariable holes into
+`+src/+`, `+tests/+`, `+benchmarks/+` or `+integrations/+`. The
+repository currently contains none, which is a property worth preserving
+rather than a coincidence; `+just lint+` fails on any of them. Do not
+weaken it back into a reporting-only recipe.
+
+Do not claim a provenance tier without its evidence.
+`+ActualEvidence.proof_ladder+` is a `+List1 ProofStep+`
+(`+src/ProvenTests/Types.idr+`), so "`Actually-Proven with zero proof
+steps`" is unrepresentable _by construction_. Preserve that. Coverage is
+likewise derived from tests that actually ran and passed
+(`+src/ProvenTests/Coverage.idr+`), with the derivation itself
+machine-checked in `+src/ProvenTests/Meta.idr+`. A covered cell must
+never become a hand-written assertion.
+
+Do not write a gate that cannot fail. Before adding any check, run it
+against a deliberately broken input and confirm a non-zero exit. Three
+separate constructs in this repository formerly passed unconditionally —
+`+|| true+`, `+|| echo "none found"+` (grep exits 1 on no-match, so the
+fallback fired on the _clean_ case), and a skip-if-absent `+[ -f ... ]+`
+guard. All three read as green. `+scripts/check-toolchain-pins.sh+` is
+the worked example of the intended shape: absent input is exit 2 and
+named as "`no check performed`", never exit 0.
+
+Licence headers are manual and owner-only. Never sweep SPDX identifiers
+in bulk, never generate a licence-change commit, and never touch
+third-party or vendored licence text. Files you newly author may carry
+the correct SPDX from birth (MPL-2.0 for code, CC-BY-SA-4.0 for docs);
+existing files are declared through `+REUSE.toml+` rather than by
+editing them.
+
+=== Building and checking
+
+`+just deps+` provisions the toolchain (`+scripts/install-idris2.sh+`;
+builds Idris2 from source against the Chez Scheme backend, needing
+`+chezscheme+` and `+libgmp-dev+`). There is no asdf or mise plugin for
+Idris2, so `+.tool-versions+` is a declarative pin, not an installer.
+`+just check-pins+` verifies that all seven artefacts naming an Idris2
+version agree with each other and with the installed compiler; run it
+after touching any version string. `+just build+`, `+just test+`,
+`+just bench+` and `+just lint+` do what their names say. `+just ci+`
+runs `+scripts/ci-build.sh+`, the full gate the hosted pipelines run.
+
+The toolchain is Idris2 *0.7.0*. It was recorded as 0.8.0 in two
+machine-readable files for a month while every executable path used
+0.7.0; that is exactly the drift `+check-pins+` now prevents. Do not
+"`align with proven`" by editing one file.
+
+=== Known-bad patterns specific to this estate
+
+A GitHub Actions job that requests more permissions than its caller, an
+indented key under a scalar `+permissions:+`, and `+timeout-minutes:+`
+on a `+uses:+` job each cause the whole workflow file to be _refused at
+parse time_. A parse-refused workflow produces *no check run at all* —
+`+gh pr checks+` shows nothing rather than a failure, so absence of a
+red mark is not evidence of a green one. Use `+gh run list+` to confirm
+a workflow actually executed.
+
+Action pins must be full 40-character SHAs that exist. Roughly 18% of
+pins measured across this estate resolved to nothing, and an
+unresolvable ref also yields no check run. Verify with
+`+gh api repos/<owner>/<repo>/commits/<sha>+` before trusting a pin; a
+422 means the SHA is invented.
+
+Do not add a `+settings.yml+`. Probot’s `+name:+` field self-renames the
+repository on push, and roughly twenty estate repos are armed with it.
+
+=== Reporting
+
+Record what you measured, not what you expect. If a suite was skipped,
+say it was skipped and why; if a number came from a document rather than
+a run, attribute it to the document. `+integrations/proven/+` grades an
+external subject from its own ledgers and is skipped when no `+proven+`
+checkout is present — a skip there is not a pass, and the grade claims
+resting on it are only as good as the last run that actually happened.
+
+=== The test doctrine (2026-08-10)
+
+Every test divides into harness and payload
+(`+docs/TEST-DOCTRINE.adoc+`). *A test fails the meta-check if the
+harness is faulty and triggers, OR if the payload is faulty and does not
+trigger the specific thing it is designed for.* Silence + firing
+fixtures are mandatory; a test missing either is inadmissible. Checks
+report three outcomes — 0 correct, 1 wrong outcome, 2 NO CHECK WAS
+PERFORMED — and a crash is 2, never silence.

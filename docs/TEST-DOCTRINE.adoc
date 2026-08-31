@@ -158,7 +158,7 @@ repository's edge.
 * `docs/CHARACTERISTICS.adoc` — the evidence spectrum: example → property → proof
 * `TEST-NEEDS.md` — every category graded REAL / THIN / ABSENT
 * `DEBT.md` — every known gap, with the command that produced the evidence
-* `AGENTS.md` and `.machine_readable/6a2/AGENTIC.a2ml` — the non-negotiables
+* `AGENTS.md` and `.machine_readable/descriptiles/AGENTIC.a2ml` — the non-negotiables
   (the two must agree; this doctrine is named in both)
 * `scripts/check-doc-facts.sh` — the anti-drift gate, itself written to this
   doctrine's three-outcome rule

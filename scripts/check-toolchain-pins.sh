@@ -62,11 +62,11 @@ extract "GitLab CI cache key" \
     's/.*key:[[:space:]]*idris2-toolchain-v\([0-9][0-9.]*\).*/\1/p'
 
 extract "META.a2ml ADR-005" \
-    ".machine_readable/6a2/META.a2ml" \
+    ".machine_readable/descriptiles/META.a2ml" \
     's/.*Toolchain Idris2 \([0-9][0-9.]*\).*/\1/p'
 
 extract "STATE.a2ml [build]" \
-    ".machine_readable/6a2/STATE.a2ml" \
+    ".machine_readable/descriptiles/STATE.a2ml" \
     's/^toolchain[[:space:]]*=[[:space:]]*"idris2-\([0-9][0-9.]*\)".*/\1/p'
 
 extract "README prerequisites" \

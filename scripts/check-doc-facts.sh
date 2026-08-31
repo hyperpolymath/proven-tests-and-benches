@@ -60,11 +60,11 @@ check_module_count() {
   # Asserted in:
   grep -q "# ${n} modules: the framework" README.adoc \
     || bad "README.adoc structure block does not say '${n} modules'"
-  grep -q "The framework library (${n} modules)" ARCHITECTURE.md \
-    || bad "ARCHITECTURE.md does not say '(${n} modules)'"
+  grep -q "The framework library (${n} modules)" ARCHITECTURE.adoc \
+    || bad "ARCHITECTURE.adoc does not say '(${n} modules)'"
   grep -q "framework library (${n} modules)" READINESS.adoc \
     || bad "READINESS.adoc does not say '(${n} modules)'"
-  grep -q "library-modules = ${n}" .machine_readable/6a2/STATE.a2ml \
+  grep -q "library-modules = ${n}" .machine_readable/descriptiles/STATE.a2ml \
     || bad "STATE.a2ml library-modules != ${n}"
   grep -q "all ${n} modules build" docs/STATE-OF-THINGS.adoc \
     || bad "docs/STATE-OF-THINGS.adoc does not say 'all ${n} modules build'"
@@ -80,8 +80,8 @@ check_package_count() {
   say "computed: packages = $n (git ls-files '*.ipkg')"
   words=(zero one two three four five six seven eight nine)
   w=${words[$n]:-$n}
-  grep -qi "builds \*\*${w}\*\* Idris2 packages" ARCHITECTURE.md \
-    || bad "ARCHITECTURE.md does not say 'builds **${w}** Idris2 packages'"
+  grep -qi "builds \*${w}\* Idris2 packages" ARCHITECTURE.adoc \
+    || bad "ARCHITECTURE.adoc does not say 'builds *${w}* Idris2 packages'"
 }
 
 # ---------------------------------------------------------------------------
@@ -94,10 +94,10 @@ check_cell_count() {
       | grep -cE '\(K (Co)')
   [ "$n" -gt 0 ] || { dead "could not count cellTests coordinates in Cells.idr"; return; }
   say "computed: lattice cells = $n (Cells.idr cellTests)"
-  grep -qE "The ${n} lattice cells" ARCHITECTURE.md \
-    || bad "ARCHITECTURE.md does not describe 'The ${n} lattice cells'"
-  grep -q "(${n} lattice cells + 1 self-classification)" TEST-NEEDS.md \
-    || bad "TEST-NEEDS.md does not say '(${n} lattice cells + 1 self-classification)'"
+  grep -qE "The ${n} lattice cells" ARCHITECTURE.adoc \
+    || bad "ARCHITECTURE.adoc does not describe 'The ${n} lattice cells'"
+  tr '\n' ' ' < TEST-NEEDS.adoc | grep -q "(${n} lattice cells + 1 self-classification)" \
+    || bad "TEST-NEEDS.adoc does not say '(${n} lattice cells + 1 self-classification)'"
 }
 
 # ---------------------------------------------------------------------------
@@ -121,7 +121,7 @@ check_axes() {
   grep -q "${cats}-category × ${asps}-aspect\|${cats} categories × ${asps} aspects\|${cats}×${asps}\|${cats} × ${asps}" README.adoc \
     || bad "README.adoc does not state the ${cats}×${asps} taxonomy"
   local total=$((cats * asps))
-  grep -q "cat-aspect-cells-total = ${total}" .machine_readable/6a2/STATE.a2ml \
+  grep -q "cat-aspect-cells-total = ${total}" .machine_readable/descriptiles/STATE.a2ml \
     || bad "STATE.a2ml cat-aspect-cells-total != ${total}"
 }
 
@@ -139,11 +139,14 @@ check_grade() {
   badge=$(grep -oE 'badge/CRG-[A-Z]-' README.adoc | head -1 | sed 's|badge/CRG-\([A-Z]\)-|\1|')
   [ "$want" = "$badge" ] \
     || bad "README badge is CRG-${badge} but READINESS.adoc says CRG-${want} (run: just crg-badge-sync)"
-  state=$(grep -oE 'readiness-grade = "[A-Z]"' .machine_readable/6a2/STATE.a2ml | grep -oE '[A-Z]"' | tr -d '"')
+  state=$(grep -oE 'readiness-grade = "[A-Z]"' .machine_readable/descriptiles/STATE.a2ml | grep -oE '[A-Z]"' | tr -d '"')
   [ "$want" = "$state" ] \
     || bad "STATE.a2ml readiness-grade is ${state} but READINESS.adoc says ${want}"
   # Root READINESS.md is GENERATED from READINESS.adoc (just crg-readiness-md)
-  # for the estate parser convention; the pair must agree.
+  # for the estate CRG parser convention; the pair must agree.
+  # NOTE: the .md here is DELIBERATE — do not repoint it at .adoc. Comparing
+  # the generated file against itself makes this check a tautology that can
+  # never fail.
   if [ -f READINESS.md ]; then
     md=$(grep -oE '\*\*Current Grade:\*\* [A-Z]' READINESS.md | tail -1 | grep -oE '[A-Z]$')
     [ "$want" = "$md" ] \
@@ -158,13 +161,13 @@ check_grade() {
 # (The header claimed 36 items while the tables held 44 — found 2026-08-10.)
 # ---------------------------------------------------------------------------
 check_debt_count() {
-  need DEBT.md || return
+  need DEBT.adoc || return
   local n
-  n=$(grep -coE '^\| \*\*[A-Z]+-[0-9]+\*\*' DEBT.md)
+  n=$(grep -cE '^\|\*[A-Z]+-[0-9]+\*' DEBT.adoc)
   [ "$n" -gt 0 ] || { dead "could not count DEBT item IDs"; return; }
-  say "computed: DEBT items = $n (ID rows in DEBT.md)"
-  grep -qE "\b${n} (debt )?items\b|with ${n} items|${n} items across" DEBT.md \
-    || bad "DEBT.md never states its own true item count (${n}); its header/prose disagrees"
+  say "computed: DEBT items = $n (ID rows in DEBT.adoc)"
+  grep -qE "${n} (debt )?items|with ${n} items|${n} items across" DEBT.adoc \
+    || bad "DEBT.adoc never states its own true item count (${n}); its header/prose disagrees"
 }
 
 # ---------------------------------------------------------------------------
@@ -195,7 +198,7 @@ PY
     return
   fi
   say "computed: framework suite = ${passed}/${total} (run report)"
-  grep -q "framework-suite = \"${passed}/${total} passing\"" .machine_readable/6a2/STATE.a2ml \
+  grep -q "framework-suite = \"${passed}/${total} passing\"" .machine_readable/descriptiles/STATE.a2ml \
     || bad "STATE.a2ml framework-suite != ${passed}/${total}"
   # Coverage counts, from the same report's summary (runReportJSON writes them).
   local covered
@@ -208,7 +211,7 @@ PY2
   )
   if [ -n "$covered" ]; then
     say "computed: covered cat-aspect cells = ${covered} (run report)"
-    grep -q "cat-aspect-cells-covered = ${covered}" .machine_readable/6a2/STATE.a2ml \
+    grep -q "cat-aspect-cells-covered = ${covered}" .machine_readable/descriptiles/STATE.a2ml \
       || bad "STATE.a2ml cat-aspect-cells-covered != ${covered}"
   else
     dead "run report carries no coverage count — cannot verify STATE.a2ml coverage"
@@ -224,8 +227,8 @@ say "== check-doc-facts (${MODE}) =="
 # an absent file "not matching" is the crash-reads-as-silence failure mode the
 # test doctrine forbids (docs/TEST-DOCTRINE.adoc).
 if [ "$MODE" = "source" ]; then
-  for f in README.adoc ARCHITECTURE.md READINESS.adoc TEST-NEEDS.md DEBT.md \
-           docs/STATE-OF-THINGS.adoc .machine_readable/6a2/STATE.a2ml; do
+  for f in README.adoc ARCHITECTURE.adoc READINESS.adoc TEST-NEEDS.adoc DEBT.adoc \
+           docs/STATE-OF-THINGS.adoc .machine_readable/descriptiles/STATE.a2ml; do
     need "$f" >/dev/null || true
   done
   if [ "$skip" -ne 0 ]; then
