@@ -135,3 +135,4 @@ bridgeClassification =
       framework = provenTestsFrameworkProof
       cert = typeSafetyCert 6 "Echo-Types Bridge" "Idris2 + echo-types" ["Integration"]
   in classifyProvisionallyProven tid desc framework cert
+       (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine category constructor, no fixture pair")

@@ -126,3 +126,4 @@ effectsClassification =
       framework = provenTestsFrameworkProof
       cert = typeSafetyCert 6 "Idris2 Effect System" "Idris2 core" ["Effect safety"]
   in classifyProvisionallyProven tid desc framework cert
+       (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine category constructor, no fixture pair")

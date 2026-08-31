@@ -79,6 +79,7 @@ tropicalLawsClassification =
       cert   = MkTypeSafetyCertificate 6 "Idris2 dependent types" "idris2 --build (total proofs)"
                  ["Tropical semiring laws"]
   in classifyActuallyProven tid "Tropical semiring laws (machine-checked)" ladder design cert
+       (CannotFailByDesign "semiring laws are total machine-checked proofs (see proof ladder); the property is compile-time enforced, so no runtime firing fixture can exist")
 
 --/ Runtime spot-check of the operations. The compile-time proofs are the real
 --/ evidence; this also exercises concrete values (and is what the runner asserts).

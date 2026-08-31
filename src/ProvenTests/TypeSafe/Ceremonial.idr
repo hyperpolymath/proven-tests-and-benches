@@ -130,3 +130,4 @@ ceremonialClassification =
       framework = provenTestsFrameworkProof
       cert = typeSafetyCert 6 "Protocol/Ritual Types" "Custom" ["Sequencing"]
   in classifyProvisionallyProven tid desc framework cert
+       (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine category constructor, no fixture pair")

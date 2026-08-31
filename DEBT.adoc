@@ -2,7 +2,7 @@
 
 *Compiled:* 2026-08-07, against `+0bc912c+`; *last re-measured
 2026-08-10* (I-10 added; I-3/I-4/I-7 remain closed). The register holds
-*45 items* — a figure now GATED by `+scripts/check-doc-facts.sh+`,
+*46 items* — a figure now GATED by `+scripts/check-doc-facts.sh+`,
 because the original header claimed 36 while the tables held 44 and
 nothing noticed for three days. *Method:* every item below carries the
 command that produced its evidence. Anything not confirmed by running
@@ -373,6 +373,18 @@ _Squisher Corpus_ `+CODE_OF_CONDUCT.md+` and a 6-ecosystem
 removed with a documented comment. |`+git show da0afbc --stat+`; both
 recoverable from reflog |*Root cause is upstream:* the sweep carries a
 pre-fix payload. Worth checking which other repos it hit.
+
+|*S-8* |MEDIUM |*B2-LEGACY-SUITE fixture debt.* B.2 made the fixture
+obligation a mandatory field of `+TestMetadata+` (a test cannot be
+constructed without stating its fixture position). The pre-doctrine
+paths — Framework's `+provenTest+`/`+provisionalTest+`/`+unprovenTest+`,
+Cells' `+pc+`/`+uc+`/`+ioc+`/`+ac+`, and the E2E classification — declare
+`+FixtureDebt "B2-LEGACY-SUITE: ..."+` instead of a real
+silence/firing pair. Debt-marked tests are never counted as tests in
+any ledger (B.4). This register may only shrink; new corpus units may
+never use it. |`+grep -rn "B2-LEGACY-SUITE" src/+` (9 sites)
+|Retire by threading real fixture pairs through the legacy suite
+helpers, battery by battery.
 |===
 
 '''''

@@ -304,8 +304,74 @@ export
 Show Provenance where
   show = show . statusOf
 
+-- =============================================================================
+-- FIXTURE OBLIGATION (TEST-DOCTRINE.adoc §2; standards R10)
+-- =============================================================================
+-- The doctrine: every test ships a silence fixture (clean input, must NOT
+-- fire — a fire is a harness fault) and a firing fixture (a committed
+-- specimen of the declared defect class, MUST fire — silence is a payload
+-- fault). "A test missing either fixture is *inadmissible*." This block makes
+-- that a type obligation rather than a review convention, following the
+-- `List1 ProofStep` precedent that makes zero-step Actually-Proven
+-- unrepresentable.
+
+--/ Where a fixture lives. Runtime construction is legitimate (R10.7): a
+--/ fixture built by the test run itself cannot silently rot into validity
+--/ the way a committed file can.
+public export
+data FixtureSource : Type where
+  OnDisk             : (path : String) -> FixtureSource
+  RuntimeConstructed : (how : String) -> FixtureSource
+
+--/ Clean input containing no member of the declared defect class (R10.6).
+--/ The description says *why* it is clean — an undocumented silence fixture
+--/ cannot be audited for accidental defect members.
+public export
+record SilenceFixture where
+  constructor MkSilenceFixture
+  source      : FixtureSource
+  description : String
+
+--/ A committed specimen of the declared defect class (R10.2) — the canonical
+--/ wrongness. `defect_class` names the class member it presents, so the
+--/ meta-check knows what "the specific thing" is.
+public export
+record FiringFixture where
+  constructor MkFiringFixture
+  source       : FixtureSource
+  defect_class : String
+
+--/ The pair the doctrine demands. CI runs both: silence must not fire,
+--/ firing must fire, and a crash in either is exit 2 (NO CHECK PERFORMED),
+--/ never a pass.
+public export
+record FixturePair where
+  constructor MkFixturePair
+  silence : SilenceFixture
+  firing  : FiringFixture
+
+--/ Every test states its fixture position — there is no silent default, which
+--/ is the point: an optional field would be the type-level form of a gate
+--/ that cannot fail.
+--/
+--/ * `Fixtures` — the doctrine's pair; the test is admissible and countable.
+--/ * `CannotFailByDesign` — the R10.5 annotation: the checked property is
+--/   enforced at compile time, so no runtime firing fixture can exist. The
+--/   reason is mandatory and censused.
+--/ * `FixtureDebt` — an explicit, dated admission that the pair is missing.
+--/   Debt-marked tests are NOT counted as tests in any ledger (B.4: "any
+--/   check with neither a firing fixture nor this annotation is not counted").
+--/   This register may only shrink; new corpus units may never use it.
+public export
+data FixtureObligation : Type where
+  Fixtures           : FixturePair -> FixtureObligation
+  CannotFailByDesign : (reason : String) -> FixtureObligation
+  FixtureDebt        : (debt_ref : String) -> FixtureObligation
+
 --/ Metadata about a test. The category/aspect axes are *typed* — a metadata
 --/ record can only claim a coordinate that exists in the taxonomy.
+--/ `fixtures` is non-optional: a test cannot be constructed without stating
+--/ its fixture position (TEST-DOCTRINE.adoc §2).
 public export
 record TestMetadata where
   constructor MkTestMetadata
@@ -314,4 +380,5 @@ record TestMetadata where
   category      : Maybe TestCategory
   aspect        : Maybe TestAspect
   typesafe_cat  : Maybe TypeSafeCategory
+  fixtures      : FixtureObligation
   provenance    : Provenance

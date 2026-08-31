@@ -127,3 +127,4 @@ decorativeClassification =
       framework = provenTestsFrameworkProof
       cert = typeSafetyCert 6 "Type-level Annotations" "Custom" ["Metadata preservation"]
   in classifyProvisionallyProven tid desc framework cert
+       (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine category constructor, no fixture pair")

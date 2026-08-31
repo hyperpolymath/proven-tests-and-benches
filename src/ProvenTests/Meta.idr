@@ -84,7 +84,7 @@ export
 metaLemmasSpotCheck : Bool
 metaLemmasSpotCheck =
   let co = MkCoord CoEvaluation Thing ReflexiveTest Dependability
-      m  = classifyUnproven (MkTestId "ProvenTests.Meta" "spot" 0) "spot" in
+      m  = classifyUnproven (MkTestId "ProvenTests.Meta" "spot" 0) "spot" (CannotFailByDesign "classification specimen: coverage-lemma test data, never executed as a test") in
   statusOf PUnproven == Unproven
     && null (coveredFrom [(co, m, Failed "deliberate")])
     && coveredFrom [(co, m, Passed)] == [co]

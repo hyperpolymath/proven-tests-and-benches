@@ -130,3 +130,4 @@ tropicalClassification =
       framework = provenTestsFrameworkProof
       cert = typeSafetyCert 6 "Dependent Types with Tropical Extension" "Idris2 + typed-wasm" ["Resource bounds"]
   in classifyProvisionallyProven tid desc framework cert
+       (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine category constructor, no fixture pair")
