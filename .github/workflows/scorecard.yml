@@ -15,6 +15,12 @@ on:
 permissions:
   actions: read
   contents: read
+  # The reusable uploads SARIF (security-events) and signs its results
+  # (id-token); caller permissions CAP the called workflow, so granting
+  # less here startup-fails the reusable. Workflow-level, not job-level:
+  # a job-level block would REPLACE this map and drop the read scopes.
+  security-events: write
+  id-token: write
 
 jobs:
   scorecard:
