@@ -2,7 +2,7 @@
 
 *Compiled:* 2026-08-07, against `+0bc912c+`; *last re-measured
 2026-08-10* (I-10 added; I-3/I-4/I-7 remain closed). The register holds
-*46 items* — a figure now GATED by `+scripts/check-doc-facts.sh+`,
+*47 items* — a figure now GATED by `+scripts/check-doc-facts.sh+`,
 because the original header claimed 36 while the tables held 44 and
 nothing noticed for three days. *Method:* every item below carries the
 command that produced its evidence. Anything not confirmed by running
@@ -385,6 +385,19 @@ any ledger (B.4). This register may only shrink; new corpus units may
 never use it. |`+grep -rn "B2-LEGACY-SUITE" src/+` (9 sites)
 |Retire by threading real fixture pairs through the legacy suite
 helpers, battery by battery.
+
+|*S-9* |MEDIUM |*Corpus units have no CI gate and no second-machine run.*
+Corpus unit #1 (`+corpus/provenance/reflexive/cancelled-gate-void/+`) is
+verified by session runs only: no CI job compiles and runs corpus units
+standalone (the per-unit matrix job of Phase ★.1), and the X.8 stability
+record shows `+reproduce = no+` — the unit has never run on a second
+machine. Until the gate exists, `+corpus/COUNT.a2ml+` is hand-written and
+its numbers are warranted by the stability record, not by an independent
+check. |`+corpus/COUNT.a2ml+` `+[deficits]+` section;
+`+corpus/provenance/reflexive/cancelled-gate-void/stability.a2ml+`
+|Add a CI matrix job that builds and runs each corpus unit alone
+(0/1/2 asserted against all three payloads), regenerate COUNT.a2ml from
+it, and record one reproduce run on a second machine.
 |===
 
 '''''
