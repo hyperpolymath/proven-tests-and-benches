@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Adversarial-content register (docs/TEST-DOCTRINE.adoc §Scanner excludability).
+# This repository DELIBERATELY contains what scanners hunt: committed defect
+# specimens, deliberately empty payloads, seeded faults. All of it lives under
+# the marked trees below. Scanners (panic-attack, pons, gitleaks via repo-local
+# allowlist entries) consume this file to exclude these paths from findings.
+# Adversarial content OUTSIDE the marked trees is a defect; scanner findings
+# INSIDE them are noise. Both directions are checkable.
+
+[marked_trees]
+corpus_firing = "corpus/**/fixture-firing/ — canonical wrongness: committed defect specimens each unit must reject (R10.2); a specimen here that stops being wrong turns its unit green SILENTLY, which is why each unit's last-fired date is registered"
+corpus_calibration = "corpus/**/calibration/ — deliberately empty or stub payloads pinning the exit-2 (NO CHECK PERFORMED) behaviour; an empty file here is intentional, not an accident"
+
+[register]
+# One entry per firing fixture: target check + the date it last demonstrably
+# fired. A fixture that has never fired is a finding, not a fixture.
+u1_firing = "corpus/provenance/reflexive/cancelled-gate-void/fixture-firing/report.txt -> target: cancelled-gate-void checker; defect class cancelled-adjudicator-reported-as-pass; last fired 2026-08-31 (exit 1)"
+u1_calibration = "corpus/provenance/reflexive/cancelled-gate-void/calibration/empty-report.txt -> target: same checker; must exit 2; last verified 2026-08-31"
+
+[future_trees]
+mutants = "mutants/ — declared by the doctrine for the mutation phase; not yet present, and its absence is stated in the doctrine rather than an empty directory landing here"

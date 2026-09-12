@@ -29,6 +29,21 @@ import System
 -- There is no formal definition of an echo type anywhere in the estate to
 -- encode, so writing one here would be inventing it.
 
+-- =============================================================================
+-- B.2 NEGATIVE WITNESS (TEST-DOCTRINE.adoc §2; plan Phase B verification)
+-- =============================================================================
+-- "Attempt to construct a test without a fixture pair; it must not compile.
+-- A type error, not a lint warning. That IS the verification." The block below
+-- is the pre-B.2 shape of MkTestMetadata — six fields, no FixtureObligation —
+-- and `failing` asserts the type checker rejects it, so this witness itself
+-- fails to build if the obligation is ever weakened back out of TestMetadata.
+failing
+  noFixturePosition : TestMetadata
+  noFixturePosition =
+    MkTestMetadata (MkTestId "SpecSuite" "no-fixture-position" 0)
+      "constructed without stating a fixture position" Nothing Nothing Nothing
+      PUnproven
+
 allSuiteTests : List ProvisionallyProvenTest
 allSuiteTests =
      allAffinityTests

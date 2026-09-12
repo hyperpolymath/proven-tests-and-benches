@@ -127,9 +127,15 @@ This repository *deliberately* contains what security and quality scanners
 hunt: malformed inputs, seeded faults, mutants, secret-shaped strings,
 vacuous-shape negative fixtures. All of it lives under marked trees —
 
-* `tests/corpus/` — generated-input corpora and regression cases
-* `tests/fixtures-negative/` — firing fixtures: committed defect specimens
-* `mutants/` — mutation-testing mutant definitions and artifacts
+* `corpus/` — the deployable test corpus (the product, top-level by ruling:
+  it is not a subdirectory of this repo's own tests). Each unit's
+  `fixture-firing/` holds committed defect specimens — the canonical
+  wrongness the unit must reject — and its `calibration/` holds deliberately
+  empty or stub payloads pinning the exit-2 VOID behaviour. This subsumes the
+  formerly planned `tests/fixtures-negative/` tree.
+* `mutants/` — mutation-testing mutant definitions and artifacts. *Deferred
+  to the mutation phase*: declared here so its eventual appearance is
+  expected, not yet present in the tree.
 
 — declared in the machine-readable manifest
 `.machine_readable/testing/adversarial-content.a2ml`, which scanners
@@ -156,9 +162,9 @@ repository's edge.
 == Cross-references
 
 * `docs/CHARACTERISTICS.adoc` — the evidence spectrum: example → property → proof
-* `TEST-NEEDS.md` — every category graded REAL / THIN / ABSENT
-* `DEBT.md` — every known gap, with the command that produced the evidence
-* `AGENTS.md` and `.machine_readable/descriptiles/AGENTIC.a2ml` — the non-negotiables
+* `TEST-NEEDS.adoc` — every category graded REAL / THIN / ABSENT
+* `DEBT.adoc` — every known gap, with the command that produced the evidence
+* `AGENTS.adoc` and `.machine_readable/descriptiles/AGENTIC.a2ml` — the non-negotiables
   (the two must agree; this doctrine is named in both)
 * `scripts/check-doc-facts.sh` — the anti-drift gate, itself written to this
   doctrine's three-outcome rule

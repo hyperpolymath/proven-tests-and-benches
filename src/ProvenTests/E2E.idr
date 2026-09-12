@@ -32,10 +32,12 @@ e2eCoord = MkCoord CoImplementation Collective EndToEnd Dependability
 e2eInnerSuite : TestSuite
 e2eInnerSuite =
   addTest (MkUnprovenTest
-            (classifyUnproven (MkTestId "ProvenTests.E2E.inner" "step-a" 0) "pipeline step A")
+            (classifyUnproven (MkTestId "ProvenTests.E2E.inner" "step-a" 0) "pipeline step A"
+              (CannotFailByDesign "inner pipeline placeholder: test_func is `pure Passed` by construction; the E2E assertion is about the runner's report"))
             (pure Passed))
     (addTest (MkUnprovenTest
-            (classifyUnproven (MkTestId "ProvenTests.E2E.inner" "step-b" 0) "pipeline step B")
+            (classifyUnproven (MkTestId "ProvenTests.E2E.inner" "step-b" 0) "pipeline step B"
+              (CannotFailByDesign "inner pipeline placeholder: test_func is `pure Passed` by construction; the E2E assertion is about the runner's report"))
             (pure Passed))
       (emptySuite "e2e-inner"))
 
@@ -49,6 +51,7 @@ e2eClassification =
                (MkTestId "ProvenTests.E2E" "frameworkPipeline" 0)
                "E2E: build a suite, run it through Framework.runSuite, verify the report"
                provenTestsFrameworkProof cert
+               (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine E2E classification, no fixture pair")
   in { category := Just EndToEnd, aspect := Just Dependability } base
 
 --/ The Baton carrying this cell across the mesh (coordinate + provenance + cost).

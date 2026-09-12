@@ -135,3 +135,4 @@ choreographicClassification =
       framework = provenTestsFrameworkProof
       cert = typeSafetyCert 6 "Session Types from TypeLL" "Idris2 + Choreographic" ["Protocol correctness"]
   in classifyProvisionallyProven tid desc framework cert
+       (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine category constructor, no fixture pair")

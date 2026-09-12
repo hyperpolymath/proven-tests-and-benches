@@ -59,7 +59,14 @@ Runnable UnprovenTest where
 -- TEST CONSTRUCTORS
 -- =============================================================================
 
---/ Create an Actually-Proven test
+-- The three constructors below are the PRE-DOCTRINE legacy path: they
+-- construct tests with `FixtureDebt`, an explicit admission that no
+-- silence/firing fixture pair exists (TEST-DOCTRINE.adoc §2). Debt-marked
+-- tests are never counted as tests in any ledger (B.4). New code must call
+-- the classifiers directly with a real `FixtureObligation`; this register
+-- may only shrink. Debt reference: DEBT.adoc B2-LEGACY-SUITE.
+
+--/ Create an Actually-Proven test (legacy: carries FixtureDebt)
 public export
 provenTest :
      TestId ->
@@ -71,33 +78,36 @@ provenTest tid desc func ladder =
   let meta = classifyActuallyProven tid desc ladder
         (designProof "Design" "Formal Verification" [] [])
         (typeSafetyCert 6 "Dependent Types" "Idris2" [])
+        (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine constructor, no fixture pair")
   in MkActuallyProvenTest meta func ladder
 
---/ Create a Provisionally-Proven test
+--/ Create a Provisionally-Proven test (legacy: carries FixtureDebt)
 public export
-provisionalTest : 
-     TestId -> 
-     String -> 
-     (IO TestResult) -> 
+provisionalTest :
+     TestId ->
+     String ->
+     (IO TestResult) ->
      ProvisionallyProvenTest
 provisionalTest tid desc func =
-  let meta = classifyProvisionallyProven tid desc 
-        (frameworkProof "Proven-Tests" 
-          (typeSafetyCert 6 "Dependent Types" "Idris2" []) 
+  let meta = classifyProvisionallyProven tid desc
+        (frameworkProof "Proven-Tests"
           (typeSafetyCert 6 "Dependent Types" "Idris2" [])
-          "") 
+          (typeSafetyCert 6 "Dependent Types" "Idris2" [])
+          "")
         (typeSafetyCert 6 "Dependent Types" "Idris2" [])
+        (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine constructor, no fixture pair")
   in MkProvisionallyProvenTest meta func
 
---/ Create an Unproven test
+--/ Create an Unproven test (legacy: carries FixtureDebt)
 public export
-unprovenTest : 
-     TestId -> 
-     String -> 
-     (IO TestResult) -> 
+unprovenTest :
+     TestId ->
+     String ->
+     (IO TestResult) ->
      UnprovenTest
 unprovenTest tid desc func =
   let meta = classifyUnproven tid desc
+        (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine constructor, no fixture pair")
   in MkUnprovenTest meta func
 
 -- =============================================================================

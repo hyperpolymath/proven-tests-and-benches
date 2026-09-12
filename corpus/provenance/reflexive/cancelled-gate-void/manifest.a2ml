@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Unit manifest for corpus/provenance/reflexive/cancelled-gate-void.
+
+[identity]
+battery = "provenance"
+category = "ReflexiveTest"
+aspect = "Dependability"
+defect_class = "cancelled-adjudicator-reported-as-pass"
+
+[classification]
+proof_system = "Idris2 total functions with machine-checked equality proofs"
+type_level = "dependent equality types over the report grammar"
+semiotic_level = "semantic"
+semiotic_justification = "the check adjudicates what the report MEANS — whether the claimed verdict corresponds to the recorded job conclusions — not merely whether it parses; it stops short of pragmatic (it does not observe a live gate in use)"
+warrant_class = "measured-defect"
+warrant_note = "grounded in a measured estate failure, not in prevalence or precedent — R-9 incumbency cap does not apply"
+
+[subject_shape]
+input = "a gate report in the declared line grammar (see regime.a2ml); producible from any CI system that exposes per-job conclusions (for GitHub Actions: jobs[].conclusion via the runs API)"
+build = "standalone: `idris2 Test.idr -o cancelled-gate-void` — base library only, no .ipkg, no sibling imports"
+
+[shared_dependencies]
+# Triangulation ledger entry (X.6): components shared with other units, which
+# bound any claimed independence.
+toolchain = "idris2 0.7.0, Chez Scheme backend"
+harness_lineage = "hand-written; no shared fixture generator; fixtures are hand-authored on-disk pairs"
+
+[adversarial]
+last_fired = "2026-08-31"

@@ -139,3 +139,4 @@ epistemicClassification =
       framework = provenTestsFrameworkProof
       cert = typeSafetyCert 6 "Dependent Types with Epistemic Extension" "Idris2 + typed-wasm" ["Information flow"]
   in classifyProvisionallyProven tid desc framework cert
+       (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine category constructor, no fixture pair")

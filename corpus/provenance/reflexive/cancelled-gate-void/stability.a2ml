@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Stability record (exactness spine X.8): repeat / reproduce / replicate,
+# with dates. A unit never run twice has an unmeasured alpha and cannot be
+# counted — this file is what makes the count honest.
+
+[repeat]
+machine = "same machine (WSL2, Linux 6.18.33.2-microsoft-standard-WSL2, idris2 0.7.0, Chez backend)"
+runs = "3"
+date = "2026-08-31T21:08:05Z"
+protocol = "full triple per run: fixture-silent, fixture-firing, calibration/empty-report"
+outcomes = "identical across all 3 runs: silent=0 firing=1 calibration=2"
+variance = "0 — deterministic pure function of input bytes, no timing component"
+
+[reproduce]
+performed = "no"
+owed = "run on a second machine; recorded as DEBT S-9 until done — the deficit is declared, not hidden"
+
+[replicate]
+performed = "no"
+owed = "different setup (different Idris2 backend or version); deferred with reproduce"
+
+[firing_history]
+# The adversarial-manifest rule: a fixture that has never fired is a finding,
+# not a fixture. This fixture HAS fired.
+first_fired = "2026-08-31T21:07Z"
+last_fired = "2026-08-31T21:08:05Z"

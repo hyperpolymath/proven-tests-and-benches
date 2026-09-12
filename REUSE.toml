@@ -130,3 +130,14 @@ path = "scripts/git-hooks/pre-push.sample"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 SPDX-License-Identifier = "MPL-2.0"
+
+[[annotations]]
+# Corpus fixture payloads are test SPECIMENS: the silence/firing pairs must
+# stay byte-exact on the declared single axis, and calibration payloads must
+# stay empty (an empty file that must remain empty cannot carry a header).
+# In-file SPDX headers would pollute the payload, so they are declared here —
+# same precedent as .mailmap and .hypatia-baseline.json above.
+path = ["corpus/**/fixture-silent/**", "corpus/**/fixture-firing/**", "corpus/**/calibration/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"

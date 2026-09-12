@@ -29,13 +29,15 @@ isActuallyProven m = case statusOf (provenance m) of
   ActuallyProven => True
   _ => False
 
---/ Create an Actually-Proven classification
+--/ Create an Actually-Proven classification. The fixture obligation is a
+--/ mandatory argument: there is no way to classify a test without stating
+--/ its fixture position (TEST-DOCTRINE.adoc §2, standards R10).
 public export
 classifyActuallyProven :
      TestId -> String -> List1 ProofStep -> DesignSafetyProof ->
-     TypeSafetyCertificate -> TestMetadata
-classifyActuallyProven tid desc ladder design type_safe =
-  MkTestMetadata tid desc Nothing Nothing Nothing
+     TypeSafetyCertificate -> FixtureObligation -> TestMetadata
+classifyActuallyProven tid desc ladder design type_safe fixtures =
+  MkTestMetadata tid desc Nothing Nothing Nothing fixtures
     (PActuallyProven (MkActualEvidence ladder design type_safe))
 
 -- =============================================================================
@@ -57,12 +59,14 @@ isProvisionallyProven m = case statusOf (provenance m) of
   ProvisionallyProven => True
   _ => False
 
---/ Create a Provisionally-Proven classification
+--/ Create a Provisionally-Proven classification. The fixture obligation is
+--/ mandatory (TEST-DOCTRINE.adoc §2, standards R10).
 public export
 classifyProvisionallyProven :
-     TestId -> String -> FrameworkSafetyProof -> TypeSafetyCertificate -> TestMetadata
-classifyProvisionallyProven tid desc framework test_safe =
-  MkTestMetadata tid desc Nothing Nothing Nothing
+     TestId -> String -> FrameworkSafetyProof -> TypeSafetyCertificate ->
+     FixtureObligation -> TestMetadata
+classifyProvisionallyProven tid desc framework test_safe fixtures =
+  MkTestMetadata tid desc Nothing Nothing Nothing fixtures
     (PProvisionallyProven (MkProvisionalEvidence framework test_safe))
 
 -- =============================================================================
@@ -76,11 +80,13 @@ isUnproven m = case statusOf (provenance m) of
   Unproven => True
   _ => False
 
---/ Create an Unproven classification
+--/ Create an Unproven classification. Even an Unproven test must state its
+--/ fixture position — Unproven describes the *evidence* tier, not licence to
+--/ skip the doctrine (TEST-DOCTRINE.adoc §2).
 public export
-classifyUnproven : TestId -> String -> TestMetadata
-classifyUnproven tid desc =
-  MkTestMetadata tid desc Nothing Nothing Nothing PUnproven
+classifyUnproven : TestId -> String -> FixtureObligation -> TestMetadata
+classifyUnproven tid desc fixtures =
+  MkTestMetadata tid desc Nothing Nothing Nothing fixtures PUnproven
 
 -- =============================================================================
 -- CLASSIFICATION UTILITIES
@@ -157,5 +163,6 @@ provenTestsMetadata : TestMetadata
 provenTestsMetadata =
   let tid = MkTestId "ProvenTests" "Framework" 0
       desc = "Proven-Tests framework self-classification"
-  in classifyProvisionallyProven tid desc provenTestsFrameworkProof 
+  in classifyProvisionallyProven tid desc provenTestsFrameworkProof
        (typeSafetyCert 6 "Dependent Types" "Idris2" ["Framework"])
+       (CannotFailByDesign "self-classification: statusOf (classifyProvisionallyProven ...) is ProvisionallyProven by construction, so the Runners spot-check compares two constants and cannot fail")

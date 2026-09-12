@@ -58,23 +58,35 @@ mkId name = MkTestId "ProvenTests.Cells" name 0
 cert : String -> TypeSafetyCertificate
 cert name = typeSafetyCert 6 "Idris2" "ProvenTests.Cells" [name]
 
+-- Cell helpers construct pre-doctrine tests: no silence/firing fixture pair
+-- exists, and the debt is declared rather than hidden (DEBT.adoc
+-- B2-LEGACY-SUITE; this register may only shrink).
+cellDebt : FixtureObligation
+cellDebt = FixtureDebt "B2-LEGACY-SUITE: pre-doctrine cell helper, no fixture pair"
+
+-- Obligation for classification specimens: metadata constructed as reflexive
+-- test DATA (fed to isUnproven & co.), never run as a test itself, so no
+-- runtime firing fixture can exist for it.
+specimen : FixtureObligation
+specimen = CannotFailByDesign "classification specimen: reflexive test data exercising the classifiers, never executed as a test"
+
 -- Provisionally-Proven cell from a pure boolean check.
 pc : ZigzagCoord -> String -> Bool -> CellTest
 pc co name b =
   MkCellTest co
-    (withCoord co (classifyProvisionallyProven (mkId name) name provenTestsFrameworkProof (cert name)))
+    (withCoord co (classifyProvisionallyProven (mkId name) name provenTestsFrameworkProof (cert name) cellDebt))
     (pure (toRes b))
 
 -- Unproven (smoke-strength) cell from a pure boolean check.
 uc : ZigzagCoord -> String -> Bool -> CellTest
 uc co name b =
-  MkCellTest co (withCoord co (classifyUnproven (mkId name) name)) (pure (toRes b))
+  MkCellTest co (withCoord co (classifyUnproven (mkId name) name cellDebt)) (pure (toRes b))
 
 -- Provisionally-Proven cell driven by an IO action (e.g. an end-to-end run).
 ioc : ZigzagCoord -> String -> IO TestResult -> CellTest
 ioc co name act =
   MkCellTest co
-    (withCoord co (classifyProvisionallyProven (mkId name) name provenTestsFrameworkProof (cert name)))
+    (withCoord co (classifyProvisionallyProven (mkId name) name provenTestsFrameworkProof (cert name) cellDebt))
     act
 
 -- Actually-Proven cell: a machine-checked proof ladder + a runtime spot-check.
@@ -83,7 +95,7 @@ ac co name ladder b =
   MkCellTest co
     (withCoord co (classifyActuallyProven (mkId name) name ladder
        (designProof name "total, machine-checked Idris2 proofs" [] [])
-       (cert name)))
+       (cert name) cellDebt))
     (pure (toRes b))
 
 -- coordinate sugar
@@ -287,11 +299,11 @@ cellTests =
   , pc  (K CoEvaluation Thing UnitTest Maintainability) "unit-coverage-empty"
         (coveredCatAspect [] == 0)
   , pc  (K CoEvaluation Thing ReflexiveTest Versability) "reflexive-classify-unproven"
-        (isUnproven (classifyUnproven (mkId "x") "x"))
+        (isUnproven (classifyUnproven (mkId "x") "x" specimen))
   , pc  (K CoEvaluation Collective ReflexiveTest Security) "reflexive-classify-provisional"
-        (isProvisionallyProven (classifyProvisionallyProven (mkId "x") "x" provenTestsFrameworkProof (cert "x")))
+        (isProvisionallyProven (classifyProvisionallyProven (mkId "x") "x" provenTestsFrameworkProof (cert "x") specimen))
   , pc  (K CoEvaluation Collective ReflexiveTest Safety) "reflexive-classify-actual"
-        (isActuallyProven (classifyActuallyProven (mkId "x") "x" metaLadder (designProof "x" "y" [] []) (cert "x")))
+        (isActuallyProven (classifyActuallyProven (mkId "x") "x" metaLadder (designProof "x" "y" [] []) (cert "x") specimen))
   ]
 
 --/ Run every cell, returning its coordinate, metadata, and result.

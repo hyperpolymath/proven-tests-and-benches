@@ -148,3 +148,4 @@ dependentClassification =
       framework = provenTestsFrameworkProof
       cert = typeSafetyCert 6 "Idris2 Dependent Types" "Idris2 core" ["Type correctness"]
   in classifyProvisionallyProven tid desc framework cert
+       (FixtureDebt "B2-LEGACY-SUITE: pre-doctrine category constructor, no fixture pair")
