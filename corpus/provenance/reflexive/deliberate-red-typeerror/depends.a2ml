@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Validity preconditions (exactness spine X.5). Violation of any precondition
+# yields exit 2 (VOID), and VOID propagates: a battery must reclassify any
+# green downstream of this unit's VOID as VOID.
+
+[upstream_units]
+value = "none — this is corpus unit #1; it depends on no other unit"
+
+[preconditions]
+fixture_readable = "the report file must exist and be readable — violation exits 2 (NO CHECK PERFORMED)"
+fixture_in_grammar = "the report must parse under the declared grammar — violation exits 2"
+
+[void_behaviour]
+convention = "exit 2 means NO CHECK WAS PERFORMED; it is never a pass and never a failure — a crash is 2, an empty payload is 2 (see calibration/)"

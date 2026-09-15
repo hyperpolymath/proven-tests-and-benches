@@ -1,0 +1,3 @@
+job build conclusion success
+job adjudicate conclusion cancelled
+verdict PASS

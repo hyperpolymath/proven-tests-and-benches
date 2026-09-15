@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Error model (exactness spine X.3 / ruling R-10): the tier is proven-exact,
+# and the zero is PROVED, not asserted — the proof terms are the warrant.
+
+[tier]
+value = "proven-exact"
+
+[alpha]
+value = "0 by construction within the fixture grammar"
+warrant = "silentOnCleanPass (Test.idr): total lemma — for ALL job lists with no cancelled job, a PASS claim yields Silent"
+
+[beta]
+value = "0 by construction within the fixture grammar"
+warrant = "firesOnCancelledPass (Test.idr): total lemma — for ALL job lists containing a cancelled job, a PASS claim yields Fired"
+
+[boundary]
+scope = "the zeros hold within the fixture grammar only; payloads outside the grammar are VOID (exit 2) by construction, so no input can reach the checker unmodelled"
+totality = "%default total governs the module; only main carries a covering escape, confined to the file read"
+demotion_rule = "per R-10, a surviving mutant against this unit would DISPROVE the alpha = beta = 0 claim and demote the tier — the mutation phase must target this unit like any other"
