@@ -28,4 +28,10 @@ toolchain = "idris2 0.7.0, Chez Scheme backend"
 harness_lineage = "hand-written; no shared fixture generator; fixtures are hand-authored on-disk pairs"
 
 [adversarial]
-last_fired = "2026-08-31"
+# ⚠ THIRD assertion site for one fact. The same date is asserted in
+# stability.a2ml [firing_history] and in corpus/COUNT.a2ml — three uncoupled
+# copies, which is the defect class this corpus polices. stability.a2ml is the
+# AUTHORITY (it carries the full transcript); this line and COUNT.a2ml's are
+# derived. WS1 commit C's generator makes that derivation mechanical; until it
+# lands the coupling is discipline, and is recorded here so it cannot be missed.
+last_fired = "2026-09-15"
