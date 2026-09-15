@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Regime declaration: the circumstances under which this unit's assertion has
+# truth conditions at all (exactness spine X.1 — an assertion without a regime
+# is not an assertion).
+
+[assertion]
+form = "validity precondition + decidable check"
+claim = "within the fixture grammar, a report claiming PASS over a cancelled job always fires; a PASS claim with no cancelled job never fires"
+
+[scope]
+grammar = "one job per line `job <name> conclusion <success|cancelled|skipped>`, exactly one final line `verdict <PASS|FAIL>`, at least one job, blank lines ignored"
+outside_grammar = "VOID by construction — any unreadable, unparseable, or incomplete payload exits 2 (NO CHECK PERFORMED); the parse boundary is the declared scope, not a hidden hole"
+
+[determinism]
+timing = "none — no clocks, no benchmarks, no timeouts in the unit itself"
+concurrency = "none — single-threaded, single pass over the input"
+machine_dependence = "none intended — pure function of the input bytes; reproduce/replicate runs on a second machine are still owed (see stability.a2ml)"
+
+[response_law]
+declared = "none — this is a correctness unit, not a performance unit; there is no scalar emitted and therefore no unconditioned-scalar hazard"
