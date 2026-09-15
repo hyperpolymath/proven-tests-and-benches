@@ -7,6 +7,9 @@ module ProvenTests.Taxonomy
 
 import public ProvenTests.Types
 import ProvenTests.Classification
+import Data.List.Elem
+
+%default total
 
 -- =============================================================================
 -- TEST CATEGORY TAXONOMY
@@ -95,6 +98,71 @@ allTestAspects = [
 public export
 allKategoriaLevels : List KategoriaLevel
 allKategoriaLevels = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12]
+
+-- =============================================================================
+-- EXHAUSTIVENESS OBLIGATIONS (Category 18 / plan WS3 commit A)
+-- =============================================================================
+-- `allTestCategories` is a LIST LITERAL, and a list literal is total no matter
+-- what it omits. It is the one site the compiler cannot see: measured on
+-- 414b00a, appending a constructor to `TestCategory` and giving it the `Show`
+-- clause the coverage checker demands leaves `idris2 --build` GREEN, every
+-- suite passing, and `check-doc-facts.sh source` reporting "categories = 17".
+-- The enum and the list can therefore disagree with nothing turning red.
+--
+-- These four obligations close that hole at COMPILE TIME:
+--   * a constructor missing from the list has no `Elem` proof   -> type error
+--   * a constructor added to the enum makes the function non-covering
+--   * the length proofs pin the cardinality the published figures rest on
+-- Adding Category 18 therefore cannot be done half-way; see commit B.
+
+--/ Every `TestCategory` constructor appears in `allTestCategories`.
+public export
+allTestCategoriesComplete : (c : TestCategory) -> Elem c Taxonomy.allTestCategories
+allTestCategoriesComplete UnitTest              = Here
+allTestCategoriesComplete PointToPoint          = There Here
+allTestCategoriesComplete EndToEnd              = There (There Here)
+allTestCategoriesComplete BuildTest             = There (There (There Here))
+allTestCategoriesComplete ExecutionRuntime      = There (There (There (There Here)))
+allTestCategoriesComplete ReflexiveTest         = There (There (There (There (There Here))))
+allTestCategoriesComplete LifecycleTest         = There (There (There (There (There (There Here)))))
+allTestCategoriesComplete SmokeTest             = There (There (There (There (There (There (There Here))))))
+allTestCategoriesComplete PropertyBasedTest     = There (There (There (There (There (There (There (There Here)))))))
+allTestCategoriesComplete MutationTest          = There (There (There (There (There (There (There (There (There Here))))))))
+allTestCategoriesComplete FuzzTest              = There (There (There (There (There (There (There (There (There (There Here)))))))))
+allTestCategoriesComplete ContractInvariantTest = There (There (There (There (There (There (There (There (There (There (There Here))))))))))
+allTestCategoriesComplete RegressionTest        = There (There (There (There (There (There (There (There (There (There (There (There Here)))))))))))
+allTestCategoriesComplete ChaosResilienceTest   = There (There (There (There (There (There (There (There (There (There (There (There (There Here))))))))))))
+allTestCategoriesComplete CompatibilityTest     = There (There (There (There (There (There (There (There (There (There (There (There (There (There Here)))))))))))))
+allTestCategoriesComplete ProofRegressionTest   = There (There (There (There (There (There (There (There (There (There (There (There (There (There (There Here))))))))))))))
+allTestCategoriesComplete TypeSafeTest          = There (There (There (There (There (There (There (There (There (There (There (There (There (There (There (There Here)))))))))))))))
+
+--/ The category cardinality the lattice arithmetic depends on.
+public export
+categoryCount : length Taxonomy.allTestCategories = 17
+categoryCount = Refl
+
+--/ Every `TestAspect` constructor appears in `allTestAspects`.
+public export
+allTestAspectsComplete : (a : TestAspect) -> Elem a Taxonomy.allTestAspects
+allTestAspectsComplete Dependability    = Here
+allTestAspectsComplete Security         = There Here
+allTestAspectsComplete Usability        = There (There Here)
+allTestAspectsComplete Interoperability = There (There (There Here))
+allTestAspectsComplete Safety           = There (There (There (There Here)))
+allTestAspectsComplete Performance      = There (There (There (There (There Here))))
+allTestAspectsComplete Functionality    = There (There (There (There (There (There Here)))))
+allTestAspectsComplete Versability      = There (There (There (There (There (There (There Here))))))
+allTestAspectsComplete Accessibility    = There (There (There (There (There (There (There (There Here)))))))
+allTestAspectsComplete Maintainability  = There (There (There (There (There (There (There (There (There Here))))))))
+allTestAspectsComplete Privacy          = There (There (There (There (There (There (There (There (There (There Here)))))))))
+allTestAspectsComplete Observability    = There (There (There (There (There (There (There (There (There (There (There Here))))))))))
+allTestAspectsComplete Reproducibility  = There (There (There (There (There (There (There (There (There (There (There (There Here)))))))))))
+allTestAspectsComplete Portability      = There (There (There (There (There (There (There (There (There (There (There (There (There Here))))))))))))
+
+--/ The aspect cardinality the lattice arithmetic depends on.
+public export
+aspectCount : length Taxonomy.allTestAspects = 14
+aspectCount = Refl
 
 -- =============================================================================
 -- CATEGORY MAPPING TO PROVENANCE
