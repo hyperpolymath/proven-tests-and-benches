@@ -177,6 +177,37 @@ crg-readiness-md:
     MD
     echo "Generated READINESS.md (grade $GRADE)"
 
+# Regenerate corpus/COUNT.a2ml from a walk of the corpus tree.
+# GENERATED — the six headline numbers are computed from each unit's own
+# manifests, never hand-written (ruling R-29: "a corpus unit is done when CI
+# runs it and the count is generated, not hand-written"). The committed copy is
+# gated by `check-doc-facts.sh source`, which diffs it against a fresh walk, so
+# the pair can never drift. Same shape as crg-readiness-md above.
+#
+# ⚠ This recipe's NAME is load-bearing: the drift message
+# "corpus/COUNT.a2ml is stale — regenerate with: just corpus-count"
+# tells a human to run it. Renaming the recipe without editing that string
+# leaves the gate instructing the reader to run a command that does not exist.
+
+# Regenerate corpus/COUNT.a2ml from the corpus walk (never hand-edit it)
+corpus-count:
+    bash scripts/check-doc-facts.sh corpus-count
+
+# Compile every corpus unit standalone and run its 0/1/2 fixture triple.
+# Needs the Idris2 toolchain; absent toolchain is exit 2 (VOID), never a pass.
+
+# Compile every corpus unit standalone and run its 0/1/2 fixture triple
+corpus-check:
+    bash scripts/check-doc-facts.sh corpus
+
+# Run the corpus gate against synthetic trees that MUST trip it.
+# A gate that has never been deliberately tripped is not a gate.
+
+# Trip the corpus gate on purpose against synthetic trees that MUST redden it
+corpus-selftest:
+    bash scripts/check-doc-facts.sh corpus-selftest
+
+
 # Print the current Component Readiness Grade
 crg-grade:
     #!/usr/bin/env bash

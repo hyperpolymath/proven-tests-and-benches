@@ -27,9 +27,14 @@
 #                                 so it cannot live in `source` — an absent
 #                                 idris2 is exit 2 here, never 0
 #   check-doc-facts.sh corpus-selftest
-#                                 runs `corpus` against synthetic trees that
+#                                 runs the gate against synthetic trees that
 #                                 MUST trip it. A gate that has not been
 #                                 deliberately tripped is not a gate
+#   check-doc-facts.sh corpus-count
+#                                 REGENERATES corpus/COUNT.a2ml from the walk.
+#                                 The ledger is a GENERATED artefact; `source`
+#                                 mode fails if the committed copy and a fresh
+#                                 walk disagree
 #   check-doc-facts.sh            both = source (report checks skipped LOUDLY)
 #
 # Exit codes, per the check-toolchain-pins.sh convention:
@@ -39,6 +44,14 @@
 #      NO CHECK WAS PERFORMED is not a pass
 
 set -uo pipefail
+
+# ⚠ The generated ledger is compared BYTE-FOR-BYTE against its committed copy,
+# and `find … | sort` orders its [units] block. `sort` collates by locale, so
+# the same corpus can generate two different byte streams on two machines —
+# green here, stale in CI, for a reason no diff explains. One unit cannot
+# expose this; the first unit whose id differs from another only by a hyphen
+# or an underscore will. Pin it once, at the top, for every subshell too.
+export LC_ALL=C
 
 MODE="${1:-source}"
 REPORT="${2:-}"
@@ -297,13 +310,26 @@ CORPUS_SPINE_DIRS=(fixture-silent fixture-firing calibration)
 # the depth CONTRACT is then asserted separately below, so a misfiled unit is a
 # loud finding instead of an invisible one.
 # ---------------------------------------------------------------------------
-corpus_discover() { # populates CORPUS_UNITS[]
+#
+# ⚠ ONE WALK, TWO QUESTIONS, TWO DIFFERENT VERDICTS ON EMPTINESS.
+# `corpus` mode asks "did every unit compile and fire?" — with no units there
+# is nothing to compile, NO CHECK was performed, and that is exit 2. The
+# LEDGER asks "how many units are deployed?" — with no units the honest answer
+# is deployed = 0, which is a measurement, not a void. Same find(1), opposite
+# meanings, so the caller declares which question it is asking.
+corpus_discover() { # corpus_discover [allow-empty] — populates CORPUS_UNITS[]
+  local empty_ok="${1:-}"
   CORPUS_UNITS=()
-  [ -d "$CORPUS_ROOT" ] || { dead "corpus root '$CORPUS_ROOT' does not exist"; return 1; }
+  if [ ! -d "$CORPUS_ROOT" ]; then
+    [ "$empty_ok" = allow-empty ] && return 0
+    dead "corpus root '$CORPUS_ROOT' does not exist"
+    return 1
+  fi
   mapfile -t CORPUS_UNITS < <(find "$CORPUS_ROOT" -type f -name manifest.a2ml -printf '%h\n' | sort)
   if [ "${#CORPUS_UNITS[@]}" -eq 0 ]; then
     # Zero units is NO CHECK, never "0 units, all fine". An empty corpus that
     # reported OK would be the six-number headline's fake green at the root.
+    [ "$empty_ok" = allow-empty ] && return 0
     dead "no corpus units found under '$CORPUS_ROOT' (no manifest.a2ml anywhere)"
     return 1
   fi
@@ -427,7 +453,7 @@ check_corpus() {
 # ---------------------------------------------------------------------------
 # Mode `corpus-selftest` — the gate run against inputs that MUST trip it.
 #
-# A gate that has not been deliberately tripped is not a gate. Eleven synthetic
+# A gate that has not been deliberately tripped is not a gate. Fifteen synthetic
 # trees, each isolating EXACTLY ONE defect and asserting both the exit code and
 # a pinned line of output.
 #
@@ -441,26 +467,240 @@ check_corpus() {
 # failure at Test:28:1 and the measured location is Test:27:1 — a selftest
 # pinned to the numeral would have failed for a reason unrelated to the defect.
 # ---------------------------------------------------------------------------
-corpus_selftest_case() { # <name> <tree> <want-rc> <want-substring> [env-assignment]
-  local case_name="$1" tree="$2" want="$3" pin="$4" envset="${5:-}"
+# ---------------------------------------------------------------------------
+# THE LEDGER. corpus/COUNT.a2ml is the public six-number claim, and R-29 rules
+# it is GENERATED, never hand-written. Everything below computes it from the
+# per-unit manifests, so the number and the thing it counts cannot drift apart.
+#
+# ⚠ Every field is derivable from SOURCE alone — no toolchain, no run. That is
+# deliberate: `check_corpus_count` lives in `source` mode, which runs before
+# the Idris2 bootstrap, so a field that needed a compile could not be checked
+# there. A run-dependent fact that cannot be sourced from a unit's own
+# stability.a2ml is DROPPED from the ledger rather than faked into it.
+#
+# ⚠ The output must be byte-stable across runs: no generation timestamp, a
+# sorted walk, and a fixed field order. A ledger that differs from itself run
+# to run makes `check_corpus_count` fire on noise and trains readers to ignore
+# it, which is worse than having no ledger at all.
+# ---------------------------------------------------------------------------
+a2ml_get() { # a2ml_get <file> <section> <key> — prints the value; empty if absent
+  [ -f "$1" ] || return 1
+  awk -v want="$2" -v key="$3" '
+    /^[[:space:]]*\[/ { s = $0; sub(/^[[:space:]]*\[/, "", s); sub(/\].*$/, "", s); sec = s; next }
+    sec == want && $0 ~ ("^[[:space:]]*" key "[[:space:]]*=") {
+      v = $0
+      sub(/^[^=]*=[[:space:]]*/, "", v)
+      sub(/^"/, "", v); sub(/"[[:space:]]*$/, "", v)
+      print v; exit
+    }
+  ' "$1"
+}
+
+# The diagnosticity contract: a unit counts as diagnosticity-complete only if
+# it declares all five sections. "Has the file" is not the same question as
+# "declares what the file is for", and the ledger asks the second one.
+corpus_diagnosticity_complete() { # <unit-dir>
+  local f="$1/diagnosticity.a2ml" sec
+  [ -f "$f" ] || return 1
+  for sec in detects sensitivity confusables distinguishing_evidence does_not_distinguish; do
+    grep -qE "^[[:space:]]*\[${sec}\]" "$f" || return 1
+  done
+  return 0
+}
+
+gen_corpus_count() { # gen_corpus_count <outfile> — writes the ledger computed from the walk
+  local out="$1" u rel tier runs lf repro repl
+  local deployed=0 fired=0 diag=0 exact=0 stat=0 repeated=0 reproduced=0 replicated=0
+  local newest="" newest_unit="" n=0
+  local -a units_out=()
+
+  corpus_discover allow-empty || return 1
+
+  for u in "${CORPUS_UNITS[@]}"; do
+    rel="${u#"$CORPUS_ROOT"/}"
+    deployed=$((deployed + 1))
+    tier=$(a2ml_get "$u/error-model.a2ml" tier value)
+    runs=$(a2ml_get "$u/stability.a2ml" repeat runs)
+    lf=$(a2ml_get "$u/stability.a2ml" firing_history last_fired)
+    repro=$(a2ml_get "$u/stability.a2ml" reproduce performed)
+    repl=$(a2ml_get "$u/stability.a2ml" replicate performed)
+
+    # "fired WITH DATE" is the point of the column: an undated firing claim is
+    # not evidence, so a bare "yes" must not count here.
+    [[ "$lf" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2} ]] && fired=$((fired + 1))
+    corpus_diagnosticity_complete "$u" && diag=$((diag + 1))
+    [ "$tier" = "proven-exact" ] && exact=$((exact + 1))
+    # The statistical column requires a DECLARED operating point, not merely a
+    # statistical tier — a statistical claim with no (alpha, beta) is exactly
+    # the unconditioned number the doctrine forbids.
+    if [ "${tier#statistical}" != "$tier" ] \
+       && [ -n "$(a2ml_get "$u/error-model.a2ml" alpha value)" ] \
+       && [ -n "$(a2ml_get "$u/error-model.a2ml" beta value)" ]; then
+      stat=$((stat + 1))
+    fi
+    [[ "$runs" =~ ^[0-9]+$ ]] && [ "$runs" -ge 2 ] && repeated=$((repeated + 1))
+    [ "$repro" = "yes" ] && reproduced=$((reproduced + 1))
+    [ "$repl" = "yes" ] && replicated=$((replicated + 1))
+
+    if [ -n "$lf" ] && [[ "$lf" > "$newest" ]]; then newest="$lf"; newest_unit="$rel"; fi
+    n=$((n + 1))
+    units_out+=("u${n} = \"${rel} tier=${tier:-none} runs=${runs:-0} last_fired=${lf:-none}\"")
+  done
+
+  {
+    printf '%s\n' '# SPDX-License-Identifier: MPL-2.0'
+    printf '%s\n' '# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>'
+    printf '%s\n' '#'
+    printf '%s\n' '# GENERATED — DO NOT HAND-EDIT. Regenerate with: just corpus-count'
+    printf '%s\n' '#'
+    printf '%s\n' '# THE COUNT LEDGER — the public claim. Six numbers, never one. A number is'
+    printf '%s\n' '# quotable only if every unit in it is individually executable, individually'
+    printf '%s\n' '# red-able, carries its canonical wrongness, declares its confusables, states'
+    printf '%s\n' '# an error model, and has been run more than once. Any shortfall prints as a'
+    printf '%s\n' '# DEFICIT, never buried.'
+    printf '%s\n' '#'
+    printf '%s\n' '# Every field is computed from the per-unit manifests under corpus/ by'
+    printf '%s\n' '# scripts/check-doc-facts.sh. `check-doc-facts.sh source` fails if this file'
+    printf '%s\n' '# and a fresh walk disagree, so a hand-edit here is drift, not an update.'
+    printf '\n'
+    printf '[count]\n'
+    printf 'deployed = "%s"\n' "$deployed"
+    printf 'fired_with_date = "%s"\n' "$fired"
+    printf 'diagnosticity_complete = "%s"\n' "$diag"
+    printf 'proven_exact = "%s"\n' "$exact"
+    printf 'statistical_with_declared_operating_point = "%s"\n' "$stat"
+    printf 'repeat_tested = "%s"\n' "$repeated"
+    printf '\n'
+    printf '[detail]\n'
+    printf 'last_fired = "%s"\n' "${newest:-none} (${newest_unit:-no unit})"
+    printf 'authority = "each unit stability.a2ml [firing_history].last_fired; this line is DERIVED"\n'
+    printf '\n'
+    printf '[deficits]\n'
+    # ⚠ DERIVED, not asserted. The predecessor ledger carried a hand-written
+    # ci_gate deficit, and a hand-written deficit is retired by whoever edits
+    # the file next — which is how a deficit gets dropped before it is
+    # discharged. This one clears itself only when a workflow really invokes
+    # the unit-running mode, and comes back if that invocation is ever deleted.
+    # `corpus-count` and `corpus-selftest` deliberately do NOT satisfy it:
+    # neither compiles a unit, so neither discharges this deficit.
+    # ⚠ BOTH SPELLINGS, and that is the point. A predicate accepting only the
+    # direct invocation would leave the deficit standing while a real CI gate
+    # existed, because `just corpus-check` is the natural thing to write in a
+    # workflow — the ledger lying in the OTHER direction, with no tree to say
+    # so. Trees 16 and 17 pin one spelling each.
+    if ! grep -rqE '(check-doc-facts\.sh[[:space:]]+corpus|just[[:space:]]+corpus-check)[[:space:]]*$' .github/workflows 2>/dev/null; then
+      printf 'ci_gate = "no workflow runs the corpus mode — units are compiled and fired locally only (DEBT S-9)"\n'
+    fi
+    printf 'reproduce_tested = "%s of %s — second-machine runs owed (DEBT S-9)"\n' "$reproduced" "$deployed"
+    printf 'replicate_tested = "%s of %s — different-setup runs owed (DEBT S-9)"\n' "$replicated" "$deployed"
+    printf '\n'
+    printf '%s\n' '# Each zero below names the CHECK that enforces it. A zero asserted by'
+    printf '%s\n' '# nobody is a wish; a zero enforced by a named gate is a measurement. This'
+    printf '%s\n' '# section was [zero_by_assertion] until WS1 commit C gave every line a gate.'
+    printf '[zero_by_gate]\n'
+    printf 'cannot_fail_by_design = "0 — enforced by corpus_fire <unit> fixture-firing 1 (check-doc-facts.sh corpus): a unit whose firing fixture exits 0 is reported, never counted"\n'
+    printf 'undeclared_error_model = "0 — enforced by corpus_check_spine (error-model.a2ml is a contract member) and by check_unit_ledger (a proven-exact tier must name lemmas that exist in Test.idr)"\n'
+    printf 'void_counted_as_pass = "0 — enforced by corpus_fire <unit> calibration 2 (check-doc-facts.sh corpus): a calibration payload exiting 0 is reported, never counted"\n'
+    printf '\n'
+    printf '[units]\n'
+    local line
+    for line in "${units_out[@]}"; do printf '%s\n' "$line"; done
+  } > "$out"
+  return 0
+}
+
+check_corpus_count() {
+  local committed="$CORPUS_ROOT/COUNT.a2ml" gen
+  need "$committed" || return
+  gen=$(mktemp) || { dead "could not create a temporary file to regenerate the ledger"; return; }
+  # ⚠ Called in the CURRENT shell, never as $(gen_corpus_count) — it can call
+  # dead(), and a subshell would swallow the flag and print OK.
+  if ! gen_corpus_count "$gen"; then rm -f "$gen"; return; fi
+  if diff -q "$committed" "$gen" >/dev/null 2>&1; then
+    say "computed: $committed agrees with a fresh walk (${#CORPUS_UNITS[@]} unit(s))"
+  else
+    bad "$committed is stale — regenerate with: just corpus-count"
+    diff -u "$committed" "$gen" | sed 's/^/    | /' >&2
+  fi
+  rm -f "$gen"
+}
+
+# ---------------------------------------------------------------------------
+# The per-unit coupling the ledger cannot see. COUNT.a2ml is derived from
+# stability.a2ml, so regenerating it can never expose a manifest.a2ml that
+# disagrees with stability.a2ml — the derivation simply ignores the manifest.
+# Commit A recorded that coupling as discipline and promised commit C would
+# make it mechanical; this is where that promise is kept.
+# ---------------------------------------------------------------------------
+check_unit_ledger() {
+  corpus_discover allow-empty || return
+  local u rel mdate sdate tier lemma
+  for u in "${CORPUS_UNITS[@]}"; do
+    rel="${u#"$CORPUS_ROOT"/}"
+    mdate=$(a2ml_get "$u/manifest.a2ml" adversarial last_fired)
+    sdate=$(a2ml_get "$u/stability.a2ml" firing_history last_fired)
+    if [ -z "$sdate" ]; then
+      dead "$rel: stability.a2ml declares no [firing_history].last_fired — the authority for the firing date is absent"
+    elif [ -n "$mdate" ] && [ "$mdate" != "${sdate:0:10}" ]; then
+      bad "$rel: manifest [adversarial].last_fired = '$mdate' disagrees with stability.a2ml [firing_history].last_fired = '$sdate' (stability.a2ml is the AUTHORITY)"
+    fi
+
+    tier=$(a2ml_get "$u/error-model.a2ml" tier value)
+    if [ "$tier" = "proven-exact" ]; then
+      # A proven-exact tier is a claim that named total lemmas discharge alpha
+      # and beta. A warrant naming a lemma that is not in Test.idr is DRIFT
+      # (exit 1), not a deficit: the claim is not weak, it is unfounded.
+      # ⚠ Process substitution, NOT a pipe — bad() must mutate the current shell.
+      while read -r lemma; do
+        [ -n "$lemma" ] || continue
+        if ! grep -qE "^${lemma}[[:space:]]*:" "$u/Test.idr"; then
+          bad "$rel: error-model.a2ml claims tier proven-exact warranted by lemma '$lemma', but Test.idr declares no such lemma"
+        fi
+      done < <(grep -oE '[A-Za-z_][A-Za-z0-9_]*[[:space:]]*\(Test\.idr\)' "$u/error-model.a2ml" \
+               | sed 's/[[:space:]]*(Test\.idr)$//' | sort -u)
+    fi
+  done
+}
+
+corpus_selftest_case() { # <name> <tree> <mode> <want-rc> <want-substring> [env-assignment]
+  local case_name="$1" tree="$2" mode="$3" want="$4" pin="$5" envset="${6:-}"
   local out rc
   if [ -n "$envset" ]; then
-    out=$(cd "$tree" && env "$envset" CORPUS_ROOT=corpus bash "$SELFTEST_SCRIPT" corpus 2>&1)
+    out=$(cd "$tree" && env "$envset" CORPUS_ROOT=corpus bash "$SELFTEST_SCRIPT" "$mode" 2>&1)
   else
-    out=$(cd "$tree" && CORPUS_ROOT=corpus bash "$SELFTEST_SCRIPT" corpus 2>&1)
+    out=$(cd "$tree" && CORPUS_ROOT=corpus bash "$SELFTEST_SCRIPT" "$mode" 2>&1)
   fi
   rc=$?
   if [ "$rc" -ne "$want" ]; then
-    bad "selftest '$case_name': expected exit ${want}, got ${rc}"
+    bad "selftest '$case_name' (${mode}): expected exit ${want}, got ${rc}"
     printf '%s\n' "$out" | sed 's/^/    | /' >&2
     return
   fi
   if ! printf '%s\n' "$out" | grep -qF -- "$pin"; then
-    bad "selftest '$case_name': exit ${rc} was right but the reason was not — expected output containing: ${pin}"
+    bad "selftest '$case_name' (${mode}): exit ${rc} was right but the reason was not — expected output containing: ${pin}"
     printf '%s\n' "$out" | sed 's/^/    | /' >&2
     return
   fi
-  say "selftest OK: $case_name -> exit ${rc}, pinned reason present"
+  # ATTRIBUTION. The right exit code is not yet the right reason, even with the
+  # right text alongside it. `fail` is tested before `skip`, so a tree that is
+  # ALSO void exits 1 and looks like a clean red — which is how the broken
+  # full-tree copy (a directory that was not a git repository) let three ledger
+  # trees pass partly on a harness defect rather than purely on their own.
+  # A 0/1 case must therefore emit NO "NO CHECK" line, and a 2 case must emit
+  # one: exit 2 with nothing uncheckable would mean the VOID came from nowhere.
+  local voids
+  voids=$(printf '%s\n' "$out" | grep -c '^NO CHECK: ')
+  if [ "$want" != 2 ] && [ "$voids" -ne 0 ]; then
+    bad "selftest '$case_name' (${mode}): exit ${rc} for the right reason but the tree was ALSO void — ${voids} NO CHECK line(s); the red is not attributable to the defect under test"
+    printf '%s\n' "$out" | grep '^NO CHECK: ' | sed 's/^/    | /' >&2
+    return
+  fi
+  if [ "$want" = 2 ] && [ "$voids" -eq 0 ]; then
+    bad "selftest '$case_name' (${mode}): exit 2 with no NO CHECK line — a VOID with no stated cause is indistinguishable from a crash"
+    printf '%s\n' "$out" | sed 's/^/    | /' >&2
+    return
+  fi
+  say "selftest OK: $case_name (${mode}) -> exit ${rc}, pinned reason present"
 }
 
 check_corpus_selftest() {
@@ -471,6 +711,7 @@ check_corpus_selftest() {
   corpus_discover || return
   local src="${CORPUS_UNITS[0]}" root
   SELFTEST_SCRIPT=$(cd "$(dirname "$0")" && pwd)/$(basename "$0")
+  local repo_root; repo_root=$(cd "$(dirname "$SELFTEST_SCRIPT")/.." && pwd)
   root=$(mktemp -d) || { dead "could not create a temporary tree for the selftest"; return; }
   # shellcheck disable=SC2064
   trap "rm -rf '$root'" RETURN
@@ -484,35 +725,68 @@ check_corpus_selftest() {
     printf '%s\n' "$t"
   }
 
+  # ⚠ The ledger trees below run `source`, not `corpus`, and `source` reads the
+  # whole document spine (ipkg, README, STATE, DEBT, READINESS). A unit-only
+  # tree would make every other source check report NO CHECK, and since fail
+  # (1) is tested before skip (2) the tree would still exit 1 — for the wrong
+  # reason, and the positive control could never reach 0. So these trees are
+  # full tracked-file copies of the WORKING tree (not HEAD: the gate under test
+  # is usually uncommitted when the selftest runs).
+  # Sets SELFTEST_TREE rather than echoing, because it can call dead() and a
+  # command substitution would swallow the flag.
+  SELFTEST_TREE=""
+  mkfull() { # mkfull <case> -> sets SELFTEST_TREE
+    local t="$root/$1" rc
+    SELFTEST_TREE=""
+    mkdir -p "$t" || { dead "could not create selftest tree '$1'"; return 1; }
+    ( cd "$repo_root" && git ls-files -z | xargs -0 cp --parents -t "$t" ) ; rc=$?
+    if [ "$rc" -ne 0 ]; then
+      dead "could not build a full-tree selftest copy (git ls-files/cp failed, rc=$rc) — the ledger trees cannot run"
+      return 1
+    fi
+    # ⚠ check_package_count counts packages with `git ls-files '*.ipkg'`, so a
+    # plain directory copy reports zero packages and the tree goes VOID. The
+    # positive control below is what exposed that; the red trees had been
+    # exiting 1 partly on a broken tree rather than purely on their own defect.
+    # An index is enough — no commit, no history, no remote.
+    ( cd "$t" && git -c init.defaultBranch=main init -q && git add -A ) >/dev/null 2>&1 ; rc=$?
+    if [ "$rc" -ne 0 ]; then
+      dead "could not index the full-tree selftest copy (git init/add failed, rc=$rc) — the ledger trees cannot run"
+      return 1
+    fi
+    SELFTEST_TREE="$t"
+    return 0
+  }
+
   local t
 
   # 1. POSITIVE CONTROL. Without this the six red trees below prove only that
   #    the gate can say no, not that it can ever say yes — a gate stuck at
   #    "fail" would pass every negative case.
   t=$(mk clean)
-  corpus_selftest_case clean "$t" 0 "OK: every checked fact agrees"
+  corpus_selftest_case clean "$t" corpus 0 "OK: every checked fact agrees"
 
   # 2. Bad import: rc=0 on a FAILED compile. The row that breaks `&&`.
   t=$(mk badimport)
   sed -i '0,/^module Test$/s//module Test\nimport ProvenTests.Types/' "$t/corpus/$rel/Test.idr"
-  corpus_selftest_case badimport "$t" 1 "does not compile standalone"
+  corpus_selftest_case badimport "$t" corpus 1 "does not compile standalone"
 
   # 3. Type error: rc=1 but a binary IS emitted. The row that breaks a
   #    binary-presence test.
   t=$(mk typeerr)
   printf '\nselftestCanary : Nat\nselftestCanary = "not a Nat"\n' >> "$t/corpus/$rel/Test.idr"
-  corpus_selftest_case typeerr "$t" 1 "does not compile standalone"
+  corpus_selftest_case typeerr "$t" corpus 1 "does not compile standalone"
 
   # 4. Incomplete spine -> VOID, never uncounted.
   t=$(mk nospine)
   rm -f "$t/corpus/$rel/depends.a2ml"
-  corpus_selftest_case nospine "$t" 2 "incomplete unit contract — 'depends.a2ml' is missing"
+  corpus_selftest_case nospine "$t" corpus 2 "incomplete unit contract — 'depends.a2ml' is missing"
 
   # 5. Empty fixture directory -> VOID. The loop would otherwise check nothing
   #    and report success.
   t=$(mk emptyfixture)
   rm -f "$t/corpus/$rel"/fixture-silent/*
-  corpus_selftest_case emptyfixture "$t" 2 "holds no payload"
+  corpus_selftest_case emptyfixture "$t" corpus 2 "holds no payload"
 
   # 6. The triple's own firing arm (verification rule 4): a unit whose silent
   #    fixture is not silent must be caught. Without this the triple is only
@@ -527,12 +801,12 @@ check_corpus_selftest() {
   t=$(mk triplebreak)
   rm -f "$t/corpus/$rel"/fixture-silent/*
   cp "$t/corpus/$rel"/fixture-firing/* "$t/corpus/$rel"/fixture-silent/
-  corpus_selftest_case triplebreak "$t" 1 "the unit contract requires 0"
+  corpus_selftest_case triplebreak "$t" corpus 1 "the unit contract requires 0"
 
   # 7. Absent toolchain -> VOID. Specimen #5 ("missing tools must be outcome 2,
   #    not green") turned on the gate itself.
   t=$(mk notoolchain)
-  corpus_selftest_case notoolchain "$t" 2 "is not on PATH" "IDRIS2=/nonexistent/idris2"
+  corpus_selftest_case notoolchain "$t" corpus 2 "is not on PATH" "IDRIS2=/nonexistent/idris2"
 
   # 8. A compile that fails while printing NO ^Error: line — a crash, an OOM
   #    kill, a timeout, a signal. This is the tree that kills the error-count
@@ -545,7 +819,7 @@ check_corpus_selftest() {
   local stub="$root/stub-idris2"
   printf '#!/bin/sh\nexit 1\n' > "$stub" && chmod +x "$stub"
   t=$(mk silentfail)
-  corpus_selftest_case silentfail "$t" 1 "does not compile standalone" "IDRIS2=$stub"
+  corpus_selftest_case silentfail "$t" corpus 1 "does not compile standalone" "IDRIS2=$stub"
 
   # --- The three gates below were added with the modes and would otherwise
   # --- ship UNTRIPPED. A gate that has not been deliberately tripped is not a
@@ -559,23 +833,189 @@ check_corpus_selftest() {
   mkdir -p "$t/corpus/shallow"
   cp -r "$src" "$t/corpus/shallow/$(basename "$src")"
   rm -rf "$t/corpus/shallow/$(basename "$src")/build"
-  corpus_selftest_case wrongdepth "$t" 1 "is at depth 2"
+  corpus_selftest_case wrongdepth "$t" corpus 1 "is at depth 2"
 
   # 10. Declared invocation vs executed invocation. The unit still compiles and
   #     its triple still fires — the ONLY thing wrong is that the manifest's
   #     [subject_shape].build no longer names the binary the gate builds.
   t=$(mk wrongname)
   mv "$t/corpus/$rel" "$t/corpus/$(dirname "$rel")/renamed-unit"
-  corpus_selftest_case wrongname "$t" 1 "does not declare '-o"
+  corpus_selftest_case wrongname "$t" corpus 1 "does not declare '-o"
 
   # 11. An empty corpus is NO CHECK, never "0 units, OK". A corpus root with no
   #     units that reported success would be the six-number headline's fake
   #     green at the root of the whole product.
   t="$root/emptycorpus"
   mkdir -p "$t/corpus"
-  corpus_selftest_case emptycorpus "$t" 2 "no corpus units found"
+  corpus_selftest_case emptycorpus "$t" corpus 2 "no corpus units found"
 
-  unset -f mk
+  # --- The LEDGER trees (mode `source`). WS1 commit C's three new gates.
+
+  # 12. POSITIVE CONTROL for `source`. Without it, trees 13-15 would prove only
+  #     that a full-tree copy can fail, not that an unmutated one passes — and
+  #     a copy that was broken by construction would "pass" all three.
+  mkfull cleanfull || return
+  corpus_selftest_case cleanfull "$SELFTEST_TREE" source 0 "OK: every checked fact agrees"
+
+  # 13. A STALE LEDGER. R-29 makes COUNT.a2ml generated; this is the gate that
+  #     makes "generated" true rather than aspirational, and it is the red
+  #     R-40 requires inside the real PR.
+  mkfull staleledger || return
+  sed -i 's/^deployed = "\([0-9]*\)"/deployed = "9\1"/' "$SELFTEST_TREE/corpus/COUNT.a2ml"
+  corpus_selftest_case staleledger "$SELFTEST_TREE" source 1 "is stale — regenerate with: just corpus-count"
+
+  # 14. A proven-exact WARRANT NAMING A LEMMA THAT DOES NOT EXIST. Drift, not a
+  #     deficit: the tier claim is not weak, it is unfounded. Note this changes
+  #     no count, so the ledger diff stays clean and only this gate fires.
+  mkfull missinglemma || return
+  sed -i '0,/[A-Za-z_][A-Za-z0-9_]* (Test\.idr)/s//definitelyNotALemma (Test.idr)/' \
+    "$SELFTEST_TREE/corpus/$rel/error-model.a2ml"
+  corpus_selftest_case missinglemma "$SELFTEST_TREE" source 1 "Test.idr declares no such lemma"
+
+  # 15. THE THREE-SITE COUPLING commit A recorded as discipline. COUNT.a2ml is
+  #     DERIVED from stability.a2ml, so regenerating the ledger can never catch
+  #     a manifest that disagrees with it — the derivation does not read the
+  #     manifest. Only a direct comparison can, which is why check_unit_ledger
+  #     exists alongside check_corpus_count rather than inside it.
+  mkfull datemismatch || return
+  sed -i '/^\[adversarial\]/,/^\[/ s/^last_fired = .*/last_fired = "1970-01-01"/' \
+    "$SELFTEST_TREE/corpus/$rel/manifest.a2ml"
+  corpus_selftest_case datemismatch "$SELFTEST_TREE" source 1 "disagrees with stability.a2ml"
+
+  # 16. THE ci_gate DEFICIT IS DERIVED, NOT ASSERTED. Its predecessor was a
+  #     hand-written line, and a hand-written deficit is retired by whoever
+  #     edits the file next — which is how a deficit gets dropped before it is
+  #     discharged. Adding a workflow that runs the unit-compiling mode must
+  #     change the generated ledger, so the committed copy goes stale and this
+  #     tree reddens. Without it the predicate could be a dead string that
+  #     never reads a workflow at all, and nothing would say so.
+  #     ⚠ The heredoc below must NOT be indented with a tab-stripping <<-, and
+  #     the invocation must end the line: the predicate anchors on $.
+  mkfull cigate || return
+  mkdir -p "$SELFTEST_TREE/.github/workflows"
+  cat > "$SELFTEST_TREE/.github/workflows/corpus-check.yml" <<'YML'
+name: corpus-check
+on: [push]
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    steps:
+      - run: bash scripts/check-doc-facts.sh corpus
+YML
+  corpus_selftest_case cigate "$SELFTEST_TREE" source 1 "is stale — regenerate with: just corpus-count"
+
+  # 17. THE SAME DEFICIT, THE OTHER SPELLING. Tree 16 pins the direct
+  #     invocation; a workflow author writing this job by hand is at least as
+  #     likely to reach for the Justfile recipe. A predicate matching only one
+  #     of the two would leave the ci_gate deficit standing while a real CI gate
+  #     existed — the ledger understating the repository instead of overstating
+  #     it, which no existing tree can see, because every other tree catches the
+  #     ledger claiming too much. Both spellings are pinned so neither half of
+  #     the alternation can be deleted silently.
+  mkfull cigatejust || return
+  mkdir -p "$SELFTEST_TREE/.github/workflows"
+  cat > "$SELFTEST_TREE/.github/workflows/corpus-check.yml" <<'YML'
+name: corpus-check
+on: [push]
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    steps:
+      - run: just corpus-check
+YML
+  corpus_selftest_case cigatejust "$SELFTEST_TREE" source 1 "is stale — regenerate with: just corpus-count"
+
+  # 18. SILENCE FIXTURE FOR THE SAME PREDICATE — the arm that must NOT fire.
+  #     Trees 16 and 17 prove the predicate is live; on their own they cannot
+  #     distinguish it from one that matches any workflow mentioning the corpus
+  #     at all, which would retire the deficit for a job that never compiles a
+  #     unit. `corpus-selftest` runs synthetic trees and `corpus-count` walks
+  #     manifests; neither invokes a compiler, so neither discharges a deficit
+  #     about units never being compiled in CI. The ledger must be UNCHANGED
+  #     here, and the run silent.
+  mkfull cigatenear || return
+  mkdir -p "$SELFTEST_TREE/.github/workflows"
+  cat > "$SELFTEST_TREE/.github/workflows/corpus-check.yml" <<'YML'
+name: corpus-check
+on: [push]
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    steps:
+      - run: just corpus-selftest
+      - run: bash scripts/check-doc-facts.sh corpus-count
+YML
+  corpus_selftest_case cigatenear "$SELFTEST_TREE" source 0 "OK: every checked fact agrees"
+
+  # 19. THE COLLATION PIN IS LOAD-BEARING, AND ITS DELETION WOULD BE SILENT.
+  #     `[units]` is ordered by `find … | sort`, and `sort` collates by locale.
+  #     Two machines can therefore generate two different byte streams from the
+  #     SAME corpus — green locally, "stale" in CI, with a diff that shows only
+  #     reordered lines and explains nothing. The tie-break for [detail].last_fired
+  #     moves with it, so the ledger's authority line changes too.
+  #     One unit cannot expose this, so the tree builds a second: the unit id
+  #     with every hyphen replaced by 'a', which C orders one way (punctuation
+  #     before letters) and a UTF-8 locale the other (punctuation ignored at the
+  #     primary level). The ledger is then generated twice under different
+  #     inherited locales and required to come out byte-identical.
+  #     ⚠ DECLARED EQUIVALENT MUTANT: pinning the WRONG locale (say
+  #     en_US.utf8 instead of C) survives this tree, and correctly so —
+  #     determinism holds under any pin. That choice is wrong for an
+  #     AVAILABILITY reason no local test can see: on a runner lacking the
+  #     locale, sort falls back to C silently and the variance returns.
+  #     C and POSIX are the only locales guaranteed to exist.
+  #     ⚠ This needs a second locale to exist. If none inverts the pair, the
+  #     tree reports NO CHECK rather than passing — an unverifiable pin is not
+  #     a verified one. Cure on a bare runner: `locale-gen en_US.UTF-8`.
+  local lc_base lc_sib lc_probe lc_dir
+  lc_base=$(basename "$rel")
+  lc_sib="${lc_base//-/a}"
+  if [ "$lc_sib" = "$lc_base" ]; then
+    dead "collation selftest: unit id '$lc_base' has no hyphen, so no sibling id can be derived — the LC_ALL pin is UNVERIFIED"
+  else
+    lc_probe=""
+    while read -r cand; do
+      [ -n "$cand" ] || continue
+      if [ "$(printf '%s\n%s\n' "$lc_base" "$lc_sib" | LC_ALL=C sort | head -1)" \
+        != "$(printf '%s\n%s\n' "$lc_base" "$lc_sib" | LC_ALL="$cand" sort | head -1)" ]; then
+        lc_probe="$cand"; break
+      fi
+    done < <(locale -a 2>/dev/null | grep -iE 'utf-?8$' | grep -viE '^(C|POSIX)' | sort -u)
+    if [ -z "$lc_probe" ]; then
+      dead "collation selftest: no available locale orders '$lc_base' and '$lc_sib' differently from C — the LC_ALL pin is UNVERIFIED (cure: locale-gen en_US.UTF-8)"
+    else
+      mkfull localecollate || return
+      lc_dir=$(dirname "$SELFTEST_TREE/corpus/$rel")
+      cp -r "$SELFTEST_TREE/corpus/$rel" "$lc_dir/$lc_sib"
+      sed -i "s/${lc_base}/${lc_sib}/g" "$lc_dir/$lc_sib/manifest.a2ml"
+      # ⚠ The invariant under test is DETERMINISM, not the pin's value, and it
+      # must be measured without assuming the harness can impose a locale: an
+      # `export` inside the script overrides an env assignment on its command
+      # line, so a run cannot be forced into a locale the script has pinned.
+      # (Measured — an earlier version of this tree tried exactly that and a
+      # mutant pinning the WRONG locale survived it.) So generate twice, under
+      # two different inherited locales, and require byte-identical output.
+      # With the pin present the inherited locale is irrelevant and the bytes
+      # match; with it deleted they diverge, which is the regression.
+      ( cd "$SELFTEST_TREE" && LC_ALL=C CORPUS_ROOT=corpus bash "$SELFTEST_SCRIPT" corpus-count ) >/dev/null 2>&1
+      cp "$SELFTEST_TREE/corpus/COUNT.a2ml" "$SELFTEST_TREE/.gen-under-C"
+      ( cd "$SELFTEST_TREE" && LC_ALL="$lc_probe" CORPUS_ROOT=corpus bash "$SELFTEST_SCRIPT" corpus-count ) >/dev/null 2>&1
+      if ! cmp -s "$SELFTEST_TREE/.gen-under-C" "$SELFTEST_TREE/corpus/COUNT.a2ml"; then
+        bad "selftest 'localecollate' (corpus-count): the generated ledger is LOCALE-DEPENDENT — C and $lc_probe produced different bytes for the same corpus, so the committed copy can only ever be correct on one machine"
+        diff -u "$SELFTEST_TREE/.gen-under-C" "$SELFTEST_TREE/corpus/COUNT.a2ml" | sed 's/^/    | /' >&2
+      else
+        say "selftest OK: localecollate (corpus-count) -> C and $lc_probe generate byte-identical ledgers"
+      fi
+      rm -f "$SELFTEST_TREE/.gen-under-C"
+      # And the ledger that walk just wrote must be ACCEPTED under the other
+      # locale — determinism of the generator is worth nothing if the checker
+      # reads it back through a differently-ordered walk.
+      corpus_selftest_case localecollate "$SELFTEST_TREE" source 0 \
+        "OK: every checked fact agrees" "LC_ALL=$lc_probe"
+    fi
+  fi
+
+  unset -f mk mkfull
 }
 
 # Preflight: every file this gate asserts AGAINST must exist. A missing
@@ -601,6 +1041,8 @@ case "$MODE" in
     check_axes
     check_grade
     check_debt_count
+    check_corpus_count
+    check_unit_ledger
     ;;
   report)
     check_report_facts
@@ -611,8 +1053,13 @@ case "$MODE" in
   corpus-selftest)
     check_corpus_selftest
     ;;
+  corpus-count)
+    if gen_corpus_count "$CORPUS_ROOT/COUNT.a2ml"; then
+      say "wrote $CORPUS_ROOT/COUNT.a2ml from a walk of $CORPUS_ROOT (${#CORPUS_UNITS[@]} unit(s))"
+    fi
+    ;;
   *)
-    dead "unknown mode '${MODE}' (use: source | report <json> | corpus | corpus-selftest)"
+    dead "unknown mode '${MODE}' (use: source | report <json> | corpus | corpus-selftest | corpus-count)"
     ;;
 esac
 
