@@ -858,6 +858,42 @@ check_corpus_selftest() {
   mkdir -p "$t/corpus"
   corpus_selftest_case emptycorpus "$t" corpus 2 "no corpus units found"
 
+  # --- PRECONDITION for the full-tree cases below, and it is not a nicety.
+  #     Trees 12-18 copy the REAL working tree and assert against its COMMITTED
+  #     corpus/COUNT.a2ml. That dependence is deliberate: the ci_gate trees have
+  #     teeth only because the committed ledger is an INDEPENDENT artefact. If
+  #     mkfull regenerated the ledger inside the copy, generation and comparison
+  #     would both run the same predicate, a mutated predicate would cancel
+  #     itself out, and the "predicate never clears" mutant would survive both
+  #     of its kills (cleanfull and cigatejust). So the coupling stays — but an
+  #     unmet precondition must be reported as a precondition, not as seven
+  #     inverted trees under a step called "prove the harness can still fail".
+  #     Measured 2026-09-15 on the deliberate red f1ce1f6: a stale committed
+  #     ledger turned cleanfull and cigatejust over and the job blamed the
+  #     harness. VOID is the honest answer: no check was performed.
+  local pre_gen pre_pwd
+  pre_pwd="$PWD"
+  if ! cd "$repo_root" 2>/dev/null; then
+    dead "could not enter the repository root to check the selftest preconditions — the full-tree cases cannot run"
+    return
+  fi
+  if ! pre_gen=$(mktemp); then
+    cd "$pre_pwd" || true
+    dead "could not create a temporary file to check the selftest preconditions — the full-tree cases cannot run"
+    return
+  fi
+  if ! CORPUS_ROOT=corpus gen_corpus_count "$pre_gen"; then
+    rm -f "$pre_gen"; cd "$pre_pwd" || true
+    return
+  fi
+  if ! diff -q corpus/COUNT.a2ml "$pre_gen" >/dev/null 2>&1; then
+    rm -f "$pre_gen"; cd "$pre_pwd" || true
+    dead "selftest precondition unmet: this working tree's corpus/COUNT.a2ml disagrees with a fresh walk, and the full-tree cases assert against the COMMITTED ledger by design. They are NOT run. This is a stale ledger, not a broken harness — regenerate with: just corpus-count, then re-run"
+    return
+  fi
+  rm -f "$pre_gen"
+  cd "$pre_pwd" || true
+
   # --- The LEDGER trees (mode `source`). WS1 commit C's three new gates.
 
   # 12. POSITIVE CONTROL for `source`. Without it, trees 13-15 would prove only
