@@ -19,7 +19,7 @@ statistical_with_declared_operating_point = "0"
 repeat_tested = "1"
 
 [detail]
-last_fired = "2026-08-31 (cancelled-gate-void, exit 1 against fixture-firing)"
+last_fired = "2026-09-15 (cancelled-gate-void, machine run: compile + full 0/1/2 triple; see the unit stability.a2ml [machine_compile])"
 repeat_protocol = "N=3 same machine, variance 0 — see the unit's stability.a2ml"
 
 [deficits]
@@ -32,4 +32,4 @@ undeclared_error_model = "0"
 void_counted_as_pass = "0"
 
 [units]
-u1 = "provenance/reflexive/cancelled-gate-void — proven-exact, fired 2026-08-31"
+u1 = "provenance/reflexive/cancelled-gate-void — proven-exact, machine-compiled and fired 2026-09-15"
