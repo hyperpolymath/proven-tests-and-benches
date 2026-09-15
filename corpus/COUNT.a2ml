@@ -14,20 +14,20 @@
 # and a fresh walk disagree, so a hand-edit here is drift, not an update.
 
 [count]
-deployed = "2"
-fired_with_date = "2"
-diagnosticity_complete = "2"
-proven_exact = "2"
+deployed = "1"
+fired_with_date = "1"
+diagnosticity_complete = "1"
+proven_exact = "1"
 statistical_with_declared_operating_point = "0"
-repeat_tested = "2"
+repeat_tested = "1"
 
 [detail]
 last_fired = "2026-09-15T02:06:33Z (provenance/reflexive/cancelled-gate-void)"
 authority = "each unit stability.a2ml [firing_history].last_fired; this line is DERIVED"
 
 [deficits]
-reproduce_tested = "0 of 2 — second-machine runs owed (DEBT S-9)"
-replicate_tested = "0 of 2 — different-setup runs owed (DEBT S-9)"
+reproduce_tested = "0 of 1 — second-machine runs owed (DEBT S-9)"
+replicate_tested = "0 of 1 — different-setup runs owed (DEBT S-9)"
 
 # Each zero below names the CHECK that enforces it. A zero asserted by
 # nobody is a wish; a zero enforced by a named gate is a measurement. This
@@ -39,4 +39,3 @@ void_counted_as_pass = "0 — enforced by corpus_fire <unit> calibration 2 (chec
 
 [units]
 u1 = "provenance/reflexive/cancelled-gate-void tier=proven-exact runs=3 last_fired=2026-09-15T02:06:33Z"
-u2 = "provenance/reflexive/deliberate-red-typeerror tier=proven-exact runs=3 last_fired=2026-09-15T02:06:33Z"
