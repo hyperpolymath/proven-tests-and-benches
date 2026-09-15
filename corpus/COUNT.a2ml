@@ -14,7 +14,7 @@
 # and a fresh walk disagree, so a hand-edit here is drift, not an update.
 
 [count]
-deployed = "1"
+deployed = "2"
 fired_with_date = "1"
 diagnosticity_complete = "1"
 proven_exact = "1"
