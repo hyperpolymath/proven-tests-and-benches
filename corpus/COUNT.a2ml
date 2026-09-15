@@ -26,7 +26,6 @@ last_fired = "2026-09-15T02:06:33Z (provenance/reflexive/cancelled-gate-void)"
 authority = "each unit stability.a2ml [firing_history].last_fired; this line is DERIVED"
 
 [deficits]
-ci_gate = "no workflow runs the corpus mode — units are compiled and fired locally only (DEBT S-9)"
 reproduce_tested = "0 of 1 — second-machine runs owed (DEBT S-9)"
 replicate_tested = "0 of 1 — different-setup runs owed (DEBT S-9)"
 
