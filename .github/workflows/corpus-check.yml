@@ -1,0 +1,115 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+# This workflow is managed by gh actions-lock.
+#
+# THE CORPUS GATE — the job whose failure is caused by the corpus.
+# ---------------------------------------------------------------
+# `corpus/` shipped to main on 2026-09-12 inside merge 6be45d5, and the CI run
+# over that very merge (34690564413) was GREEN while never reading a byte of it:
+# the corpus is named by no `.ipkg`, so `idris2 --build` never opened it. A green
+# that did not perform the check is the defect class this repository exists to
+# detect, and it is how this repository's own flagship artefact was admitted.
+#
+# This workflow exists so that stops being true. It is deliberately a THIN
+# CALLER: every decision — the three-signal compile predicate, the 0/1/2 fixture
+# triple, the unit contract, the ledger — lives in `scripts/check-doc-facts.sh`,
+# where it is covered by that script's own `corpus-selftest` mode. Duplicating
+# any of it here would create a second copy to drift.
+#
+# ⚠ DO NOT "OPTIMISE" THIS INTO ONE STEP, AND DO NOT SPLIT IT INTO TWO JOBS.
+# `corpus-selftest` proves the harness is still able to fail; `corpus` is the
+# harness applied to the real corpus. A green `corpus` whose harness was never
+# proven is exactly a VOID reported as a pass. They run in that order, in the
+# SAME job, so one cannot be green while the other is skipped.
+
+name: corpus-check
+
+on:
+  push:
+    branches: [main]
+  # No branches: filter on pull_request — a REQUIRED check whose workflow is
+  # branch-filtered never reports on PRs targeting other bases and blocks them
+  # forever at "Expected - Waiting for status" (ci.yml:35-41 documents this).
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Must agree with ci.yml and .mise.toml; check-toolchain-pins.sh is the gate.
+  IDRIS2_VERSION: 0.7.0
+
+jobs:
+  corpus:
+    name: Compile and fire every corpus unit
+    runs-on: ubuntu-latest
+    # Generous only because a cold cache bootstraps Idris2 from source. The
+    # corpus work itself is seconds.
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      # The selftest's `localecollate` tree generates the ledger twice under two
+      # DIFFERENT inherited locales and requires byte-identical output, because
+      # `find … | sort` orders the ledger's [units] block and `sort` collates by
+      # locale. That tree needs a non-C UTF-8 locale to exist to have anything to
+      # compare against; without one it reports NO CHECK and exits 2 — honest,
+      # but a VOID, and this job must not run on a VOID.
+      - name: Ensure a second locale exists for the collation selftest
+        run: |
+          sudo locale-gen en_US.UTF-8
+          sudo update-locale
+          if ! locale -a | grep -iE 'utf-?8$' | grep -qviE '^(C|POSIX)'; then
+            echo "::error title=VOID::No non-C UTF-8 locale on this runner — the collation selftest cannot run and its LC_ALL pin would be UNVERIFIED."
+            exit 2
+          fi
+          locale -a
+
+      - name: Cache Idris2 toolchain
+        id: cache-idris2
+        uses: actions/cache@v6.1.0
+        with:
+          # Deliberately the SAME key as ci.yml: one bootstrap serves both gates.
+          path: ~/.idris2
+          key: idris2-v${{ env.IDRIS2_VERSION }}-${{ runner.os }}
+
+      - name: Install Idris2
+        run: bash scripts/install-idris2.sh
+        env:
+          IDRIS2_VERSION: v${{ env.IDRIS2_VERSION }}
+
+      - name: Confirm the installed compiler matches the pin
+        run: |
+          echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
+          "$HOME/.idris2/bin/idris2" --version
+          bash scripts/check-toolchain-pins.sh
+
+      # ⚠ NOTHING BELOW MAY INSTALL THIS REPOSITORY'S LIBRARY INTO THE PREFIX.
+      # R-43 ships the corpus with no `.ipkg`: each unit is a bare `module Test`
+      # compiled standalone, and its isolation is REAL rather than declared
+      # because `import ProvenTests.Types` fails to resolve. Install the library
+      # here and that import starts resolving, the `badimport` selftest tree
+      # stops reddening, and the isolation guarantee silently evaporates. If that
+      # tree ever goes red in this job, it is an ENVIRONMENT PROBE reporting a
+      # polluted prefix — fix the prefix, never delete the tree.
+
+      # Harness first: nineteen synthetic trees, each asserting an exit code, a
+      # pinned error TEXT, and attribution (a 0/1 case must emit no NO CHECK
+      # line; a 2 case must emit one). Every predicate-collapse mutant killed by
+      # these trees still exited 1 — the text is what catches them.
+      - name: Prove the corpus harness can still fail
+        run: bash scripts/check-doc-facts.sh corpus-selftest
+
+      # Then the harness applied to the real corpus: every unit compiled
+      # standalone under the three-signal predicate (rc == 0 ∧ an executable at
+      # build/exec/<name> ∧ zero ^Error: lines), then its silent/firing/
+      # calibration fixtures fired for 0/1/2.
+      - name: Compile and fire every corpus unit
+        run: bash scripts/check-doc-facts.sh corpus

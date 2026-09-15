@@ -739,6 +739,15 @@ check_corpus_selftest() {
     local t="$root/$1" rc
     SELFTEST_TREE=""
     mkdir -p "$t" || { dead "could not create selftest tree '$1'"; return 1; }
+    # ⚠ `git ls-files` lists the INDEX, so a brand-new file that has not been
+    # `git add`ed is invisible to every full-tree case even though it is sitting
+    # in the working tree the committed ledger was generated against. That makes
+    # the positive control `cleanfull` go red with a perfectly correct predicate:
+    # the copy lacks the file, the fresh walk re-derives a deficit the real tree
+    # no longer has, and the committed ledger reads as stale. STAGE FIRST, then
+    # run the selftest. Do NOT "fix" this by copying untracked files as well —
+    # the trees would then inherit build output, editor droppings and any other
+    # session's scratch, and the ledger cases would stop being reproducible.
     ( cd "$repo_root" && git ls-files -z | xargs -0 cp --parents -t "$t" ) ; rc=$?
     if [ "$rc" -ne 0 ]; then
       dead "could not build a full-tree selftest copy (git ls-files/cp failed, rc=$rc) — the ledger trees cannot run"
@@ -882,37 +891,38 @@ check_corpus_selftest() {
     "$SELFTEST_TREE/corpus/$rel/manifest.a2ml"
   corpus_selftest_case datemismatch "$SELFTEST_TREE" source 1 "disagrees with stability.a2ml"
 
-  # 16. THE ci_gate DEFICIT IS DERIVED, NOT ASSERTED. Its predecessor was a
-  #     hand-written line, and a hand-written deficit is retired by whoever
-  #     edits the file next — which is how a deficit gets dropped before it is
-  #     discharged. Adding a workflow that runs the unit-compiling mode must
-  #     change the generated ledger, so the committed copy goes stale and this
-  #     tree reddens. Without it the predicate could be a dead string that
-  #     never reads a workflow at all, and nothing would say so.
-  #     ⚠ The heredoc below must NOT be indented with a tab-stripping <<-, and
-  #     the invocation must end the line: the predicate anchors on $.
+  # 16. THE ci_gate DEFICIT IS DERIVED, AND ITS RETURN IS THE PROOF. Its
+  #     predecessor was a hand-written line, and a hand-written deficit is
+  #     retired by whoever edits the file next — which is how a deficit gets
+  #     dropped before it is discharged.
+  #     ⚠ THIS TREE WAS INVERTED WHEN THE REAL WORKFLOW LANDED, and the
+  #     inversion is the lesson. Until then it ADDED a workflow and expected the
+  #     ledger to go stale — an expectation that silently encoded "the deficit
+  #     is currently present" as an unstated premise about the repository, not
+  #     about the predicate. The commit that shipped .github/workflows/
+  #     corpus-check.yml discharged the deficit and turned all three ci_gate
+  #     trees over at once. A tree must assert what the PREDICATE does, never
+  #     what the repository currently happens to be: so this one now removes
+  #     every workflow and requires the deficit to COME BACK. That is the half
+  #     of "derived" no tree tested before — a predicate hard-wired to return
+  #     "cleared" would have survived every earlier version of this file.
   mkfull cigate || return
-  mkdir -p "$SELFTEST_TREE/.github/workflows"
-  cat > "$SELFTEST_TREE/.github/workflows/corpus-check.yml" <<'YML'
-name: corpus-check
-on: [push]
-jobs:
-  corpus:
-    runs-on: ubuntu-latest
-    steps:
-      - run: bash scripts/check-doc-facts.sh corpus
-YML
+  rm -rf "$SELFTEST_TREE/.github/workflows"
   corpus_selftest_case cigate "$SELFTEST_TREE" source 1 "is stale — regenerate with: just corpus-count"
 
-  # 17. THE SAME DEFICIT, THE OTHER SPELLING. Tree 16 pins the direct
-  #     invocation; a workflow author writing this job by hand is at least as
-  #     likely to reach for the Justfile recipe. A predicate matching only one
-  #     of the two would leave the ci_gate deficit standing while a real CI gate
+  # 17. THE OTHER SPELLING ALSO DISCHARGES IT. `cleanfull` is the silence arm
+  #     for the direct invocation, because the real workflow ships it; this is
+  #     the silence arm for the Justfile recipe, which a workflow author writing
+  #     the job by hand is at least as likely to reach for. A predicate matching
+  #     only one of the two would leave the deficit standing while a real CI gate
   #     existed — the ledger understating the repository instead of overstating
-  #     it, which no existing tree can see, because every other tree catches the
-  #     ledger claiming too much. Both spellings are pinned so neither half of
-  #     the alternation can be deleted silently.
+  #     it, which no other tree can see, because every other tree catches the
+  #     ledger claiming too much. Strip the real workflow first, so a pass here
+  #     cannot be inherited from the file tree 16 removes.
+  #     ⚠ The heredoc must NOT be indented with a tab-stripping <<-, and the
+  #     invocation must end the line: the predicate anchors on $.
   mkfull cigatejust || return
+  rm -rf "$SELFTEST_TREE/.github/workflows"
   mkdir -p "$SELFTEST_TREE/.github/workflows"
   cat > "$SELFTEST_TREE/.github/workflows/corpus-check.yml" <<'YML'
 name: corpus-check
@@ -923,17 +933,20 @@ jobs:
     steps:
       - run: just corpus-check
 YML
-  corpus_selftest_case cigatejust "$SELFTEST_TREE" source 1 "is stale — regenerate with: just corpus-count"
+  corpus_selftest_case cigatejust "$SELFTEST_TREE" source 0 "OK: every checked fact agrees"
 
-  # 18. SILENCE FIXTURE FOR THE SAME PREDICATE — the arm that must NOT fire.
-  #     Trees 16 and 17 prove the predicate is live; on their own they cannot
-  #     distinguish it from one that matches any workflow mentioning the corpus
-  #     at all, which would retire the deficit for a job that never compiles a
-  #     unit. `corpus-selftest` runs synthetic trees and `corpus-count` walks
-  #     manifests; neither invokes a compiler, so neither discharges a deficit
-  #     about units never being compiled in CI. The ledger must be UNCHANGED
-  #     here, and the run silent.
+  # 18. THE NEAR MISS MUST NOT DISCHARGE IT. Trees 16 and 17 prove the predicate
+  #     is live in both directions; on their own they cannot distinguish it from
+  #     one that matches any workflow mentioning the corpus at all, which would
+  #     retire a deficit about units never being COMPILED in CI on the strength
+  #     of a job that compiles nothing. `corpus-selftest` runs synthetic trees
+  #     and `corpus-count` walks manifests; neither invokes a compiler. The
+  #     deficit must therefore come back, exactly as in tree 16.
+  #     The real specimen is not hypothetical: label-triage.yml carries the
+  #     prose "historical corpus" in a comment, so a wildcard predicate would
+  #     have been discharged by an unrelated sentence.
   mkfull cigatenear || return
+  rm -rf "$SELFTEST_TREE/.github/workflows"
   mkdir -p "$SELFTEST_TREE/.github/workflows"
   cat > "$SELFTEST_TREE/.github/workflows/corpus-check.yml" <<'YML'
 name: corpus-check
@@ -945,7 +958,7 @@ jobs:
       - run: just corpus-selftest
       - run: bash scripts/check-doc-facts.sh corpus-count
 YML
-  corpus_selftest_case cigatenear "$SELFTEST_TREE" source 0 "OK: every checked fact agrees"
+  corpus_selftest_case cigatenear "$SELFTEST_TREE" source 1 "is stale — regenerate with: just corpus-count"
 
   # 19. THE COLLATION PIN IS LOAD-BEARING, AND ITS DELETION WOULD BE SILENT.
   #     `[units]` is ordered by `find … | sort`, and `sort` collates by locale.
