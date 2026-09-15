@@ -7,6 +7,7 @@ module SpecSuite.Main
 
 import ProvenTests.Types
 import ProvenTests.Framework
+import ProvenTests.Taxonomy
 import ProvenLawsTests.LawsTests
 import AffineScriptTests.AffinityTests
 import AffineScriptTests.BorrowTests
@@ -43,6 +44,36 @@ failing
     MkTestMetadata (MkTestId "SpecSuite" "no-fixture-position" 0)
       "constructed without stating a fixture position" Nothing Nothing Nothing
       PUnproven
+
+-- =============================================================================
+-- WS3-A NEGATIVE WITNESS — the cardinality obligation must be able to FAIL
+-- =============================================================================
+-- `categoryCount` (Taxonomy.idr) asserts `length allTestCategories = 17` by
+-- `Refl`. A proof by Refl that is never seen to fail is indistinguishable from
+-- a proof of a tautology, so this block asserts the WRONG cardinality and
+-- requires the type checker to reject it.
+--
+-- The pinned substring is "Mismatch between" and NOT the numerals 16/17.
+-- Measured 2026-09-15 on Idris2 0.7.0: dropping one constructor from the list
+-- reports a `Mismatch between:` whose operands are an INNER pair produced by
+-- peeling the matching `S`s — wrapped in one of Idris2's internal totality
+-- helpers — so pinning "16" or "17" would pin text the compiler never emits.
+-- The exact string is quoted in this commit's message and in PR #58, NOT
+-- here: `scripts/check-escape-hatches.sh` greps raw text across tests/ and
+-- cannot tell a token quoted inside a comment from a token actually used, so
+-- quoting the compiler's own diagnostic verbatim turns that gate red. See the
+-- filed issue; this comment deliberately does not weaken the gate to suit it.
+--
+-- ⚠ `Taxonomy.allTestCategories` is QUALIFIED on purpose. An unqualified
+-- lowercase name in a type signature is implicitly BOUND as a fresh variable
+-- (Idris2 warns "is shadowing"), which turns this specific claim into a
+-- universally-quantified one about any list. Measured 2026-09-15: the
+-- unqualified form here reports "Ambiguous elaboration ... Prelude.List.length
+-- / Prelude.SnocList.length", NOT "Mismatch between" — so the witness would
+-- fail for the wrong reason, and this block would still look healthy.
+failing "Mismatch between"
+  categoryCountIsSixteen : length Taxonomy.allTestCategories = 16
+  categoryCountIsSixteen = Refl
 
 allSuiteTests : List ProvisionallyProvenTest
 allSuiteTests =
