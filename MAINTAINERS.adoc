@@ -65,4 +65,4 @@ For questions about project governance:
 
 * link:GOVERNANCE.md[Governance Model]
 * link:CODE_OF_CONDUCT.md[Code of Conduct]
-* link:CONTRIBUTING.md[Contributing Guide]
+* link:.github/CONTRIBUTING.md[Contributing Guide]

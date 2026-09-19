@@ -36,7 +36,7 @@ just ci           # library, type-safe suite, spec suite, benchmark, subject gra
 **This section previously said “ensure SPDX headers on all files”. That
 was wrong**, and following it would have violated estate policy.
 
-Existing files are declared through [`REUSE.toml`](REUSE.toml), not by
+Existing files are declared through [`REUSE.toml`](../REUSE.toml), not by
 editing them. Bulk SPDX sweeps are explicitly forbidden — they have
 duplicated headers and mis-licensed files elsewhere in the estate. If
 you add a *new* file, put a correct SPDX identifier on **line 1** (the
@@ -46,7 +46,7 @@ place the declaration.
 
 `reuse` `lint` must report 100% on both dimensions with no unused
 licences. The former unused AGPL migration remnant was removed by owner
-decision; see [`DEBT.adoc`](DEBT.adoc) L-1.
+decision; see [`DEBT.adoc`](../DEBT.adoc) L-1.
 
 ## Two rules that will get a PR sent back
 
