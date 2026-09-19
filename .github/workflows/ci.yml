@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       # --- Cheap gates first: these need no toolchain, so drift and escape
       # --- hatches fail in seconds rather than after a 15-minute bootstrap.
@@ -147,7 +147,7 @@ jobs:
 
       - name: Cache Idris2 toolchain
         id: cache-idris2
-        uses: actions/cache@v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.idris2
           key: idris2-v${{ env.IDRIS2_VERSION }}-${{ runner.os }}
@@ -177,7 +177,7 @@ jobs:
       # Phase 3b baseline is computed as the mean of the last 10 main-run
       # medians (taxonomy L447), from these artifacts — never asserted.
       - name: Upload benchmark result artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: proven-bench-${{ github.run_id }}
           path: build/report/proven-bench.json
