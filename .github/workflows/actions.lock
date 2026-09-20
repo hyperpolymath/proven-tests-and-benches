@@ -23,26 +23,60 @@ workflows:
     '.github/workflows/scorecard.yml': []
     '.github/workflows/secret-scanner.yml': []
 dependencies:
+    'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9':
+        ref: '55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
+        commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
+        owner_id: 44036562
+        repo_id: 215566462
+
     'actions/cache@v6.1.0':
         ref: 'v6.1.0'
         commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         owner_id: 44036562
         repo_id: 215566462
+
+    'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1':
+        ref: 'v7.0.1'
+        commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
+        owner_id: 44036562
+        repo_id: 197814629
+
     'actions/checkout@v7.0.1':
         ref: 'v7.0.1'
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
+
+    'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a':
+        ref: '043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+        commit: 'sha1-043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+        owner_id: 44036562
+        repo_id: 192625955
+
     'actions/upload-artifact@v7.0.1':
         ref: 'v7.0.1'
         commit: 'sha1-043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
         owner_id: 44036562
         repo_id: 192625955
+
+    'github/codeql-action@b96794f015dfd88f77b49b1c93e0fa7110f94c63':
+        ref: 'b96794f015dfd88f77b49b1c93e0fa7110f94c63'
+        commit: 'sha1-b96794f015dfd88f77b49b1c93e0fa7110f94c63'
+        owner_id: 9919
+        repo_id: 259445878
+
     'github/codeql-action@v4.38.0':
         ref: 'v4.38.0'
         commit: 'sha1-b96794f015dfd88f77b49b1c93e0fa7110f94c63'
         owner_id: 9919
         repo_id: 259445878
+
+    'hyperpolymath/smtp-notify-action@22e7bdb322c430c1d0dac6b3bb307f4bb139d0be':
+        ref: '22e7bdb322c430c1d0dac6b3bb307f4bb139d0be'
+        commit: 'sha1-22e7bdb322c430c1d0dac6b3bb307f4bb139d0be'
+        owner_id: 6759885
+        repo_id: 1352485172
+
     'hyperpolymath/smtp-notify-action@v0.3.0':
         ref: 'v0.3.0'
         commit: 'sha1-22e7bdb322c430c1d0dac6b3bb307f4bb139d0be'
