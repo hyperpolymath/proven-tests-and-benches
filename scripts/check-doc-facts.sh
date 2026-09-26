@@ -548,7 +548,14 @@ gen_corpus_count() { # gen_corpus_count <outfile> — writes the ledger computed
   done
 
   {
-    printf '%s\n' '# SPDX-License-Identifier: MPL-2.0'
+    # The licence tag is emitted via format specifiers, never as a literal
+    # shell argument. reuse lint parses this file's comments as source, and a
+    # quoted tag line whose value is followed by a stray closing quote is read
+    # as an invalid in-file expression — which is how the CI "REUSE
+    # compliance" step found the previous form of this line. A comment in this
+    # file must therefore never spell out a full tag with its colon either.
+    # The generated output below is byte-identical either way.
+    printf '# %s: %s\n' 'SPDX-License-Identifier' 'MPL-2.0'
     printf '%s\n' '# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>'
     printf '%s\n' '#'
     printf '%s\n' '# GENERATED — DO NOT HAND-EDIT. Regenerate with: just corpus-count'
