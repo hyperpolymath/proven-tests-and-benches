@@ -41,6 +41,29 @@
 #
 # On a Dependabot actions PR: close it, run `gh actions-lock`, and land the
 # lockfile change with truthful refs instead.
+#
+# MEASURED FAILURE MODE (2026-10-03)
+# ----------------------------------
+# Dependabot rewrites a `uses:` ref and does not touch .github/workflows/
+# actions.lock. Measured on this repository (run 36862835814, 2026-10-01):
+# a bump that landed without a regenerated lock left CodeQL unstartable
+# (`startup_failure`, 0s, zero jobs, no reason in either the REST or GraphQL
+# payload) and failed BOTH lock gates — ci.yml's "Verify action refs against
+# actions.lock" and governance's "Actions lockfile verify".
+#
+# The earlier "v4.38.1/4.38.2 is blocked estate-wide" belief (nexia-list#100)
+# does not survive that measurement: every commit it labelled "blocked" was
+# one where the workflow had been re-keyed while the lock was left behind, and
+# github/codeql-action v4.38.2 runs green in this estate on a consistent lock
+# (hyperpolymath/panic-attack, 2026-10-01). That `ignore:` hold is therefore
+# removed below — see the header of codeql.yml and issue #34.
+#
+# The estate sweeper for this class is hyperpolymath/standards'
+# `dependabot-lock-regen.yml` (hourly, regenerates locks on open Dependabot
+# PRs). It is credential-gated and currently warns rather than acts, so until
+# it is live the guard here is the PR-time check: `ci.yml`'s "Verify action
+# refs against actions.lock" and governance's "Actions lockfile verify" both
+# fail on a stale lock, and a Dependabot PR must never merge red.
 version: 2
 updates:
   # GitHub Actions — the only dependency ecosystem present in this repository.
@@ -53,10 +76,4 @@ updates:
         patterns:
           - "*"
     open-pull-requests-limit: 2
-    ignore:
-      # HOLD: github/codeql-action at v4.38.0 (SHA-pinned). v4.38.1 fails
-      # GitHub workflow-startup validation estate-wide (nexia-list#100;
-      # SHA-form re-bump bypassed versions-scoped ignores - nexia-list#101).
-      # Hold until upstream clears 4.38.1 or a new release verifies green.
-      - dependency-name: "github/codeql-action"
 

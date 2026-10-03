@@ -8,6 +8,29 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === [Unreleased]
 
+==== 2026-10-03 — action-ref form and the lockfile, reconciled at the root (#34)
+
+* *`+codeql.yml+` refs restored to the symbolic form* `+@v4.38.2+`, with the
+resolved commit moved to `+actions.lock+` — `+github/codeql-action@v4.38.2+` →
+`+sha1-2892aa5e…+`. Both halves change in one commit: a `+uses:+` ref the lock
+does not vouch for is a `+startup_failure+`, not a stale lock.
+* *The codeql-action `+ignore:+` hold is withdrawn.* The "v4.38.1/4.38.2 is
+blocked estate-wide" belief (nexia-list#100) does not survive measurement:
+every commit it called blocked is one where the workflow ref was changed and
+`+actions.lock+` was not, and v4.38.2 runs green in the estate on a
+consistent lock (`+hyperpolymath/panic-attack+`, 2026-10-01).
+* *`+.hypatia-baseline.json+` sheds its `+DependencyPinning+` entry.* The
+scanner's rule has been lock-aware since hypatia#762 (576e962, an ancestor of
+the pinned scanner commit `+51ab6496+`), it reads a valid lock with a
+per-workflow association, and it no longer reports tag refs that the lock
+covers. The four `+SD022+` entries are re-homed to #78 — they are a separate
+defect (SD022 does not skip repo-qualified `+src/<dir>/+` references) and were
+never #34's subject.
+* *DEBT I-10 and ADR-010 re-scoped, not rewritten.* The Dependabot-actor
+attribution is downgraded to unproven; the measured variable is the ref form
+across two epochs. The decision — `+gh actions-lock+` is the bump mechanism,
+Dependabot is a notifier — stands and is unchanged.
+
 ==== 2026-08-10 (PRs #29–#30, ruleset, wiki — reconstructed same-day)
 
 * *`+.github/workflows/actions.lock+`* minted via `+gh actions-lock+`;

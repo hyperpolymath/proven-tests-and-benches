@@ -1,20 +1,11 @@
 [
   {
     "severity": "medium",
-    "rule_module": "scorecard",
-    "type": "DependencyPinning",
-    "file": ".",
-    "note": "MEASURED CONFLICT between two estate mechanisms, 2026-08-10 (PR #30 A/B): this account startup-refuses workflows whose uses: refs are bare 40-char SHAs (12:51 run, 0s, zero steps), so workflows MUST carry symbolic version refs with the resolved SHAs held in .github/workflows/actions.lock \u2014 which this rule then flags as tag-pinning. Runtime drift IS gated: ci.yml runs `gh actions-lock --no-fix` on every push/PR, failing on any ref that stops matching its recorded SHA. Remove this entry when the estate reconciles the scanner with the lockfile model.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
-    "expires_at": "2026-11-10"
-  },
-  {
-    "severity": "medium",
     "rule_module": "structural_drift",
     "type": "SD022",
     "file": ".machine_readable/descriptiles/ECOSYSTEM.a2ml",
-    "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. The SD022 pattern matches the substring `src/aggregate/` even when the reference is explicitly qualified as another repo's tree (verified: qualifying as panic-attack:src/aggregate/ still fires). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 \u2014 the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Remove these entries when SD022 learns to skip refs qualified with a repo prefix.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
+    "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. SD022's matcher (`~r{(?<![\\w./-])src/([A-Za-z0-9_][A-Za-z0-9_-]*)/}`) does not skip a REPOSITORY qualifier: the character before `src` in `panic-attack:src/aggregate/` is `:`, which is outside the lookbehind class, so the match succeeds; `aggregate` is not a real `src/<name>` basename here and describes_a_local_src_tree?/2 is true (this repo has a root `src/`), so the finding fires. Verified against the pinned scanner commit 51ab6496bf47e30a0576d503df31fec30f3cfe56 (2026-10-03). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 - the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Tracked by hyperpolymath/proven-tests-and-benches#78. Expiry NOT extended: these must be consciously renewed, not silently.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#78",
     "expires_at": "2026-11-10"
   },
   {
@@ -22,8 +13,8 @@
     "rule_module": "structural_drift",
     "type": "SD022",
     "file": ".machine_readable/descriptiles/NEUROSYM.a2ml",
-    "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. The SD022 pattern matches the substring `src/aggregate/` even when the reference is explicitly qualified as another repo's tree (verified: qualifying as panic-attack:src/aggregate/ still fires). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 \u2014 the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Remove these entries when SD022 learns to skip refs qualified with a repo prefix.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
+    "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. SD022's matcher (`~r{(?<![\\w./-])src/([A-Za-z0-9_][A-Za-z0-9_-]*)/}`) does not skip a REPOSITORY qualifier: the character before `src` in `panic-attack:src/aggregate/` is `:`, which is outside the lookbehind class, so the match succeeds; `aggregate` is not a real `src/<name>` basename here and describes_a_local_src_tree?/2 is true (this repo has a root `src/`), so the finding fires. Verified against the pinned scanner commit 51ab6496bf47e30a0576d503df31fec30f3cfe56 (2026-10-03). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 - the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Tracked by hyperpolymath/proven-tests-and-benches#78. Expiry NOT extended: these must be consciously renewed, not silently.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#78",
     "expires_at": "2026-11-10"
   },
   {
@@ -31,8 +22,8 @@
     "rule_module": "structural_drift",
     "type": "SD022",
     "file": "ARCHITECTURE.adoc",
-    "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. The SD022 pattern matches the substring `src/aggregate/` even when the reference is explicitly qualified as another repo's tree (verified: qualifying as panic-attack:src/aggregate/ still fires). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 \u2014 the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Remove these entries when SD022 learns to skip refs qualified with a repo prefix.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
+    "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. SD022's matcher (`~r{(?<![\\w./-])src/([A-Za-z0-9_][A-Za-z0-9_-]*)/}`) does not skip a REPOSITORY qualifier: the character before `src` in `panic-attack:src/aggregate/` is `:`, which is outside the lookbehind class, so the match succeeds; `aggregate` is not a real `src/<name>` basename here and describes_a_local_src_tree?/2 is true (this repo has a root `src/`), so the finding fires. Verified against the pinned scanner commit 51ab6496bf47e30a0576d503df31fec30f3cfe56 (2026-10-03). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 - the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Tracked by hyperpolymath/proven-tests-and-benches#78. Expiry NOT extended: these must be consciously renewed, not silently.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#78",
     "expires_at": "2026-11-10"
   },
   {
@@ -40,8 +31,8 @@
     "rule_module": "structural_drift",
     "type": "SD022",
     "file": "docs/INTEROP-PANIC-ATTACK.adoc",
-    "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. The SD022 pattern matches the substring `src/aggregate/` even when the reference is explicitly qualified as another repo's tree (verified: qualifying as panic-attack:src/aggregate/ still fires). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 \u2014 the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Remove these entries when SD022 learns to skip refs qualified with a repo prefix.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#34",
+    "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. SD022's matcher (`~r{(?<![\\w./-])src/([A-Za-z0-9_][A-Za-z0-9_-]*)/}`) does not skip a REPOSITORY qualifier: the character before `src` in `panic-attack:src/aggregate/` is `:`, which is outside the lookbehind class, so the match succeeds; `aggregate` is not a real `src/<name>` basename here and describes_a_local_src_tree?/2 is true (this repo has a root `src/`), so the finding fires. Verified against the pinned scanner commit 51ab6496bf47e30a0576d503df31fec30f3cfe56 (2026-10-03). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 - the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Tracked by hyperpolymath/proven-tests-and-benches#78. Expiry NOT extended: these must be consciously renewed, not silently.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#78",
     "expires_at": "2026-11-10"
   }
 ]
