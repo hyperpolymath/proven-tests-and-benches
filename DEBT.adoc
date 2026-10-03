@@ -349,6 +349,21 @@ account can vouch for — a symbolic ref, or a bare SHA that
 below is its cure. What is *not* supported is the narrower claim that the
 account refuses Dependabot-actor runs as such; that attribution is
 downgraded from measured to unproven.
+
+*Downstream consequence — the scanner pin is a dependency of the rule, and it
+was stale (measured 2026-10-03).* The rule that judges this repository is not
+Hypatia's main; it is the commit the caller's reusable pins. `+governance.yml+`
+pinned `+hyperpolymath/standards@da2c748a+`, whose `+HYPATIA_PIN=0e913426+`
+(2026-09-06) predates hypatia#762 by 134 commits: its
+`+check_pinned_dependencies/2+` is a raw `+uses: owner/repo@vN+` regex with no
+awareness of `+actions.lock+`, so a symbolic ref was a finding *no matter what
+the lock recorded*, and `+actions/checkout@v7.0.1+` in ci.yml was enough to
+fire it. The two Hypatia callers now pin `+standards@71bb615e+`, whose
+`+hypatia-ref+` default is `+51ab6496+` (post-#762). Recorded here because the
+next scanner bump has the same shape: **a rule change upstream is inert in this
+repository until the caller pin moves**, and the baseline entry is what absorbs
+the gap. Same class as the `+actions.lock+` staleness this item is about — a
+pinned artefact drifting from the thing it is supposed to describe.
 |===
 
 === Supply chain & metadata — S

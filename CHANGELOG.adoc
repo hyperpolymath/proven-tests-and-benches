@@ -19,13 +19,42 @@ blocked estate-wide" belief (nexia-list#100) does not survive measurement:
 every commit it called blocked is one where the workflow ref was changed and
 `+actions.lock+` was not, and v4.38.2 runs green in the estate on a
 consistent lock (`+hyperpolymath/panic-attack+`, 2026-10-01).
-* *`+.hypatia-baseline.json+` sheds its `+DependencyPinning+` entry.* The
-scanner's rule has been lock-aware since hypatia#762 (576e962, an ancestor of
-the pinned scanner commit `+51ab6496+`), it reads a valid lock with a
-per-workflow association, and it no longer reports tag refs that the lock
-covers. The four `+SD022+` entries are re-homed to #78 — they are a separate
-defect (SD022 does not skip repo-qualified `+src/<dir>/+` references) and were
-never #34's subject.
+* *The estate's scanner pin is the other half of the reconciliation, and it
+was the missing half.* Retiring the `+DependencyPinning+` acknowledgement only
+works if the gate runs a lock-aware scanner. It did not: `+governance.yml+`
+pinned `+hyperpolymath/standards@da2c748a+`, whose `+HYPATIA_PIN=0e913426+`
+(2026-09-06) is 134 commits older than the lock-aware rule and still tests a
+raw `+uses: owner/repo@vN+` regex that has never heard of `+actions.lock+` —
+so `+actions/checkout@v7.0.1+` in any workflow was a finding no matter what
+the lock recorded. Both Hypatia callers (`+governance.yml+`,
+`+hypatia-scan.yml+`) now pin `+standards@71bb615e+` ("pin Hypatia baseline,
+warn≡medium, self-fresh lock gate", #1121), whose `+hypatia-ref+` default is
+`+51ab6496+` and therefore contains hypatia#762. The job set is identical
+across the bump, so this moves the scanner pin and nothing else.
+* *`+.hypatia-baseline.json+` sheds its `+DependencyPinning+` entry.* With a
+lock-aware scanner the finding does not exist: `+check_unpinned_actions/2+`
+accepts a symbolic ref that `+actions.lock+` records for that exact workflow,
+and reports only a ref with no lock entry, an invalid lock, or a lock that
+disagrees with the workflow. The entry's own note said to remove it once the
+estate reconciled the scanner with the lockfile model — this is that moment,
+and it is why the entry is deleted rather than renewed. The four `+SD022+`
+entries are a different defect (SD022 does not skip repo-qualified
+`+src/<dir>/+` references) and were never #34's subject; they are re-homed to
+#78 with their expiry deliberately not extended.
+* *Eight findings the newer scanner exposes are acknowledged, not settled.*
+Moving the pin forward 134 commits turns on rules the old scanner never ran:
+3× `+RE001+` (secret-bearing jobs without egress monitoring), 4× `+WH008+`
+(`+secrets: inherit+`), 1× `+hardcoded_tmp+` (`+scripts/install-idris2.sh+`;
+one entry covers all four occurrences). All pre-existing, none caused by the
+pin move; each carries the shared `+expires_at+` and points at #80. The growth
+is declared, not silent: the estate's exemption ratchet refuses a ledger that
+grows without a `+Ratchet-exception:+` naming it, and this commit carries one. The ninth,
+`+RE005+` on `+ci.yml+`, is not acknowledged because it is FIXED: the rule flags
+a step whose *name* contains verify/check/test and whose body swallows an exit,
+and `+Verify action refs against actions.lock+` did both, so the best-effort
+`+gh extension install … || true+` moved into its own step. The gate step now
+contains no swallowed exit and no longer looks like the flake-masking pattern
+it was never an instance of.
 * *DEBT I-10 and ADR-010 re-scoped, not rewritten.* The Dependabot-actor
 attribution is downgraded to unproven; the measured variable is the ref form
 across two epochs. The decision — `+gh actions-lock+` is the bump mechanism,
