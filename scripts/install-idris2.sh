@@ -34,10 +34,22 @@ else
 fi
 
 if [ ! -x "$HOME/.idris2/bin/idris2" ]; then
-  rm -rf /tmp/Idris2
-  git clone --depth 1 --branch "$IDRIS2_VERSION" https://github.com/idris-lang/Idris2 /tmp/Idris2
-  make -C /tmp/Idris2 bootstrap SCHEME=chezscheme
-  make -C /tmp/Idris2 install
+  # Scratch tree: `mktemp -d` with no template. Content_patterns/hardcoded_tmp
+  # (CWE-377) flags a predictable `/tmp/<name>` because another process can
+  # pre-create it and win the race; a fixed `rm -rf /tmp/Idris2` also deletes
+  # whatever else happens to be sitting at that path. mktemp gives a private,
+  # unpredictable, mode-0700 directory, and the trap removes it on every exit
+  # path including a failed build, so a broken build no longer leaves a
+  # half-cloned tree that the next run would silently build on top of.
+  #
+  # Deliberate behaviour change: the clone no longer survives the script. The
+  # only consumer of the built compiler is $HOME/.idris2 (what the cache step
+  # and the gate below use); nothing reads the scratch tree afterwards.
+  SCRATCH="$(mktemp -d)"
+  trap 'rm -rf "$SCRATCH"' EXIT
+  git clone --depth 1 --branch "$IDRIS2_VERSION" https://github.com/idris-lang/Idris2 "$SCRATCH/Idris2"
+  make -C "$SCRATCH/Idris2" bootstrap SCHEME=chezscheme
+  make -C "$SCRATCH/Idris2" install
 fi
 
 "$HOME/.idris2/bin/idris2" --version

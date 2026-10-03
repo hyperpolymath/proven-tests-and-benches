@@ -52,7 +52,9 @@ jobs:
     steps:
       - name: Classify and label
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Same substitution as .github/workflows/labels.yml: the automatic
+          # token, not a secret. See the comment there and RE001's rule text.
+          GH_TOKEN: ${{ github.token }}
           NUM: ${{ github.event.issue.number || inputs.issue }}
         run: |
           set -uo pipefail
