@@ -326,6 +326,29 @@ minutes later. Dependabot actions-PRs therefore merge unvalidated.
 `+gh actions-lock+` is the bump mechanism; Dependabot is a notifier only
 (see `+.github/dependabot.yml+` header). Close its actions PRs and
 re-lock.
+
+*Cause RE-SCOPED — re-read 2026-10-03 (measured).* The
+`+startup_failure+`s this item rests on are real, but actor policy is not
+the load-bearing variable. The ref FORM is, in two measured epochs:
+
+* *Before `+actions.lock+` existed.* The 09:37 Dependabot run it cites,
+*5f9443f7, carried `+actions/checkout@3d3c42e5… # v4.2.2+` — a bare SHA
+with a false label — and no lock: all three workflows died in 0s. On the
+same PR at 12:44 (97aab389) the same workflows with *tag* refs ran green;
+flipping them to bare SHAs at 12:51 (490bde40) reddened exactly the
+workflows whose refs changed, and reverting to tags at 12:57 (ac8ad93b)
+restored green.
+* *After `+actions.lock+` existed.* A bare SHA IS accepted when the lock
+records it for that exact workflow — 2f8a940 and 6b19deb ran CodeQL green
+on `+@b96794f0…+` — and goes red the moment the workflow is re-keyed and
+the lock is left behind (7713107, 3d42a4a, and main ever since).
+
+So the rule the evidence supports: a `+uses:+` ref must be one the
+account can vouch for — a symbolic ref, or a bare SHA that
+`+actions.lock+` records. That is ADR-010's model, and the *decision*
+below is its cure. What is *not* supported is the narrower claim that the
+account refuses Dependabot-actor runs as such; that attribution is
+downgraded from measured to unproven.
 |===
 
 === Supply chain & metadata — S
