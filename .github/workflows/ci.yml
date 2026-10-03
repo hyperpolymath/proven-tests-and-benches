@@ -134,11 +134,19 @@ jobs:
       # bare-SHA uses:), so runtime immutability rests on this step: verify the
       # tags still resolve to the SHAs recorded in actions.lock. A re-pointed
       # tag fails here — the drift detection a raw tag ref lacks (PR #30).
+      # The install is best-effort — on a runner that already carries the
+      # extension it exits non-zero, and that is not a gate failure. It gets its
+      # own step so the step that DOES gate contains no swallowed exit: RE005
+      # flags any step whose NAME contains verify/check/test/lint and whose body
+      # swallows an exit, and a name-based heuristic that cannot separate the
+      # two is not a reason to leave the install status unhandled.
+      - name: Install gh-actions-lock extension
+        run: gh extension install github/gh-actions-lock 2>/dev/null || true
+
       - name: Verify action refs against actions.lock
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh extension install github/gh-actions-lock 2>/dev/null || true
           if ! gh actions-lock --no-fix; then
             echo "::error::A workflow ref no longer matches the SHA recorded in actions.lock — possible re-pointed tag. Run gh actions-lock locally and review the diff."
             exit 1

@@ -34,5 +34,77 @@
     "note": "Cross-repo reference to panic-attack's src/aggregate/proven_tests.rs. SD022's matcher (`~r{(?<![\\w./-])src/([A-Za-z0-9_][A-Za-z0-9_-]*)/}`) does not skip a REPOSITORY qualifier: the character before `src` in `panic-attack:src/aggregate/` is `:`, which is outside the lookbehind class, so the match succeeds; `aggregate` is not a real `src/<name>` basename here and describes_a_local_src_tree?/2 is true (this repo has a root `src/`), so the finding fires. Verified against the pinned scanner commit 51ab6496bf47e30a0576d503df31fec30f3cfe56 (2026-10-03). The reference is correct and load-bearing (DEBT D-5, ROADMAP item 3 - the panic-attack wiring); removing the path would make the docs vaguer to satisfy an imprecise pattern. Tracked by hyperpolymath/proven-tests-and-benches#78. Expiry NOT extended: these must be consciously renewed, not silently.",
     "tracking_issue": "hyperpolymath/proven-tests-and-benches#78",
     "expires_at": "2026-11-10"
+  },
+  {
+    "severity": "medium",
+    "rule_module": "research_extensions",
+    "type": "RE001",
+    "file": ".github/workflows/labels.yml",
+    "note": "job references `secrets.*` without `step-security/harden-runner`, so outbound egress from a secret-bearing job is unmonitored. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "expires_at": "2026-11-10"
+  },
+  {
+    "severity": "medium",
+    "rule_module": "research_extensions",
+    "type": "RE001",
+    "file": ".github/workflows/push-email-notify.yml",
+    "note": "job references `secrets.*` without `step-security/harden-runner`, so outbound egress from a secret-bearing job is unmonitored. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "expires_at": "2026-11-10"
+  },
+  {
+    "severity": "medium",
+    "rule_module": "research_extensions",
+    "type": "RE001",
+    "file": ".github/workflows/label-triage.yml",
+    "note": "job references `secrets.*` without `step-security/harden-runner`, so outbound egress from a secret-bearing job is unmonitored. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "expires_at": "2026-11-10"
+  },
+  {
+    "severity": "medium",
+    "rule_module": "workflow_hardening",
+    "type": "WH008",
+    "file": ".github/workflows/mirror.yml",
+    "note": "`secrets: inherit` forwards every caller secret into the reusable; the reusable should be handed only the secrets it needs. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "expires_at": "2026-11-10"
+  },
+  {
+    "severity": "medium",
+    "rule_module": "workflow_hardening",
+    "type": "WH008",
+    "file": ".github/workflows/hypatia-scan.yml",
+    "note": "`secrets: inherit` forwards every caller secret into the reusable; the reusable should be handed only the secrets it needs. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "expires_at": "2026-11-10"
+  },
+  {
+    "severity": "medium",
+    "rule_module": "workflow_hardening",
+    "type": "WH008",
+    "file": ".github/workflows/scorecard.yml",
+    "note": "`secrets: inherit` forwards every caller secret into the reusable; the reusable should be handed only the secrets it needs. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "expires_at": "2026-11-10"
+  },
+  {
+    "severity": "medium",
+    "rule_module": "workflow_hardening",
+    "type": "WH008",
+    "file": ".github/workflows/secret-scanner.yml",
+    "note": "`secrets: inherit` forwards every caller secret into the reusable; the reusable should be handed only the secrets it needs. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "expires_at": "2026-11-10"
+  },
+  {
+    "severity": "medium",
+    "rule_module": "content_patterns",
+    "type": "hardcoded_tmp",
+    "file": "scripts/install-idris2.sh",
+    "note": "predictable `/tmp` paths in the Idris2 installer (CWE-377). All four occurrences in this file collapse into this one entry. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "expires_at": "2026-11-10"
   }
 ]
