@@ -364,6 +364,21 @@ next scanner bump has the same shape: **a rule change upstream is inert in this
 repository until the caller pin moves**, and the baseline entry is what absorbs
 the gap. Same class as the `+actions.lock+` staleness this item is about — a
 pinned artefact drifting from the thing it is supposed to describe.
+
+*Collateral, and the one piece that is not ours to close.* The same pin move
+turned on rules the old scanner never ran; four of the resulting findings were
+discharged outright (see CHANGELOG) and four are acknowledged with a named
+discharge condition in `+.hypatia-baseline.json+` (#82). Three of those four
+cannot be fixed from here at all: `+mirror-reusable.yml+`,
+`+hypatia-scan-reusable.yml+` and `+secret-scanner-reusable.yml+` reference
+secrets without declaring them under `+on.workflow_call.secrets+`, and GitHub
+permits referencing an undeclared secret only through `+inherit+` — so a caller
+must either hand over its whole secret scope or break the call. The remediation
+is a declaration in `+hyperpolymath/standards+` (filed as #1141), not a change
+here. This is the second form of the same lesson: **the gate's rules, its
+scanner and the reusables it calls are all pinned dependencies of this
+repository's security posture, and each is someone else's artefact.** A finding
+that survives every local fix is evidence about the pin, not about the tree.
 |===
 
 === Supply chain & metadata — S

@@ -26,4 +26,12 @@ permissions:
 jobs:
   scorecard:
     uses: hyperpolymath/standards/.github/workflows/scorecard-reusable.yml@da2c748aad55c1a1dcba00b60fe4a35017bc6540
-    secrets: inherit
+    # NO `secrets: inherit` here, deliberately. `secrets: inherit` hands the
+    # reusable every secret in this repository's scope; workflow_hardening/WH008
+    # flags it for exactly that reason, and it was pure over-provisioning here:
+    # scorecard-reusable.yml @da2c748a contains no `secrets.` reference and no
+    # `inherit` of its own, so removing the line cannot change what the reusable
+    # can read — it only stops offering what it never asks for. If a future
+    # revision of the reusable needs a secret, add it by NAME (which requires
+    # the reusable to declare it under `on.workflow_call.secrets`) rather than
+    # re-introducing inherit.

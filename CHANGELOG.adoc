@@ -41,20 +41,32 @@ and it is why the entry is deleted rather than renewed. The four `+SD022+`
 entries are a different defect (SD022 does not skip repo-qualified
 `+src/<dir>/+` references) and were never #34's subject; they are re-homed to
 #78 with their expiry deliberately not extended.
-* *Eight findings the newer scanner exposes are acknowledged, not settled.*
-Moving the pin forward 134 commits turns on rules the old scanner never ran:
-3× `+RE001+` (secret-bearing jobs without egress monitoring), 4× `+WH008+`
-(`+secrets: inherit+`), 1× `+hardcoded_tmp+` (`+scripts/install-idris2.sh+`;
-one entry covers all four occurrences). All pre-existing, none caused by the
-pin move; each carries the shared `+expires_at+` and points at #80. The growth
-is declared, not silent: the estate's exemption ratchet refuses a ledger that
-grows without a `+Ratchet-exception:+` naming it, and this commit carries one. The ninth,
-`+RE005+` on `+ci.yml+`, is not acknowledged because it is FIXED: the rule flags
-a step whose *name* contains verify/check/test and whose body swallows an exit,
-and `+Verify action refs against actions.lock+` did both, so the best-effort
-`+gh extension install … || true+` moved into its own step. The gate step now
-contains no swallowed exit and no longer looks like the flake-masking pattern
-it was never an instance of.
+* *The scanner's collateral was triaged, and four of the eight are gone.*
+Moving the pin forward 134 commits turned on rules the old scanner never ran.
+Four acknowledged findings were discharged outright, not renewed:
+`+WH008+` on `+scorecard.yml+` (the line handed the whole secret scope to a
+reusable that reads no secret at all — `+scorecard-reusable.yml @da2c748a+` has
+no `+secrets.+` reference to satisfy); `+RE001+` on `+labels.yml+` and
+`+label-triage.yml+` (`+secrets.GITHUB_TOKEN+` → `+github.token+`: the same
+token, no secrets context, so the jobs no longer resemble a secret-bearing
+egress path); and `+hardcoded_tmp+` in `+scripts/install-idris2.sh+`
+(`+rm -rf /tmp/Idris2+` and a fixed-path clone replaced by `+mktemp -d+` plus
+`+trap … EXIT+` — private dir, no predictable name, and a failed build no longer
+leaves a half-clone for the next run to build on top of).
+* *Four remain, and they are blocked on an upstream declaration, not on work
+here.* The three surviving `+WH008+` findings call reusables that reference
+secrets WITHOUT declaring them under `+on.workflow_call.secrets+`
+(`+mirror-reusable.yml+` reads seven per-forge SSH keys and says so in its own
+header; `+hypatia-scan-reusable.yml+` reads `+GITHUB_TOKEN+` and
+`+HYPATIA_SCAN_PAT+`; `+secret-scanner-reusable.yml+` reads `+GITHUB_TOKEN+`).
+GitHub documents that referencing an undeclared secret works only for
+`+inherit+`, so a caller's choice today is "hand over every secret in scope" or
+"break the call"; the fix belongs to `+hyperpolymath/standards+` and is filed
+there as #1141. The fourth, `+RE001+` on `+push-email-notify.yml+`, is a dormant
+estate template (`+if: vars.PUSH_EMAIL_ENABLED == 'true'+`) whose suggested
+control — `+step-security/harden-runner+` — is used by zero estate reusables.
+Each surviving entry now names its discharge condition and points at #82; the
+`+expires_at+` is unchanged.
 * *DEBT I-10 and ADR-010 re-scoped, not rewritten.* The Dependabot-actor
 attribution is downgraded to unproven; the measured variable is the ref form
 across two epochs. The decision — `+gh actions-lock+` is the bump mechanism,

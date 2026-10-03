@@ -39,27 +39,9 @@
     "severity": "medium",
     "rule_module": "research_extensions",
     "type": "RE001",
-    "file": ".github/workflows/labels.yml",
-    "note": "job references `secrets.*` without `step-security/harden-runner`, so outbound egress from a secret-bearing job is unmonitored. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
-    "expires_at": "2026-11-10"
-  },
-  {
-    "severity": "medium",
-    "rule_module": "research_extensions",
-    "type": "RE001",
     "file": ".github/workflows/push-email-notify.yml",
-    "note": "job references `secrets.*` without `step-security/harden-runner`, so outbound egress from a secret-bearing job is unmonitored. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
-    "expires_at": "2026-11-10"
-  },
-  {
-    "severity": "medium",
-    "rule_module": "research_extensions",
-    "type": "RE001",
-    "file": ".github/workflows/label-triage.yml",
-    "note": "job references `secrets.*` without `step-security/harden-runner`, so outbound egress from a secret-bearing job is unmonitored. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "note": "not a fixable-in-place finding: the job is DORMANT by design (`if: vars.PUSH_EMAIL_ENABLED == 'true'`, and run history shows it skipping), it is estate-managed template content re-placed by the farm sweep, and it is the only workflow here that touches real credentials (SMTP_HOST/PORT/USER/PASS). RE001's suggested control, step-security/harden-runner, is used by ZERO of the estate's reusable workflows, so adopting it in one dormant caller would add a third-party dependency the estate does not run anywhere else. Discharge condition: estate-wide adoption of harden-runner (then add it here as the job's first step), or a dormancy carve-out upstream for a job whose `if:` is false in the repository's current configuration. Upstream request filed as hyperpolymath/standards#1141.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#82",
     "expires_at": "2026-11-10"
   },
   {
@@ -67,8 +49,8 @@
     "rule_module": "workflow_hardening",
     "type": "WH008",
     "file": ".github/workflows/mirror.yml",
-    "note": "`secrets: inherit` forwards every caller secret into the reusable; the reusable should be handed only the secrets it needs. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "note": "`secrets: inherit` forwards the CALLER's secret scope to mirror-reusable.yml; that reusable reads seven SSH keys (BITBUCKET_/CODEBERG_/SOURCEHUT_/DISROOT_/GITEA_/GITLAB_SSH_KEY, RADICLE_KEY) and declares none of them. Discharge condition: an upstream change to hyperpolymath/standards giving this reusable an `on.workflow_call.secrets` block. Until the reusable declares its secrets, explicit per-name forwarding is not possible at all: GitHub's reusable-workflow docs state that a named secret is passed under `secrets:` from the caller, and the note on `secrets: inherit` says referencing an UNDECLARED secret works only for inherit. So the choice here is 'hand over every secret in scope' or 'break the call' — and the estate already has the two acknowledgements this one belongs beside. Do NOT remediate this by adding a declaration to a caller copy of the reusable: the reusable is pinned by SHA and lives upstream.  Upstream request filed as hyperpolymath/standards#1141.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#82",
     "expires_at": "2026-11-10"
   },
   {
@@ -76,17 +58,8 @@
     "rule_module": "workflow_hardening",
     "type": "WH008",
     "file": ".github/workflows/hypatia-scan.yml",
-    "note": "`secrets: inherit` forwards every caller secret into the reusable; the reusable should be handed only the secrets it needs. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
-    "expires_at": "2026-11-10"
-  },
-  {
-    "severity": "medium",
-    "rule_module": "workflow_hardening",
-    "type": "WH008",
-    "file": ".github/workflows/scorecard.yml",
-    "note": "`secrets: inherit` forwards every caller secret into the reusable; the reusable should be handed only the secrets it needs. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "note": "`secrets: inherit` forwards the CALLER's secret scope to hypatia-scan-reusable.yml; that reusable reads secrets.GITHUB_TOKEN and secrets.HYPATIA_SCAN_PAT and declares neither. Discharge condition: an upstream change to hyperpolymath/standards giving this reusable an `on.workflow_call.secrets` block. Until the reusable declares its secrets, explicit per-name forwarding is not possible at all: GitHub's reusable-workflow docs state that a named secret is passed under `secrets:` from the caller, and the note on `secrets: inherit` says referencing an UNDECLARED secret works only for inherit. So the choice here is 'hand over every secret in scope' or 'break the call' — and the estate already has the two acknowledgements this one belongs beside. Do NOT remediate this by adding a declaration to a caller copy of the reusable: the reusable is pinned by SHA and lives upstream.  Upstream request filed as hyperpolymath/standards#1141.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#82",
     "expires_at": "2026-11-10"
   },
   {
@@ -94,17 +67,8 @@
     "rule_module": "workflow_hardening",
     "type": "WH008",
     "file": ".github/workflows/secret-scanner.yml",
-    "note": "`secrets: inherit` forwards every caller secret into the reusable; the reusable should be handed only the secrets it needs. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
-    "expires_at": "2026-11-10"
-  },
-  {
-    "severity": "medium",
-    "rule_module": "content_patterns",
-    "type": "hardcoded_tmp",
-    "file": "scripts/install-idris2.sh",
-    "note": "predictable `/tmp` paths in the Idris2 installer (CWE-377). All four occurrences in this file collapse into this one entry. Surfaced 2026-10-03 by adopting the lock-aware Hypatia scanner in the governance gate (standards@71bb615e -> hypatia-ref 51ab6496). The previous pin (standards@da2c748a -> hypatia 0e913426, 2026-09-06, 134 commits behind) predates these rules, so this is pre-existing debt becoming VISIBLE, not new debt. It is acknowledged, not settled: see the tracking issue for the fixes, and do not renew this expiry without reading it.",
-    "tracking_issue": "hyperpolymath/proven-tests-and-benches#80",
+    "note": "`secrets: inherit` forwards the CALLER's secret scope to secret-scanner-reusable.yml; that reusable reads secrets.GITHUB_TOKEN (the gitleaks action's inner token) and declares none. Restricting this one by hand is the case where a mistake degrades silently rather than failing: an empty GITHUB_TOKEN makes gitleaks scan less and still exit 0, which is why the caller carries a comment saying inherit is required. Discharge condition: an upstream change to hyperpolymath/standards giving this reusable an `on.workflow_call.secrets` block. Until the reusable declares its secrets, explicit per-name forwarding is not possible at all: GitHub's reusable-workflow docs state that a named secret is passed under `secrets:` from the caller, and the note on `secrets: inherit` says referencing an UNDECLARED secret works only for inherit. So the choice here is 'hand over every secret in scope' or 'break the call' — and the estate already has the two acknowledgements this one belongs beside. Do NOT remediate this by adding a declaration to a caller copy of the reusable: the reusable is pinned by SHA and lives upstream.  Upstream request filed as hyperpolymath/standards#1141.",
+    "tracking_issue": "hyperpolymath/proven-tests-and-benches#82",
     "expires_at": "2026-11-10"
   }
 ]
