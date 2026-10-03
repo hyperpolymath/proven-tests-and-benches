@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# ⚠ TEMPORARY DIAGNOSTIC — NOT FOR MERGE. Delete before the PR lands.
+#
+# Reproduces the governance reusable's "Run Hypatia scan (Baseline validation)"
+# step and reports every finding it produces, so the one finding the baseline
+# filter keeps can be identified from check-run annotations (run logs and
+# artifacts are not reachable from the environment this was written in).
+#
+# Refs are full 40-char SHAs on purpose:
+#   * `gh actions-lock` skips "not pinned" for a full SHA, so this file needs
+#     no actions.lock entry and cannot desync the lockfile;
+#   * WH004 skips SHA-pinned refs, so this workflow contributes no findings.
+name: DIAG Hypatia findings
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diag:
+    name: DIAG / reproduce baseline gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: '1.19.4'
+          otp-version: '28.3'
+
+      - name: Scan and report findings
+        run: |
+          set -uo pipefail
+          git clone --quiet https://github.com/hyperpolymath/hypatia.git "$HOME/hypatia"
+          cd "$HOME/hypatia"
+          git checkout --quiet 51ab6496bf47e30a0576d503df31fec30f3cfe56
+          mix deps.get >/dev/null 2>&1 || { echo "::error::mix deps.get failed"; exit 1; }
+          mix escript.build >/dev/null 2>&1 || { echo "::error::mix escript.build failed"; exit 1; }
+
+          cd "$GITHUB_WORKSPACE"
+          # Same invocation as the governance reusable: no GITHUB_TOKEN, so the
+          # dependabot / code-scanning / secret-scanning alert modules stay off.
+          HYPATIA_FORMAT=json "$HOME/hypatia/hypatia-cli.sh" scan . --exit-zero > "$RUNNER_TEMP/findings.json" || true
+
+          if ! jq -e 'type == "array"' "$RUNNER_TEMP/findings.json" >/dev/null 2>&1; then
+            echo "::error::scanner did not produce a JSON array"
+            head -40 "$RUNNER_TEMP/findings.json"
+            exit 1
+          fi
+
+          echo "===== ALL FINDINGS ====="
+          jq -r '.[] | "\(.severity) | \(.rule_module) | \(.type) | \(.file)"' "$RUNNER_TEMP/findings.json"
+          echo "count: $(jq 'length' "$RUNNER_TEMP/findings.json")"
+
+          echo "===== RELATIVIZE (same jq as the reusable) ====="
+          jq --arg root "$PWD" '
+            map(if (.file? // "") == $root then .file = "."
+                elif (.file? // "") | startswith($root + "/")
+                then .file = (.file | ltrimstr($root + "/"))
+                else . end)
+          ' "$RUNNER_TEMP/findings.json" > "$RUNNER_TEMP/findings.rel.json"
+
+          echo "===== apply-baseline.sh (blocking, threshold info) ====="
+          git clone --quiet --depth 1 --filter=blob:none --sparse \
+            https://github.com/hyperpolymath/standards.git "$RUNNER_TEMP/std"
+          ( cd "$RUNNER_TEMP/std" && git sparse-checkout set scripts >/dev/null )
+          cp "$RUNNER_TEMP/std/scripts/apply-baseline.sh" "$RUNNER_TEMP/apply-baseline.sh"
+          BLOCKING_THRESHOLD=info bash "$RUNNER_TEMP/apply-baseline.sh" \
+            "$RUNNER_TEMP/findings.rel.json" .hypatia-baseline.json blocking \
+            > "$RUNNER_TEMP/annotated.json" 2> "$RUNNER_TEMP/gate.err" || true
+          echo "--- gate stderr ---"
+          cat "$RUNNER_TEMP/gate.err"
+          echo "--- KEPT (unfiltered) findings ---"
+          jq -r '.findings_kept[] | "KEPT | \(.severity) | \(.rule_module) | \(.type) | \(.file) | \(.reason // "")"' \
+            "$RUNNER_TEMP/annotated.json"
+
+          echo "===== ANNOTATE kept findings (10 = per-step annotation cap) ====="
+          if jq -e '.findings_kept' "$RUNNER_TEMP/annotated.json" >/dev/null 2>&1; then
+            jq -r '.findings_kept[] | "::warning title=HYPATIA-KEPT::" + (.rule_module|tostring) + "/" + (.type|tostring) + " | file=" + (.file|tostring) + " | sev=" + (.severity|tostring) + " | " + ((.reason // .description // "")|tostring)' \
+              "$RUNNER_TEMP/annotated.json" | head -10
+          else
+            jq -r '.[] | "::warning title=HYPATIA-ALL::" + (.rule_module|tostring) + "/" + (.type|tostring) + " | file=" + (.file|tostring) + " | sev=" + (.severity|tostring) + " | " + ((.reason // .description // "")|tostring)' \
+              "$RUNNER_TEMP/findings.json" | head -10
+          fi
