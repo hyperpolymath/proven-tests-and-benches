@@ -30,9 +30,12 @@ rather than a coincidence; `+just lint+` fails on any of them. Do not
 weaken it back into a reporting-only recipe.
 
 Do not claim a provenance tier without its evidence.
-`+ActualEvidence.proof_ladder+` is a `+List1 ProofStep+`
-(`+src/ProvenTests/Types.idr+`), so "`Actually-Proven with zero proof
-steps`" is unrepresentable _by construction_. Preserve that. Coverage is
+`+ActualEvidence.proof_ladder+` is a `+List1 Witnessed+`
+(`+src/ProvenTests/Types.idr+`): every rung carries an erased proof term
+at an explicit statement, so "`Actually-Proven with zero proof steps`" and
+"`Actually-Proven citing a theorem that does not exist`" are both
+unrepresentable _by construction_. Preserve that, and never write a trivial
+statement (`+Witness s () ()+` compiles; the statement must be the law). Coverage is
 likewise derived from tests that actually ran and passed
 (`+src/ProvenTests/Coverage.idr+`), with the derivation itself
 machine-checked in `+src/ProvenTests/Meta.idr+`. A covered cell must

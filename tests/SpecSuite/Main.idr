@@ -6,6 +6,8 @@
 module SpecSuite.Main
 
 import ProvenTests.Types
+import ProvenTests.Proven.Laws
+import Data.List1
 import ProvenTests.Framework
 import ProvenTests.Taxonomy
 import ProvenLawsTests.LawsTests
@@ -28,9 +30,9 @@ import System
 -- spec (standards .github/ISSUES/cicd-optimization/004-tests-benches-standards.md
 -- §3.1) and exits non-zero if any test fails, so this executable can gate CI.
 --
--- EchoTypes is absent on purpose: see src/ProvenTests/EchoTypes/README.adoc.
--- There is no formal definition of an echo type anywhere in the estate to
--- encode, so writing one here would be inventing it.
+-- EchoTypes is absent: see src/ProvenTests/EchoTypes/README.adoc. The formal
+-- definition lives in hyperpolymath/echo-types (Agda); re-stating it in Idris2
+-- would be an unchecked copy of a result proved elsewhere, so it is not done.
 
 -- =============================================================================
 -- B.2 NEGATIVE WITNESS (TEST-DOCTRINE.adoc §2; plan Phase B verification)
@@ -76,6 +78,46 @@ failing
 failing "Mismatch between"
   categoryCountIsSixteen : length Taxonomy.allTestCategories = 16
   categoryCountIsSixteen = Refl
+
+-- =============================================================================
+-- PROOF-CARRYING TIER NEGATIVE WITNESSES (ProvenTests.Types.Witnessed)
+-- =============================================================================
+-- Actually-Proven evidence used to be strings: a ladder could name a theorem
+-- that did not exist, or claim a property its theorem never stated, and the
+-- framework would print [Actually-Proven] anyway. Each rung now carries the
+-- proof term. The three blocks below are the three forgeries that must no
+-- longer compile; each body was lifted out and checked for exactly this
+-- error before being placed here (2026-10-06, Idris2 0.7.0).
+
+-- (1) A real theorem cited for a property it does not prove.
+failing "Mismatch between"
+  wrongStatement : Witnessed
+  wrongStatement =
+    Witness (MkProofStep "forged" Nothing Nothing (Just "appendNilRightProof"))
+      ((xs : List Nat) -> xs ++ [] = []) appendNilRightProof
+
+-- (2) The pre-tier shape: a ladder of citations with no proof terms.
+failing "Mismatch between: ProofStep and Witnessed"
+  stringsOnlyLadder : ActualEvidence
+  stringsOnlyLadder =
+    MkActualEvidence (singleton (MkProofStep "forged" Nothing Nothing (Just "anything")))
+      (MkDesignSafetyProof "d" "t" [] []) (MkTypeSafetyCertificate 6 "s" "v" [])
+
+-- (3) A citation to a theorem that does not exist (deleted or renamed).
+failing "Undefined name"
+  danglingCitation : Witnessed
+  danglingCitation =
+    Witness (MkProofStep "forged" Nothing Nothing (Just "noSuchTheorem")) _ noSuchTheorem
+
+-- RESIDUAL (a positive control, kept on purpose): a TRIVIAL witness still
+-- compiles. The tier proves that the cited term inhabits the stated
+-- proposition, NOT that the proposition is the one the test description
+-- names. This forgery is a visible lie in code, reviewable in a diff, where
+-- the old one was an invisible string. It is private and used by nothing.
+private
+trivialWitnessStillCompiles : Witnessed
+trivialWitnessStillCompiles =
+  Witness (MkProofStep "residual: proves Unit, claims nothing" Nothing Nothing Nothing) () ()
 
 allSuiteTests : List ProvisionallyProvenTest
 allSuiteTests =

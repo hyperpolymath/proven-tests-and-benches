@@ -92,7 +92,7 @@ ioc co name act =
     act
 
 -- Actually-Proven cell: a machine-checked proof ladder + a runtime spot-check.
-ac : ZigzagCoord -> String -> List1 ProofStep -> Bool -> CellTest
+ac : ZigzagCoord -> String -> List1 Witnessed -> Bool -> CellTest
 ac co name ladder b =
   MkCellTest co
     (withCoord co (classifyActuallyProven (mkId name) name ladder
@@ -108,23 +108,23 @@ K = MkCoord
 tropFile : Maybe String
 tropFile = Just "src/ProvenTests/Tropical.idr"
 
-tropLadder : List1 ProofStep
+tropLadder : List1 Witnessed
 tropLadder =
-  MkProofStep "min-plus (+) commutative" tropFile Nothing (Just "oplusComm")
-    ::: [ MkProofStep "(+) associative" tropFile Nothing (Just "oplusAssoc")
-        , MkProofStep "(+) idempotent"  tropFile Nothing (Just "oplusIdem")
-        , MkProofStep "(*) commutative" tropFile Nothing (Just "otimesComm") ]
+  Witness (MkProofStep "min-plus (+) commutative" tropFile Nothing (Just "oplusComm")) _ oplusComm
+    ::: [ Witness (MkProofStep "(+) associative" tropFile Nothing (Just "oplusAssoc")) _ oplusAssoc
+        , Witness (MkProofStep "(+) idempotent"  tropFile Nothing (Just "oplusIdem")) _ oplusIdem
+        , Witness (MkProofStep "(*) commutative" tropFile Nothing (Just "otimesComm")) _ otimesComm ]
 
 -- proof ladder for the framework's own meta-theorems (cited from ProvenTests.Meta)
 metaFile : Maybe String
 metaFile = Just "src/ProvenTests/Meta.idr"
 
-metaLadder : List1 ProofStep
+metaLadder : List1 Witnessed
 metaLadder =
-  MkProofStep "statusOf never upgrades a tier" metaFile Nothing (Just "statusOfActual")
-    ::: [ MkProofStep "a failed cell contributes no coverage" metaFile Nothing (Just "coveredFromExcludesFailure")
-        , MkProofStep "a passed cell contributes exactly its coord" metaFile Nothing (Just "coveredFromIncludesPass")
-        , MkProofStep "empty coverage covers no cell" metaFile Nothing (Just "emptyCoverageIsEmpty") ]
+  Witness (MkProofStep "statusOf never upgrades a tier" metaFile Nothing (Just "statusOfActual")) _ statusOfActual
+    ::: [ Witness (MkProofStep "a failed cell contributes no coverage" metaFile Nothing (Just "coveredFromExcludesFailure")) _ coveredFromExcludesFailure
+        , Witness (MkProofStep "a passed cell contributes exactly its coord" metaFile Nothing (Just "coveredFromIncludesPass")) _ coveredFromIncludesPass
+        , Witness (MkProofStep "empty coverage covers no cell" metaFile Nothing (Just "emptyCoverageIsEmpty")) _ emptyCoverageIsEmpty ]
 
 -- A timed reproducibility/performance workload: fold ⊕/⊗ over a range, twice.
 tropWorkload : Nat -> ExtNat

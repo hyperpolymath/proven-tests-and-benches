@@ -8,24 +8,27 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === [Unreleased]
 
-==== 2026-10-06 — totality is the default everywhere, and the lint checks it
+==== 2026-10-06 — the Actually-Proven tier carries its proofs
 
-* *`+%default total+` in every Idris2 file* (49 files gained it; 10 had it).
-A file without the pragma was silently `+covering+`, so a non-terminating
-helper could have sat beside a proof unremarked.
-* *Two real totality gaps closed* in
-`+src/ProvenTests/TypeSafe/Choreographic.idr+`: `+choreographicEndsProperly+`
-and `+choreographicNoOrphanedChoices+` recursed through `+all+`, which hides
-the structural descent from the checker. Each now recurses through a local
-helper over the branch list.
-* *The five `+readFile+` I/O functions say `+covering+` explicitly*:
-`+readFile+` consumes fuel until EOF and cannot be total. Every pure
-function around them stays total.
-* *`+scripts/check-escape-hatches.sh+` widened.* It now also bans
-`+assert_smaller+`, `+%default partial+`/`+covering+` and a `+partial+`
-declaration modifier; requires `+%default total+` in every `+.idr+` file; and
-scans `+templates/+` and `+corpus/+`, which it previously skipped. Each new
-rule was shown to fire on a planted file (exit 1) before it was trusted.
+* *`+proof_ladder+` is now `+List1 Witnessed+`* (`+src/ProvenTests/Types.idr+`):
+each rung holds an erased proof term at an explicit statement, so an
+Actually-Proven claim citing a missing theorem, or a real theorem for the
+wrong property, no longer compiles. Every existing ladder (Laws suite, Baton,
+Cells) was converted; all 12 polymorphic law statements typecheck.
+* *Three rejection controls* in `+tests/SpecSuite/Main.idr+` (`+failing+`
+blocks, exact errors measured first) plus one recorded positive control: the
+trivial witness `+Witness s () ()+` still compiles, and the docs say so.
+* *The dead `+ActuallyProvenEvidence+` record is removed*
+(`+src/ProvenTests/Classification.idr+`): strings-only, with a possibly-empty
+ladder, and used by nothing.
+* *`+integrations/proven+` no longer constructs in-build Actually-Proven
+evidence from another repo's ledger.* `+Graded+` separates the tier `+claimed+`
+from proven's ledgers from the provenance `+heldHere+` (at most
+Provisionally-Proven); report counts are unchanged and the sanity gate fails if
+any external module ever holds Actually-Proven.
+* *`+EchoTypes/README.adoc+` corrected:* `+echo-types+` holds 219 `+.agda+` files
+(217 `+--safe+`); the 07-28 "no formal artefacts" claim counted only
+`+.idr+`/`+.lean+`/`+.v+`.
 
 ==== 2026-10-03 — action-ref form and the lockfile, reconciled at the root (#34)
 

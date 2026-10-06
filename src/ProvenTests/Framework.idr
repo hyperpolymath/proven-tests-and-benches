@@ -22,7 +22,7 @@ record ActuallyProvenTest where
   constructor MkActuallyProvenTest
   metadata    : TestMetadata
   test_func    : IO TestResult
-  proof_ladder : List1 ProofStep
+  proof_ladder : List1 Witnessed
 
 --/ Provisionally-Proven test type
 public export
@@ -74,7 +74,7 @@ provenTest :
      TestId ->
      String ->
      (IO TestResult) ->
-     List1 ProofStep ->
+     List1 Witnessed ->
      ActuallyProvenTest
 provenTest tid desc func ladder =
   let meta = classifyActuallyProven tid desc ladder
