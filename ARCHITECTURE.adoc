@@ -57,9 +57,9 @@ tokens and are not referenced by any pipeline. `+container/README.adoc+`
 says so itself. They are listed here so their presence is not mistaken
 for working infrastructure.
 
-=== The five packages
+=== The six packages
 
-This repository builds *five* Idris2 packages, not one. They are
+This repository builds *six* Idris2 packages, not one. They are
 separate because the dependency direction matters:
 
 [width="100%",cols="34%,33%,33%",options="header",]
@@ -70,10 +70,19 @@ separate because the dependency direction matters:
 |`+proven-tests-suite.ipkg+` |`+proven-tests-suite+` (52 assertions)
 |the installed library
 
+|`+proven-spec-suite.ipkg+` |`+proven-spec-suite+` (92 tests, 29
+Actually-Proven) |the installed library
+
 |`+benchmarks/benchmark.ipkg+` |`+proven-bench+` |the installed library
 
 |`+integrations/proven/proven-subject.ipkg+` |`+proven-subject-report+`
 |the installed library
+
+|`+integrations/proven/proven-ordering-laws.ipkg+`
+|`+proven-ordering-laws+` (8 Actually-Proven laws of proven's `+mergeVT+`)
+|the installed library + `+proven-safeordering+` (proven at
+`+PROVEN_PIN+`, installed into a throwaway prefix by
+`+scripts/build-proven-laws.sh+`)
 |===
 
 The suite builds _against the installed library_ rather than against the
