@@ -12,6 +12,8 @@ import ProvenTests.Coverage
 import ProvenTests.Cells
 import Data.List
 
+%default total
+
 -- NOTE: the per-category runners that used to live here (runTropicalCategoryTests
 -- et al., runTypeSafeTests, runAllTests, runTropicalLawTests, runE2ECategoryTests)
 -- were superseded by the typed lattice cells in ProvenTests.Cells — every one of

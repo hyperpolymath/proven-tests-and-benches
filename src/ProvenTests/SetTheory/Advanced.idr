@@ -9,6 +9,8 @@ import ProvenTests.SetTheory.Basics
 import Data.List
 import Data.Nat
 
+%default total
+
 -- =============================================================================
 -- HIGHER SET CONCEPTS
 -- =============================================================================

@@ -9,6 +9,8 @@ import ProvenTests.TypeSafe.Dependent
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- DEPENDENT TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================

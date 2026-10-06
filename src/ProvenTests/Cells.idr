@@ -28,6 +28,8 @@ import Data.List1
 import Data.List
 import System.Clock
 
+%default total
+
 -- =============================================================================
 -- LATTICE CELLS — self-deriving coverage
 -- =============================================================================

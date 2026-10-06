@@ -7,6 +7,8 @@ module ProvenTests.HigherOrder.Projection
 
 import Data.List
 
+%default total
+
 -- =============================================================================
 -- PROJECTION LAWS
 -- =============================================================================

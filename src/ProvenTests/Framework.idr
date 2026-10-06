@@ -10,6 +10,8 @@ import ProvenTests.Classification
 import ProvenTests.Taxonomy
 import Data.List1
 
+%default total
+
 -- =============================================================================
 -- TEST DEFINITION
 -- =============================================================================

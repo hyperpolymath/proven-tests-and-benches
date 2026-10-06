@@ -9,6 +9,8 @@ import ProvenTests.TypeSafe.Choreographic
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- CHOREOGRAPHIC TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================

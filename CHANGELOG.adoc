@@ -8,6 +8,25 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === [Unreleased]
 
+==== 2026-10-06 — totality is the default everywhere, and the lint checks it
+
+* *`+%default total+` in every Idris2 file* (49 files gained it; 10 had it).
+A file without the pragma was silently `+covering+`, so a non-terminating
+helper could have sat beside a proof unremarked.
+* *Two real totality gaps closed* in
+`+src/ProvenTests/TypeSafe/Choreographic.idr+`: `+choreographicEndsProperly+`
+and `+choreographicNoOrphanedChoices+` recursed through `+all+`, which hides
+the structural descent from the checker. Each now recurses through a local
+helper over the branch list.
+* *The five `+readFile+` I/O functions say `+covering+` explicitly*:
+`+readFile+` consumes fuel until EOF and cannot be total. Every pure
+function around them stays total.
+* *`+scripts/check-escape-hatches.sh+` widened.* It now also bans
+`+assert_smaller+`, `+%default partial+`/`+covering+` and a `+partial+`
+declaration modifier; requires `+%default total+` in every `+.idr+` file; and
+scans `+templates/+` and `+corpus/+`, which it previously skipped. Each new
+rule was shown to fire on a planted file (exit 1) before it was trusted.
+
 ==== 2026-10-03 — action-ref form and the lockfile, reconciled at the root (#34)
 
 * *`+codeql.yml+` refs restored to the symbolic form* `+@v4.38.2+`, with the

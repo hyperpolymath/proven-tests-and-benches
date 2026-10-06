@@ -18,6 +18,8 @@ import TypeSafeTests.DyadicTests
 import TypeSafeTests.BridgeTests
 import System
 
+%default total
+
 -- =============================================================================
 -- TYPE-SAFE TEST SUITE ENTRY POINT
 -- =============================================================================
