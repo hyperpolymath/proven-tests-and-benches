@@ -8,6 +8,32 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === [Unreleased]
 
+==== 2026-10-06 — the min-plus semiring completed; max-plus for bench bounds
+
+* *Min-plus is now a full commutative semiring, every axiom proved.*
+`+src/ProvenTests/Tropical.idr+` adds `+otimesAssoc+`, `+otimesIdentityL+`,
+`+otimesDistribL+`/`+otimesDistribR+` (via `+plusMinNDistribL/R+`) and
+`+otimesAbsorbL+`/`+otimesAbsorbR+`, all total under `+%default total+`.
+Before this the module was called a semiring while proving neither
+distributivity nor `+PosInf+` annihilation.
+* *Max-plus over `+Nat+` for worst-case bench bounds* (sequential composition
+= `+`, branch = `+max+`), in the same module: `+max+`
+comm/assoc/idem/identity 0, `+`+` comm/assoc/identity 0, and distributivity
+of `+`+` over `+max+` on both sides. It is *not* a semiring — the
+`+max+`-identity 0 does not annihilate `+`+` — and the module header says so.
+It lives in `+Tropical.idr+` rather than a new module because a 33rd library
+module needs `+STATE.a2ml+` `+library-modules+` updated, which this change
+does not touch.
+* *17 new Actually-Proven tests* in
+`+tests/ProvenLawsTests/TropicalLawsTests.idr+` (spec suite 75 → 92, 12 → 29
+Actually-Proven). Each rung is built with `+rung+` at the full law
+statement, so the citation is the checked term. Two `+failing "Mismatch between"+` reject controls
+assert false laws (max-plus 0 annihilating `+`+`, min-plus `+⊗+`
+idempotence) do not typecheck.
+* *Wrong comment fixed* in `+src/ProvenTests/TypeSafe/Tropical.idr+`: `+min(x,
+0) = x+` is false; `+min+`'s identity is `+inf+`. The matching assertion
+message in `+tests/TypeSafeTests/TropicalTests.idr+` is corrected too.
+
 ==== 2026-10-06 — rung citations are derived from the term (#87 review)
 
 * *`+rung+` macro* (`+src/ProvenTests/Types.idr+`): one quoted theorem name

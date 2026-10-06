@@ -27,6 +27,18 @@ import Data.List1
 -- The laws below are TOTAL Idris2 proofs: if this module compiles, they hold for
 -- every input (a real ∀-proof), which is what makes the tropical-laws test
 -- genuinely Actually-Proven rather than merely sampled.
+--
+-- Min-plus laws proved: ⊕ commutative, associative, idempotent, identity PosInf
+-- (both sides); ⊗ commutative, associative, identity Fin 0 (both sides); ⊗
+-- distributes over ⊕ (left and right); PosInf annihilates ⊗ (both sides).
+-- Together these are every commutative-semiring axiom, so the structure is a
+-- commutative, ⊕-idempotent semiring.
+--
+-- The end of this module also carries a MAX-PLUS structure over Nat for
+-- worst-case bench bounds. It is NOT a semiring; its own header lists exactly
+-- which laws are proved and which do not hold. It lives here rather than in its
+-- own module because a new library module changes the module count asserted
+-- in the machine-readable state file, which this change does not edit.
 
 --/ The tropical carrier: a natural number, or +∞.
 public export
@@ -153,3 +165,210 @@ otimesComm (Fin a) (Fin b) = cong Fin (plusCommutative a b)
 public export
 cheapestSingleton : (x : ExtNat) -> cheapest (x ::: []) = x
 cheapestSingleton _ = Refl
+
+-- =============================================================================
+-- COMPLETING THE SEMIRING: ⊗ associativity, left identity, distributivity,
+-- and PosInf annihilation. With these, (ExtNat, oplus, otimes, PosInf, Fin 0)
+-- satisfies every commutative-semiring axiom, each by a total proof.
+-- =============================================================================
+
+||| Addition distributes over minN from the left: a + min b c = min (a+b) (a+c).
+public export
+plusMinNDistribL : (a, b, c : Nat) -> a + minN b c = minN (a + b) (a + c)
+plusMinNDistribL Z     _ _ = Refl
+plusMinNDistribL (S a) b c = cong S (plusMinNDistribL a b c)
+
+||| Addition distributes over minN from the right: min b c + a = min (b+a) (c+a).
+public export
+plusMinNDistribR : (a, b, c : Nat) -> minN b c + a = minN (b + a) (c + a)
+plusMinNDistribR a b c =
+  rewrite plusCommutative (minN b c) a in
+  rewrite plusCommutative b a in
+  rewrite plusCommutative c a in
+  plusMinNDistribL a b c
+
+||| Fin 0 is a left identity for ⊗ (the right identity is otimesIdentityR).
+public export
+otimesIdentityL : (a : ExtNat) -> otimes (Fin 0) a = a
+otimesIdentityL PosInf  = Refl
+otimesIdentityL (Fin _) = Refl
+
+||| ⊗ is associative.
+public export
+otimesAssoc : (a, b, c : ExtNat) -> otimes a (otimes b c) = otimes (otimes a b) c
+otimesAssoc PosInf  _       _       = Refl
+otimesAssoc (Fin _) PosInf  _       = Refl
+otimesAssoc (Fin _) (Fin _) PosInf  = Refl
+otimesAssoc (Fin a) (Fin b) (Fin c) = cong Fin (plusAssociative a b c)
+
+||| PosInf annihilates ⊗ on the left: PosInf ⊗ x = PosInf.
+public export
+otimesAbsorbL : (a : ExtNat) -> otimes PosInf a = PosInf
+otimesAbsorbL _ = Refl
+
+||| PosInf annihilates ⊗ on the right: x ⊗ PosInf = PosInf.
+public export
+otimesAbsorbR : (a : ExtNat) -> otimes a PosInf = PosInf
+otimesAbsorbR PosInf  = Refl
+otimesAbsorbR (Fin _) = Refl
+
+||| ⊗ distributes over ⊕ from the left: a ⊗ (b ⊕ c) = (a ⊗ b) ⊕ (a ⊗ c).
+public export
+otimesDistribL : (a, b, c : ExtNat) ->
+                 otimes a (oplus b c) = oplus (otimes a b) (otimes a c)
+otimesDistribL PosInf  _       _       = Refl
+otimesDistribL (Fin _) PosInf  _       = Refl
+otimesDistribL (Fin _) (Fin _) PosInf  = Refl
+otimesDistribL (Fin a) (Fin b) (Fin c) = cong Fin (plusMinNDistribL a b c)
+
+||| ⊗ distributes over ⊕ from the right: (b ⊕ c) ⊗ a = (b ⊗ a) ⊕ (c ⊗ a).
+public export
+otimesDistribR : (a, b, c : ExtNat) ->
+                 otimes (oplus b c) a = oplus (otimes b a) (otimes c a)
+otimesDistribR _       PosInf  _       = Refl
+otimesDistribR PosInf  (Fin _) PosInf  = Refl
+otimesDistribR (Fin _) (Fin _) PosInf  = Refl
+otimesDistribR PosInf  (Fin _) (Fin _) = Refl
+otimesDistribR (Fin a) (Fin b) (Fin c) = cong Fin (plusMinNDistribR a b c)
+
+-- =============================================================================
+-- MAX-PLUS OVER Nat — worst-case bench bounds
+-- =============================================================================
+-- A worst-case cost bound composes two ways:
+--   * sequential composition  (do p, then q)        bound = p + q   (mpOtimes)
+--   * branch                  (do p or q, unknown)  bound = max p q (mpOplus)
+--
+-- PROVED below (total, for every input):
+--   mpOplus  (max): commutative, associative, idempotent, identity 0 (both sides)
+--   mpOtimes (+):   commutative, associative, identity 0 (both sides)
+--   mpOtimes distributes over mpOplus, on the left and on the right
+--
+-- DOES NOT HOLD, so this is NOT a semiring:
+--   The ⊕-identity 0 does not annihilate ⊗: mpOtimes 0 a = a, not 0. A semiring
+--   needs a zero with 0 ⊗ a = 0; over plain Nat the only candidate is the
+--   max-identity 0, which is also the +-identity. (Adjoining a NegInf bottom
+--   would restore annihilation; it is deliberately omitted because a bench
+--   bound is never -∞.) The rejection of that law is checked by a `failing`
+--   block in tests/ProvenLawsTests/TropicalLawsTests.idr.
+--   ⊗ is not idempotent either (a + a /= a for a > 0), as expected.
+-- What remains is a commutative "presemiring" (semiring minus annihilation)
+-- whose ⊕ is idempotent and whose two units coincide.
+
+||| Structural max on Nat, defined directly (not via Ord) so the proofs are clean.
+public export
+maxN : Nat -> Nat -> Nat
+maxN Z     b     = b
+maxN a     Z     = a
+maxN (S a) (S b) = S (maxN a b)
+
+||| Max-plus ⊕ = max: the bound of a branch whose taken arm is unknown.
+public export
+mpOplus : Nat -> Nat -> Nat
+mpOplus = maxN
+
+||| Max-plus ⊗ = +: the bound of sequential composition.
+public export
+mpOtimes : Nat -> Nat -> Nat
+mpOtimes = plus
+
+||| maxN is commutative.
+public export
+maxNComm : (a, b : Nat) -> maxN a b = maxN b a
+maxNComm Z     Z     = Refl
+maxNComm Z     (S _) = Refl
+maxNComm (S _) Z     = Refl
+maxNComm (S a) (S b) = cong S (maxNComm a b)
+
+||| maxN is idempotent.
+public export
+maxNIdem : (a : Nat) -> maxN a a = a
+maxNIdem Z     = Refl
+maxNIdem (S a) = cong S (maxNIdem a)
+
+||| maxN is associative.
+public export
+maxNAssoc : (a, b, c : Nat) -> maxN a (maxN b c) = maxN (maxN a b) c
+maxNAssoc Z     _     _     = Refl
+maxNAssoc (S _) Z     _     = Refl
+maxNAssoc (S _) (S _) Z     = Refl
+maxNAssoc (S a) (S b) (S c) = cong S (maxNAssoc a b c)
+
+||| 0 is the right identity of maxN.
+public export
+maxNZeroR : (a : Nat) -> maxN a 0 = a
+maxNZeroR Z     = Refl
+maxNZeroR (S _) = Refl
+
+||| Addition distributes over maxN from the left: a + max b c = max (a+b) (a+c).
+public export
+plusMaxNDistribL : (a, b, c : Nat) -> a + maxN b c = maxN (a + b) (a + c)
+plusMaxNDistribL Z     _ _ = Refl
+plusMaxNDistribL (S a) b c = cong S (plusMaxNDistribL a b c)
+
+||| Addition distributes over maxN from the right: max b c + a = max (b+a) (c+a).
+public export
+plusMaxNDistribR : (a, b, c : Nat) -> maxN b c + a = maxN (b + a) (c + a)
+plusMaxNDistribR a b c =
+  rewrite plusCommutative (maxN b c) a in
+  rewrite plusCommutative b a in
+  rewrite plusCommutative c a in
+  plusMaxNDistribL a b c
+
+||| Max-plus ⊕ is commutative.
+public export
+mpOplusComm : (a, b : Nat) -> mpOplus a b = mpOplus b a
+mpOplusComm = maxNComm
+
+||| Max-plus ⊕ is associative.
+public export
+mpOplusAssoc : (a, b, c : Nat) ->
+               mpOplus a (mpOplus b c) = mpOplus (mpOplus a b) c
+mpOplusAssoc = maxNAssoc
+
+||| Max-plus ⊕ is idempotent.
+public export
+mpOplusIdem : (a : Nat) -> mpOplus a a = a
+mpOplusIdem = maxNIdem
+
+||| 0 is the left identity of max-plus ⊕.
+public export
+mpOplusIdentityL : (a : Nat) -> mpOplus 0 a = a
+mpOplusIdentityL _ = Refl
+
+||| 0 is the right identity of max-plus ⊕.
+public export
+mpOplusIdentityR : (a : Nat) -> mpOplus a 0 = a
+mpOplusIdentityR = maxNZeroR
+
+||| Max-plus ⊗ is commutative.
+public export
+mpOtimesComm : (a, b : Nat) -> mpOtimes a b = mpOtimes b a
+mpOtimesComm = plusCommutative
+
+||| Max-plus ⊗ is associative.
+public export
+mpOtimesAssoc : (a, b, c : Nat) ->
+                mpOtimes a (mpOtimes b c) = mpOtimes (mpOtimes a b) c
+mpOtimesAssoc = plusAssociative
+
+||| 0 is the left identity of max-plus ⊗.
+public export
+mpOtimesIdentityL : (a : Nat) -> mpOtimes 0 a = a
+mpOtimesIdentityL _ = Refl
+
+||| 0 is the right identity of max-plus ⊗.
+public export
+mpOtimesIdentityR : (a : Nat) -> mpOtimes a 0 = a
+mpOtimesIdentityR = plusZeroRightNeutral
+
+||| Max-plus ⊗ distributes over ⊕ from the left.
+public export
+mpDistribL : (a, b, c : Nat) ->
+             mpOtimes a (mpOplus b c) = mpOplus (mpOtimes a b) (mpOtimes a c)
+mpDistribL = plusMaxNDistribL
+
+||| Max-plus ⊗ distributes over ⊕ from the right.
+public export
+mpDistribR : (a, b, c : Nat) ->
+             mpOtimes (mpOplus b c) a = mpOplus (mpOtimes b a) (mpOtimes c a)
+mpDistribR = plusMaxNDistribR

@@ -60,9 +60,10 @@ self-classification) |`+src/ProvenTests/Cells.idr+`
 |Type-safe category suite |*56 / 56 passing*
 |`+./build/exec/proven-tests-suite+`, 2026-08-07
 
-|Spec suite (Proven laws, AffineScript, HigherOrder, SetTheory) |*75 /
-75 passing*, of which *12 report Actually-Proven*
-|`+./build/exec/proven-spec-suite+`, 2026-08-07 — first gated run
+|Spec suite (Proven laws, AffineScript, HigherOrder, SetTheory) |*92 /
+92 passing*, of which *29 report Actually-Proven*
+|`+./build/exec/proven-spec-suite+`, 2026-10-06 (first gated run
+2026-08-07: 75/75, 12 Actually-Proven)
 
 |Benchmark harness |runs; 4 workloads, 5 samples each, calibrated
 iteration counts, `+--json+` emission

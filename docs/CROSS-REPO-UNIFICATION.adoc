@@ -26,10 +26,15 @@ shipped and machine-checked here; the bag-of-actions side is the work named in
 
 The laws are **total, machine-checked Idris2 proofs** (no `believe_me`): `oplus`
 is commutative, associative, idempotent, with `PosInf` as identity; `otimes` is
-commutative with `Fin 0` as identity. Because they are proofs, they hold for
+commutative and associative with `Fin 0` as identity, distributes over `oplus`
+on both sides, and is annihilated by `PosInf` — every commutative-semiring
+axiom (all proved as of 2026-10-06). Because they are proofs, they hold for
 *every* input — which is why the framework lists them as the first genuinely
 **Actually-Proven** test (`ProvenTests.Baton.tropicalLawsClassification`), with a
-proof ladder citing each theorem by name.
+proof ladder citing theorems
+by name. That ladder still lists the six laws proved before
+2026-10-06; the laws added then are cited, type-checked, by
+`tests/ProvenLawsTests/TropicalLawsTests.idr`.
 
 Two consumers, one algebra:
 
