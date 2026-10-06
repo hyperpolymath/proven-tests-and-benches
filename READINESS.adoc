@@ -13,10 +13,12 @@ that ran and passed; it is not a hand-maintained claim.
 
 == Promotion blockers
 
-The benchmark harness is honest but its results are not yet baselined and no
-regression threshold is enforced. The external-subject integration grades one
+The benchmark harness is baselined and gated: `+benchmarks/baseline.json+`
+(mean of the last 10 `+main+` runs) and `+scripts/check-bench-regression.sh+`
+in the required CI job, with the measured tolerances and blind spots in
+`+benchmarks/README.adoc+`. The external-subject integration grades one
 real repository; grade B requires evidence across at least six genuinely
-different external targets. These gaps are tracked in `+DEBT.adoc+` and
+different external targets. That gap is tracked in `+DEBT.adoc+` and
 `+ROADMAP.adoc+`.
 
 == Sources of truth

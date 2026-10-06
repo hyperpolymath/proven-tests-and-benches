@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "kind": "proven-bench-baseline",
+  "bench_schema_version": 1,
+  "statistic": "leave-one-out ratio: a workload median divided by the geometric mean of the other workloads medians in the same run",
+  "method": "arithmetic mean over the source runs (taxonomy: mean of the last 10 CI runs on main)",
+  "note": "Manual tolerance override (taxonomy Part IV permits one with a stated reason): the checker fails at 2.0x the baseline ratio or 2.5x the baseline absolute median, not the taxonomy 1.5x, because 1.5x would have failed green runs on shared GitHub runners (max observed ratio 1.53x, absolute 1.65x). Measured numbers are in benchmarks/README.adoc and scripts/check-bench-regression.sh.",
+  "window": 10,
+  "sources": [
+    {
+      "run_id": "34896163257",
+      "commit": "ad86d0b76370b186863bc176e0a9052ff8d06bbc"
+    },
+    {
+      "run_id": "34947830362",
+      "commit": "414b00a8ba357f239ea4a014eed0006fa53b49ee"
+    },
+    {
+      "run_id": "34954109819",
+      "commit": "b38b7ca0fc01f911a30fdf251d9fa0f1195bd5ac"
+    },
+    {
+      "run_id": "35349482995",
+      "commit": "77e7c88636dffbdc94d1c804a659a2ac9a8714a7"
+    },
+    {
+      "run_id": "36270626251",
+      "commit": "1ecb66760e9d147ce28b274d696be8fd126d676b"
+    },
+    {
+      "run_id": "37132094412",
+      "commit": "fef10222fa4f7b80e6aebe576cb4b8e444c53046"
+    },
+    {
+      "run_id": "37133554922",
+      "commit": "ed8f198fdad0174a4f9c00ec66d0971e6ea5e1b8"
+    },
+    {
+      "run_id": "37147579156",
+      "commit": "31dfc95c72cdd8e028173088ac3a340283c8b91d"
+    },
+    {
+      "run_id": "37471529158",
+      "commit": "40fa9aa004b5dd01db8d287569e1f7e0c4c13705"
+    },
+    {
+      "run_id": "37471889673",
+      "commit": "baaa2361224e082fcb02b75ab6bc1ccc26ed155d"
+    }
+  ],
+  "workloads": {
+    "ceremonyEndsProperly": {
+      "iterations": 8000,
+      "mean_median_ns": 178781233.6,
+      "mean_loo_ratio": 2.9651494080808662
+    },
+    "coveredCatAspect": {
+      "iterations": 120,
+      "mean_median_ns": 38092567.1,
+      "mean_loo_ratio": 0.37088212908285506
+    },
+    "effectStackValid": {
+      "iterations": 10000,
+      "mean_median_ns": 119172840,
+      "mean_loo_ratio": 1.730656989029736
+    },
+    "relationTransitive": {
+      "iterations": 3000000,
+      "mean_median_ns": 49985879.6,
+      "mean_loo_ratio": 0.5345516293079953
+    }
+  }
+}
