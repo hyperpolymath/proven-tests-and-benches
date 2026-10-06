@@ -17,7 +17,8 @@ import Data.String
 
 
 -- Tropical semiring: (ℝ ∪ {∞}, min, +)
--- Identity: min(x, 0) = x, x + ∞ = ∞
+-- Identities: min(x, +inf) = x (min's identity is +inf, not 0), x + 0 = x;
+-- +inf absorbs +: x + inf = inf
 -- Properties: min is idempotent, + is commutative and associative
 
 -- Resource bound representation

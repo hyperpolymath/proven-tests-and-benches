@@ -9,6 +9,7 @@ import ProvenTests.Types
 import ProvenTests.Framework
 import ProvenTests.Taxonomy
 import ProvenLawsTests.LawsTests
+import ProvenLawsTests.TropicalLawsTests
 import AffineScriptTests.AffinityTests
 import AffineScriptTests.BorrowTests
 import HigherOrderTests.IdentityTests
@@ -88,7 +89,8 @@ allSuiteTests =
 
 suite : TestSuite
 suite = MkTestSuite "Spec suites (Proven + AffineScript + HigherOrder + SetTheory)"
-          (map toRunnable allProvenLawsTests ++ map toRunnable allSuiteTests)
+          (map toRunnable allProvenLawsTests ++ map toRunnable allTropicalLawsTests
+           ++ map toRunnable allSuiteTests)
 
 isPass : TestResult -> Bool
 isPass Passed = True

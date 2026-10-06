@@ -9,10 +9,13 @@ Required by the Proven Tests specification
 
 [IMPORTANT]
 ====
-**12 properties are now Actually-Proven.** The tier was empty until 2026-07-28.
+**29 spec-suite properties are now Actually-Proven** — the 12 laws in
+`Proven/Laws.idr` (2026-07-28) plus 17 tropical and max-plus laws in
+`Tropical.idr` (2026-10-06). The tier was empty until 2026-07-28.
 
-The framework defines three tiers and implements all three. Measured after the
-first Actually-Proven suite landed:
+The framework defines three tiers and implements all three. Measured on
+2026-07-28, after the first Actually-Proven suite landed (before the 17
+tropical and max-plus laws; the table is that snapshot):
 
 [cols="2,1,4"]
 !===
@@ -131,7 +134,7 @@ injected failure, **51/52, exit 1**.
 | `Bridge` | cross-representation bridging
 |===
 
-=== `proven-spec-suite` — Proven + AffineScript + HigherOrder + SetTheory (75 tests)
+=== `proven-spec-suite` — Proven + AffineScript + HigherOrder + SetTheory (92 tests)
 
 ==== Actually-Proven laws (12 theorems)
 
@@ -172,6 +175,46 @@ is quantified over all inputs with a term inhabiting it.
 ! `length (filter p xs) <= length xs`
 ! Induction with a with-split; the bound that makes affinity's use-count meaningful
 !===
+
+==== Actually-Proven tropical and max-plus laws (17 theorems)
+
+`src/ProvenTests/Tropical.idr`, exercised by
+`tests/ProvenLawsTests/TropicalLawsTests.idr`. Each test passes the theorem to
+`cite` at the law's full statement, so a deleted or weakened theorem stops the
+suite compiling — the citation is type-checked, not only a string.
+
+[cols="3,3"]
+!===
+! Law ! Theorem(s)
+
+! Min-plus `⊗` associative; `Fin 0` left identity
+! `otimesAssoc`, `otimesIdentityL`
+
+! Min-plus `⊗` distributes over `⊕` (left, right)
+! `otimesDistribL`, `otimesDistribR` (via `plusMinNDistribL/R`)
+
+! `PosInf` annihilates `⊗` (left, right)
+! `otimesAbsorbL`, `otimesAbsorbR`
+
+! Max-plus `max`: commutative, associative, idempotent, identity 0 (both sides)
+! `mpOplusComm`, `mpOplusAssoc`, `mpOplusIdem`, `mpOplusIdentityL/R`
+
+! Max-plus `+`: commutative, associative, identity 0 (both sides)
+! `mpOtimesComm`, `mpOtimesAssoc`, `mpOtimesIdentityL/R`
+
+! Max-plus `+` distributes over `max` (left, right)
+! `mpDistribL`, `mpDistribR` (via `plusMaxNDistribL/R`)
+!===
+
+With the laws proved before 2026-10-06 (`⊕` comm/assoc/idem/identity, `⊗`
+comm/right identity), min-plus over `Nat ∪ {PosInf}` now satisfies every
+commutative-semiring axiom. Max-plus over `Nat` does *not*: its `⊕`-identity 0
+does not annihilate `+` (`0 + a = a`), so it is a semiring minus annihilation.
+Two `failing "Mismatch between"` blocks in the same test file require the type
+checker to reject false laws — max-plus `0` annihilating `+`, and min-plus `⊗`
+idempotence. Planting either one as a true statement (`= 3`, `= Fin 4`) turns the build
+red with "Failing block did not fail", so each block rejects for the stated
+reason.
 
 The last two matter most: they are the AffineScript affinity properties
 *proved* rather than sampled.

@@ -43,7 +43,7 @@ testTropicalMinIdentity : ProvisionallyProvenTest
 testTropicalMinIdentity = 
   provisionalTest (tropicalTestId 3) "Tropical min identity property" (
     assertTrue (tropicalMinIdentity exampleBound1) 
-      "min(x, 0) should equal x in tropical semiring"
+      "min(x, +inf) should equal x in tropical semiring"
   )
 
 -- Test: Tropical plus identity

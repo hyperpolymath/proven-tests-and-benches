@@ -35,7 +35,9 @@ so a claimed-covered cell cannot be faked.
   categories; the 17th, `TypeSafeTest`, is a *local extension* to this
   repository and exists in no standard. The drift is intentional but unratified
   — see `DEBT.md` S-4.
-* A machine-checked tropical (min-plus) semiring for cost-aware test routing
+* A machine-checked tropical (min-plus) semiring for cost-aware test routing —
+  every commutative-semiring axiom, including distributivity and `PosInf`
+  annihilation — plus a max-plus structure for worst-case bench bounds
   (`src/ProvenTests/Tropical.idr` — total proofs, no escape hatches)
 * Honest status reporting: see `docs/STATE-OF-THINGS.adoc` (the self-audit)
   and `READINESS.adoc` (Component Readiness Grade)
@@ -111,7 +113,7 @@ proven-tests-and-benches/
 │   ├── Types.idr             # evidence-carrying provenance (the core idea)
 │   ├── Classification.idr    # tier constructors and honest promotion
 │   ├── Taxonomy.idr          # 17 categories × 14 aspects × 12 kategoria levels
-│   ├── Tropical.idr          # machine-checked min-plus semiring (total proofs)
+│   ├── Tropical.idr          # machine-checked min-plus semiring + max-plus (total proofs)
 │   ├── Zigzag.idr            # co-phase × actor × category × aspect lattice
 │   ├── Baton.idr             # cross-repo contract: coord + provenance + cost
 │   ├── Coverage.idr          # self-deriving coverage (cannot be faked)

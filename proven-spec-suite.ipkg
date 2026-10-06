@@ -9,6 +9,7 @@ executable = "proven-spec-suite"
 depends = proven-tests
 
 modules = ProvenLawsTests.LawsTests,
+         ProvenLawsTests.TropicalLawsTests,
          AffineScriptTests.AffinityTests,
          AffineScriptTests.BorrowTests,
          HigherOrderTests.IdentityTests,
