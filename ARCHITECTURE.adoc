@@ -133,12 +133,15 @@ hole syntax appear nowhere in `+src+`, `+tests+`, `+benchmarks+`,
 `+just lint+`.
 * *Totality everywhere, checked.* Every `+.idr+` file in that scope declares
 `+%default total+`, and the same script fails on a file that does not. The
-only functions that opt out are the five I/O functions on a `+readFile+` path
-(it consumes fuel until EOF, so it cannot be total): `+readRequired+`,
-`+readOwed+`, `+runReport+` and `+main+` in
-`+integrations/proven/src/ProvenSubject/Main.idr+`, and `+main+` in the
-corpus unit. Each carries an explicit function-level
-`+covering+`, which the totality checker still verifies.
+only functions that opt out are seven I/O functions on a `+readFile+` or
+`+runSuite+` path (they consume fuel until EOF, so they cannot be total):
+`+readRequired+`, `+readOwed+`, `+runReport+` and `+main+` in
+`+integrations/proven/src/ProvenSubject/Main.idr+`,
+`+metaFailingSuiteDetected+` and `+metaNegativeCell+` in
+`+src/ProvenTests/Meta.idr+`, and `+main+` in the corpus unit. Each carries
+an explicit function-level `+covering+`, which the totality checker still
+verifies, and the same script fails on any `+covering+` declaration that is
+not one of those exact file:function pairs.
 * *One toolchain version.* Seven artefacts name an Idris2 version;
 `+scripts/check-toolchain-pins.sh+` fails if any disagree.
 * *Typed taxonomy axes.* Categories and aspects are enums, not strings,

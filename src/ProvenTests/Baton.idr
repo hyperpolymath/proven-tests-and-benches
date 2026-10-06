@@ -61,16 +61,24 @@ cheaperBaton x y = if lteEN (cost x) (cost y) then x else y
 tropicalFile : Maybe String
 tropicalFile = Just "src/ProvenTests/Tropical.idr"
 
+--/ The Actually-Proven classification of the tropical semiring laws: six rungs
+--/ built with `rung`, each citing a total theorem in ProvenTests.Tropical.
 public export
 tropicalLawsClassification : TestMetadata
 tropicalLawsClassification =
   let tid    = MkTestId "ProvenTests.Tropical" "semiringLaws" 0
-      ladder = Witness (MkProofStep "min-plus (+) is commutative"  tropicalFile Nothing (Just "oplusComm")) _ oplusComm
-           ::: [ Witness (MkProofStep "(+) is associative"         tropicalFile Nothing (Just "oplusAssoc")) _ oplusAssoc
-               , Witness (MkProofStep "(+) is idempotent"          tropicalFile Nothing (Just "oplusIdem")) _ oplusIdem
-               , Witness (MkProofStep "PosInf is the (+) identity" tropicalFile Nothing (Just "oplusIdentityR")) _ oplusIdentityR
-               , Witness (MkProofStep "Fin 0 is the (*) identity"  tropicalFile Nothing (Just "otimesIdentityR")) _ otimesIdentityR
-               , Witness (MkProofStep "(*) is commutative"         tropicalFile Nothing (Just "otimesComm")) _ otimesComm ]
+      ladder = rung "min-plus (+) is commutative" tropicalFile Nothing `{oplusComm}
+                 ((a, b : ExtNat) -> oplus a b = oplus b a)
+           ::: [ rung "(+) is associative" tropicalFile Nothing `{oplusAssoc}
+                   ((a, b, c : ExtNat) -> oplus a (oplus b c) = oplus (oplus a b) c)
+               , rung "(+) is idempotent" tropicalFile Nothing `{oplusIdem}
+                   ((a : ExtNat) -> oplus a a = a)
+               , rung "PosInf is the (+) identity" tropicalFile Nothing `{oplusIdentityR}
+                   ((a : ExtNat) -> oplus a PosInf = a)
+               , rung "Fin 0 is the (*) identity" tropicalFile Nothing `{otimesIdentityR}
+                   ((a : ExtNat) -> otimes a (Fin 0) = a)
+               , rung "(*) is commutative" tropicalFile Nothing `{otimesComm}
+                   ((a, b : ExtNat) -> otimes a b = otimes b a) ]
       design = MkDesignSafetyProof
                  "Tropical (min-plus) semiring over Nat union {PosInf}"
                  "Total, machine-checked Idris2 equality proofs"

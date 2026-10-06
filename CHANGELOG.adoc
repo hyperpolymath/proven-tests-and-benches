@@ -8,6 +8,26 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === [Unreleased]
 
+==== 2026-10-06 — rung citations are derived from the term (#87 review)
+
+* *`+rung+` macro* (`+src/ProvenTests/Types.idr+`): one quoted theorem name
+supplies both the proof term and the printed citation, elaborated against the
+full statement at compile time. Every ladder (Laws suite, Baton, Cells) is
+built with it, and no rung uses `+_+` as its statement any more.
+* *Correction to the entry below:* `+Witness+` alone did not stop a rung
+whose `+theorem+` string named a missing theorem; only its *term* had to
+exist. That is now true for every rung built with `+rung+`; a hand-built
+`+Witness+` with a free label still compiles and is kept as a residual control.
+* *SpecSuite controls* now pin the macro's own reflection errors, and a
+compile-time `+Refl+` checks that the derived citation is the literal name.
+* *`+covering+` is allowlisted:* `+scripts/check-escape-hatches.sh+` fails on
+any function-level `+covering+` that is not one of seven exact I/O
+file:function pairs, closing the route by which a `+covering+` citer could
+cite a non-terminating theorem. Three planted controls give rc=1.
+* *Dead `+emptyProofLadder+` / `+addProofStep+` removed*
+(`+src/ProvenTests/Classification.idr+`): `+List ProofStep+` helpers that
+nothing called.
+
 ==== 2026-10-06 — the Actually-Proven tier carries its proofs
 
 * *`+proof_ladder+` is now `+List1 Witnessed+`* (`+src/ProvenTests/Types.idr+`):

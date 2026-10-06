@@ -85,16 +85,20 @@ failing "Mismatch between"
 -- Actually-Proven evidence used to be strings: a ladder could name a theorem
 -- that did not exist, or claim a property its theorem never stated, and the
 -- framework would print [Actually-Proven] anyway. Each rung now carries the
--- proof term. The three blocks below are the three forgeries that must no
--- longer compile; each body was lifted out and checked for exactly this
--- error before being placed here (2026-10-06, Idris2 0.7.0).
+-- proof term, and every ladder builds its rungs with `ProvenTests.Types.rung`,
+-- which derives the citation from the same quoted name it checks. The three
+-- blocks below are the three forgeries that must no longer compile; each body
+-- was lifted out and checked for exactly this error before being placed here
+-- (2026-10-06, Idris2 0.7.0). A macro error arrives wrapped in an
+-- ambiguity list (Idris2 also tries the partial applications), so (1) and (3)
+-- pin the macro's own reflection error, not the wrapper's generic text.
 
 -- (1) A real theorem cited for a property it does not prove.
-failing "Mismatch between"
+failing "Mismatch between: xs and []"
   wrongStatement : Witnessed
   wrongStatement =
-    Witness (MkProofStep "forged" Nothing Nothing (Just "appendNilRightProof"))
-      ((xs : List Nat) -> xs ++ [] = []) appendNilRightProof
+    rung "forged" Nothing Nothing `{appendNilRightProof}
+      ((xs : List Nat) -> xs ++ [] = [])
 
 -- (2) The pre-tier shape: a ladder of citations with no proof terms.
 failing "Mismatch between: ProofStep and Witnessed"
@@ -103,21 +107,57 @@ failing "Mismatch between: ProofStep and Witnessed"
     MkActualEvidence (singleton (MkProofStep "forged" Nothing Nothing (Just "anything")))
       (MkDesignSafetyProof "d" "t" [] []) (MkTypeSafetyCertificate 6 "s" "v" [])
 
--- (3) A citation to a theorem that does not exist (deleted or renamed).
-failing "Undefined name"
+-- (3) A citation to a theorem that does not exist (deleted or renamed). The
+-- quoted name is the only input, so this is the citation itself failing.
+failing "Error during reflection: Undefined name noSuchTheorem"
   danglingCitation : Witnessed
   danglingCitation =
-    Witness (MkProofStep "forged" Nothing Nothing (Just "noSuchTheorem")) _ noSuchTheorem
+    rung "forged" Nothing Nothing `{noSuchTheorem}
+      ((xs : List Nat) -> xs ++ [] = xs)
 
--- RESIDUAL (a positive control, kept on purpose): a TRIVIAL witness still
--- compiles. The tier proves that the cited term inhabits the stated
--- proposition, NOT that the proposition is the one the test description
--- names. This forgery is a visible lie in code, reviewable in a diff, where
--- the old one was an invisible string. It is private and used by nothing.
+-- (4) The citation is derived from the term, not typed beside it: a rung
+-- built from `{appendNilRightProof} cites exactly "appendNilRightProof". If
+-- the derivation ever stopped reducing to the literal name, this would not
+-- typecheck.
+--/ A rung built from `{appendNilRightProof}, used to check its derived citation.
+private
+derivedRung : Witnessed
+derivedRung =
+  rung "appendNilRight" Nothing Nothing `{appendNilRightProof}
+    ({0 a : Type} -> (xs : List a) -> xs ++ [] = xs)
+
+--/ The theorem a rung cites.
+private
+citationOf : Witnessed -> Maybe String
+citationOf (Witness s _ _) = s.theorem
+
+--/ Compile-time check: the derived citation is the literal theorem name.
+private
+citationIsDerived : citationOf SpecSuite.Main.derivedRung = Just "appendNilRightProof"
+citationIsDerived = Refl
+
+-- RESIDUALS (positive controls, kept on purpose). Both still compile.
+--
+-- (a) A TRIVIAL witness. The tier proves that the cited term inhabits the
+-- stated proposition, NOT that the proposition is the one the test description
+-- names.
+--/ Residual (a): a trivial witness that still compiles.
 private
 trivialWitnessStillCompiles : Witnessed
 trivialWitnessStillCompiles =
   Witness (MkProofStep "residual: proves Unit, claims nothing" Nothing Nothing Nothing) () ()
+
+-- (b) A HAND-BUILT witness whose label names another theorem. `rung` binds the
+-- citation to the term; the `Witness` constructor, which stays public, does
+-- not. Every ladder in this repository uses `rung`; this is what bypassing it
+-- looks like. Both forgeries are visible lies in code, reviewable in a diff,
+-- where the pre-tier ones were invisible strings. Private, used by nothing.
+--/ Residual (b): a hand-built witness whose label is not its term.
+private
+handBuiltLabelStillCompiles : Witnessed
+handBuiltLabelStillCompiles =
+  Witness (MkProofStep "residual: label is not the term" Nothing Nothing (Just "noSuchTheorem"))
+    ({0 a : Type} -> (xs : List a) -> xs ++ [] = xs) appendNilRightProof
 
 allSuiteTests : List ProvisionallyProvenTest
 allSuiteTests =
