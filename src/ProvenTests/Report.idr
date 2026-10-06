@@ -13,6 +13,8 @@ import Data.List
 import Data.List1
 import Data.String
 
+%default total
+
 -- =============================================================================
 -- REPORT DATA STRUCTURES
 -- =============================================================================
@@ -184,7 +186,7 @@ jmaybeAsp (Just a) = jstr (show a)
 
 --/ The proof ladder behind a provenance (empty unless Actually-Proven).
 ladderOf : Provenance -> List ProofStep
-ladderOf (PActuallyProven ev) = forget (proof_ladder ev)
+ladderOf (PActuallyProven ev) = map step (forget (proof_ladder ev))
 ladderOf _                    = []
 
 proofStepJSON : ProofStep -> String

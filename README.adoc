@@ -26,7 +26,8 @@ so a claimed-covered cell cannot be faked.
 
 * Tests are written in Idris2; provenance is evidence-carrying by construction
   (`src/ProvenTests/Types.idr`: an Actually-Proven classification *requires* a
-  non-empty proof ladder — the type system rejects the claim without the evidence)
+  non-empty ladder of typechecked proof terms (`List1 Witnessed`) — the type
+  system rejects the claim without the proof, not merely without a citation)
 * Three-tier classification: Actually-Proven, Provisionally-Proven, Unproven
   (see `docs/CHARACTERISTICS.adoc` for the evidence-spectrum philosophy:
   example → property → proof)

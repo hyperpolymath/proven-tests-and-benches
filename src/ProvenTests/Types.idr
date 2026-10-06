@@ -11,6 +11,10 @@ import Data.String
 import Data.List
 import Data.List1
 import Data.Maybe
+import public Language.Reflection
+
+%language ElabReflection
+%default total
 
 -- =============================================================================
 -- PROVENANCE CLASSIFICATION
@@ -276,13 +280,69 @@ record ProvisionalEvidence where
   framework_safety : FrameworkSafetyProof
   test_safety      : TypeSafetyCertificate
 
+--/ One rung of an Actually-Proven ladder: the citation AND the proof term it
+--/ cites. `statement` is the proposition; `term` must inhabit it, so the
+--/ typechecker — not a reviewer — confirms the cited theorem exists, still has
+--/ the stated type, and is the term the ladder names. Both are erased (quantity
+--/ 0): the evidence is checked at compile time and costs nothing at run time.
+--/
+--/ What this does NOT stop: a deliberately trivial witness
+--/ (`Witness s () ()`) still compiles. That forgery is now a visible lie in
+--/ code rather than an unchecked string, and `tests/SpecSuite/Main.idr` keeps
+--/ it as a recorded positive control so nobody reads the tier as unforgeable.
+public export
+record Witnessed where
+  constructor Witness
+  step          : ProofStep
+  0 statement   : Type
+  0 term        : statement
+
+-- =============================================================================
+-- RUNG: a proof-carrying ladder step whose citation cannot drift from its term
+-- =============================================================================
+-- Built with the `Witness` constructor directly, a rung's `theorem` string and
+-- its proof term are two independent inputs: `Just "noSuchTheorem"` beside
+-- `oplusComm` typechecks, and the report would publish the dangling citation.
+--
+-- `rung` takes ONE input for both, a quoted name (`{oplusComm}). At compile
+-- time it elaborates that name against the stated proposition and derives the
+-- citation from the same name, so the name that is checked is the name that is
+-- printed. A missing theorem is "Undefined name"; a theorem that proves a
+-- different proposition fails to unify. tests/SpecSuite/Main.idr holds both as
+-- `failing` blocks, plus a compile-time check that the derived citation is the
+-- literal name.
+--
+-- Every ladder in this repository is built with `rung`. The constructor stays
+-- public (other modules pattern-match on it), so a hand-built `Witness` with a
+-- mismatched label still compiles; SpecSuite keeps that as a residual control.
+
+--/ The unqualified name of a quoted theorem: `ProvenTests.Tropical.oplusComm`
+--/ and `oplusComm` both give "oplusComm". Public so the derived citation
+--/ reduces at compile time.
+public export
+baseName : Name -> String
+baseName (NS _ n) = baseName n
+baseName (UN (Basic s)) = s
+baseName n = show n
+
+--/ A proof-carrying rung: description, cited file, optional line, the quoted
+--/ theorem name, and the full proposition it proves. The term is the theorem
+--/ itself, checked against the proposition; the citation is derived from it.
+export
+%macro
+rung : String -> Maybe String -> Maybe Nat -> Name -> (stmt : Type) -> Elab Witnessed
+rung desc file line thm stmt = do
+  prf <- check {expected = stmt} (IVar EmptyFC thm)
+  pure (Witness (MkProofStep desc file line (Just (baseName thm))) stmt prf)
+
 --/ Evidence required to justify an Actually-Proven classification.
---/ The proof ladder is a non-empty `List1`, so it is impossible to claim
---/ Actually-Proven with zero proof steps.
+--/ The proof ladder is a non-empty `List1` of proof-carrying rungs, so it is
+--/ impossible to claim Actually-Proven with zero proof steps, and every step
+--/ carries a typechecked proof term (see `Witnessed`).
 public export
 record ActualEvidence where
   constructor MkActualEvidence
-  proof_ladder : List1 ProofStep
+  proof_ladder : List1 Witnessed
   design_proof : DesignSafetyProof
   type_safety  : TypeSafetyCertificate
 
@@ -312,8 +372,8 @@ Show Provenance where
 -- specimen of the declared defect class, MUST fire — silence is a payload
 -- fault). "A test missing either fixture is *inadmissible*." This block makes
 -- that a type obligation rather than a review convention, following the
--- `List1 ProofStep` precedent that makes zero-step Actually-Proven
--- unrepresentable.
+-- `List1 Witnessed` precedent that makes zero-step (and proof-free)
+-- Actually-Proven unrepresentable.
 
 --/ Where a fixture lives. Runtime construction is legitimate (R10.7): a
 --/ fixture built by the test run itself cannot silently rot into validity

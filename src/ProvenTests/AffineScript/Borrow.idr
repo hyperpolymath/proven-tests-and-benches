@@ -7,6 +7,8 @@ module ProvenTests.AffineScript.Borrow
 
 import Data.List
 
+%default total
+
 -- =============================================================================
 -- BORROWING: NO CONFLICTING BORROWS, NO ESCAPING BORROWS
 -- =============================================================================

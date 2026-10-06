@@ -9,6 +9,8 @@ import ProvenTests.SetTheory.Basics
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- SET OPERATION TESTS - EXECUTABLE
 -- =============================================================================

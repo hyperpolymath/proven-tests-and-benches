@@ -9,6 +9,8 @@ import ProvenTests.TypeSafe.Bridge
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- BRIDGE TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================

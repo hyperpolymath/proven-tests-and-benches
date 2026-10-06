@@ -9,6 +9,8 @@ import ProvenTests.TypeSafe.Dyadic
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- DYADIC TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================

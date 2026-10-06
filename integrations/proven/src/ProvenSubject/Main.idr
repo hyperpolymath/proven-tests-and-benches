@@ -15,7 +15,7 @@ import System.File
 import Data.String
 import Data.List
 
-%default covering
+%default total
 
 -- =============================================================================
 -- proven-subject-report — grade proven's modules by three-tier provenance
@@ -31,7 +31,10 @@ trustDisclaimer = unlines
   , "(MODULE-STATUS.txt + .machine_readable/descriptiles/STATE.a2ml). The proofs are NOT"
   , "re-checked here; the grading only reflects what proven already states about"
   , "itself. 'Actually-Proven' under the strict reading additionally requires a"
-  , "module to sit in proven's own zero-OWED clean set."
+  , "module to sit in proven's own zero-OWED clean set. Every tier below is a"
+  , "CLAIM counted from those ledgers: Actually-Proven evidence needs a proof"
+  , "term typechecked in THIS build, so the provenance held here for any proven"
+  , "module is at most Provisionally-Proven (checked by the sanity gate)."
   , "----------------------------------------------------------------------------" ]
 
 resolveRoot : List String -> IO String
@@ -42,6 +45,9 @@ resolveRoot args = do
     (Nothing, (_ :: r :: _)) => r
     _                    => "/home/user/proven"
 
+-- `covering`, not total: readFile consumes fuel until EOF (Data.Fuel.forever).
+-- Every pure function in this package remains under %default total.
+covering
 readRequired : String -> IO String
 readRequired path = do
   result <- readFile path
@@ -51,6 +57,7 @@ readRequired path = do
       putStrLn ("ERROR: cannot read " ++ path ++ ": " ++ show err)
       exitFailure
 
+covering
 readOwed : String -> IO (String, String)
 readOwed root = do
   let canonicalPath = root ++ "/.machine_readable/descriptiles/STATE.a2ml"
@@ -84,6 +91,7 @@ partition3 gs =
   , filter (\g => statusOfGraded g == ProvisionallyProven) gs
   , filter (\g => statusOfGraded g == Unproven) gs )
 
+covering
 runReport : List String -> IO ()
 runReport args = do
   root <- resolveRoot args
@@ -138,12 +146,16 @@ runReport args = do
 
   -- Sanity gate mirroring the plan: strict Actually-Proven must be <= declared
   -- FIRST-CLASS count, and the whole report reconciles the module count.
-  let ok = actually sc <= actually dc && length mods > 0
+  -- And no external module may HOLD Actually-Proven evidence: that tier
+  -- requires a proof term typechecked in this build (ProvenTests.Types.Witnessed).
+  let heldActually = filter (\g => heldHere g == ActuallyProven) (declared ++ strict)
+  let ok = actually sc <= actually dc && length mods > 0 && null heldActually
   if ok
     then putStrLn "proven-subject-report: OK"
     else do putStrLn "proven-subject-report: FAILED sanity gate"
             exitFailure
 
+covering
 main : IO ()
 main = do
   args <- getArgs

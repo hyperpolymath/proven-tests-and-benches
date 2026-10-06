@@ -28,6 +28,8 @@ import Data.List1
 import Data.List
 import System.Clock
 
+%default total
+
 -- =============================================================================
 -- LATTICE CELLS — self-deriving coverage
 -- =============================================================================
@@ -90,7 +92,7 @@ ioc co name act =
     act
 
 -- Actually-Proven cell: a machine-checked proof ladder + a runtime spot-check.
-ac : ZigzagCoord -> String -> List1 ProofStep -> Bool -> CellTest
+ac : ZigzagCoord -> String -> List1 Witnessed -> Bool -> CellTest
 ac co name ladder b =
   MkCellTest co
     (withCoord co (classifyActuallyProven (mkId name) name ladder
@@ -106,23 +108,33 @@ K = MkCoord
 tropFile : Maybe String
 tropFile = Just "src/ProvenTests/Tropical.idr"
 
-tropLadder : List1 ProofStep
+--/ The rungs citing four min-plus laws, each checked against its full statement.
+tropLadder : List1 Witnessed
 tropLadder =
-  MkProofStep "min-plus (+) commutative" tropFile Nothing (Just "oplusComm")
-    ::: [ MkProofStep "(+) associative" tropFile Nothing (Just "oplusAssoc")
-        , MkProofStep "(+) idempotent"  tropFile Nothing (Just "oplusIdem")
-        , MkProofStep "(*) commutative" tropFile Nothing (Just "otimesComm") ]
+  rung "min-plus (+) commutative" tropFile Nothing `{oplusComm}
+    ((a, b : ExtNat) -> oplus a b = oplus b a)
+    ::: [ rung "(+) associative" tropFile Nothing `{oplusAssoc}
+            ((a, b, c : ExtNat) -> oplus a (oplus b c) = oplus (oplus a b) c)
+        , rung "(+) idempotent" tropFile Nothing `{oplusIdem}
+            ((a : ExtNat) -> oplus a a = a)
+        , rung "(*) commutative" tropFile Nothing `{otimesComm}
+            ((a, b : ExtNat) -> otimes a b = otimes b a) ]
 
 -- proof ladder for the framework's own meta-theorems (cited from ProvenTests.Meta)
 metaFile : Maybe String
 metaFile = Just "src/ProvenTests/Meta.idr"
 
-metaLadder : List1 ProofStep
+--/ The rungs citing the framework's own meta-theorems in ProvenTests.Meta.
+metaLadder : List1 Witnessed
 metaLadder =
-  MkProofStep "statusOf never upgrades a tier" metaFile Nothing (Just "statusOfActual")
-    ::: [ MkProofStep "a failed cell contributes no coverage" metaFile Nothing (Just "coveredFromExcludesFailure")
-        , MkProofStep "a passed cell contributes exactly its coord" metaFile Nothing (Just "coveredFromIncludesPass")
-        , MkProofStep "empty coverage covers no cell" metaFile Nothing (Just "emptyCoverageIsEmpty") ]
+  rung "statusOf reports Actually-Proven evidence as Actually-Proven" metaFile Nothing `{statusOfActual}
+    ((e : ActualEvidence) -> statusOf (PActuallyProven e) = ActuallyProven)
+    ::: [ rung "a failed cell contributes no coverage" metaFile Nothing `{coveredFromExcludesFailure}
+            ((co : ZigzagCoord) -> (m : TestMetadata) -> (msg : String) -> coveredFrom [(co, m, Failed msg)] = [])
+        , rung "a passed cell contributes exactly its coord" metaFile Nothing `{coveredFromIncludesPass}
+            ((co : ZigzagCoord) -> (m : TestMetadata) -> coveredFrom [(co, m, Passed)] = [co])
+        , rung "empty coverage covers no cell" metaFile Nothing `{emptyCoverageIsEmpty}
+            ((c : TestCategory) -> (a : TestAspect) -> cellCoveredBy [] c a = False) ]
 
 -- A timed reproducibility/performance workload: fold ⊕/⊗ over a range, twice.
 tropWorkload : Nat -> ExtNat

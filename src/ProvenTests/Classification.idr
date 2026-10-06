@@ -8,19 +8,11 @@ module ProvenTests.Classification
 import ProvenTests.Types
 import Data.List1
 
+%default total
+
 -- =============================================================================
 -- ACTUALLY-PROVEN CLASSIFICATION
 -- =============================================================================
-
---/ Evidence for Actually-Proven classification
-public export
-record ActuallyProvenEvidence where
-  constructor MkActuallyProvenEvidence
-  proof_ladder      : List ProofStep
-  design_proof      : DesignSafetyProof
-  type_safety       : TypeSafetyCertificate
-  formal_verification : List String
-  coverage          : List String
 
 --/ Classifier for Actually-Proven tests
 public export
@@ -34,7 +26,7 @@ isActuallyProven m = case statusOf (provenance m) of
 --/ its fixture position (TEST-DOCTRINE.adoc §2, standards R10).
 public export
 classifyActuallyProven :
-     TestId -> String -> List1 ProofStep -> DesignSafetyProof ->
+     TestId -> String -> List1 Witnessed -> DesignSafetyProof ->
      TypeSafetyCertificate -> FixtureObligation -> TestMetadata
 classifyActuallyProven tid desc ladder design type_safe fixtures =
   MkTestMetadata tid desc Nothing Nothing Nothing fixtures
@@ -108,7 +100,7 @@ promoteToProvisionallyProven meta fw ts = case provenance meta of
 --/ Promote from Provisionally-Proven to Actually-Proven
 public export
 promoteToActuallyProven :
-     TestMetadata -> List1 ProofStep -> DesignSafetyProof ->
+     TestMetadata -> List1 Witnessed -> DesignSafetyProof ->
      TypeSafetyCertificate -> Maybe TestMetadata
 promoteToActuallyProven meta ladder design ts = case provenance meta of
   PProvisionallyProven _ =>
@@ -118,14 +110,6 @@ promoteToActuallyProven meta ladder design ts = case provenance meta of
 -- =============================================================================
 -- CONSTRUCTORS
 -- =============================================================================
-
-public export
-emptyProofLadder : List ProofStep
-emptyProofLadder = []
-
-public export
-addProofStep : ProofStep -> List ProofStep -> List ProofStep
-addProofStep step ladder = ladder ++ [step]
 
 public export
 proofStep : String -> Maybe String -> Maybe Nat -> Maybe String -> ProofStep

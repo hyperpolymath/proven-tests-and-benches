@@ -9,6 +9,8 @@ import ProvenTests.Types
 import ProvenTests.Classification
 import Data.String
 
+%default total
+
 -- =============================================================================
 -- CHOREOGRAPHIC TYPE SYSTEM TESTS
 -- =============================================================================
@@ -45,7 +47,13 @@ choreographicEndsProperly : SessionType -> Bool
 choreographicEndsProperly End = True
 choreographicEndsProperly (Send _ st) = choreographicEndsProperly st
 choreographicEndsProperly (Recv _ st) = choreographicEndsProperly st
-choreographicEndsProperly (Choice _ branches) = all choreographicEndsProperly branches
+choreographicEndsProperly (Choice _ branches) = allEndProperly branches
+  where
+    ||| True when every branch ends properly. Recurses over the list itself,
+    ||| because `all` hides the structural descent from the totality checker.
+    allEndProperly : List SessionType -> Bool
+    allEndProperly [] = True
+    allEndProperly (b :: bs) = choreographicEndsProperly b && allEndProperly bs
 
 -- Test: No orphaned choices — every label has a branch, checked RECURSIVELY.
 --
@@ -59,7 +67,13 @@ choreographicNoOrphanedChoices End = True
 choreographicNoOrphanedChoices (Send _ st) = choreographicNoOrphanedChoices st
 choreographicNoOrphanedChoices (Recv _ st) = choreographicNoOrphanedChoices st
 choreographicNoOrphanedChoices (Choice labels branches) =
-  length labels == length branches && all choreographicNoOrphanedChoices branches
+  length labels == length branches && allNoOrphans branches
+  where
+    ||| True when no branch has an orphaned choice. Recurses over the list
+    ||| itself, because `all` hides the structural descent from the checker.
+    allNoOrphans : List SessionType -> Bool
+    allNoOrphans [] = True
+    allNoOrphans (b :: bs) = choreographicNoOrphanedChoices b && allNoOrphans bs
 
 -- Test: Dual session (send and recv match)
 public export

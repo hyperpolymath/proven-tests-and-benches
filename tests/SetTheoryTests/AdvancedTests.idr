@@ -10,6 +10,8 @@ import ProvenTests.SetTheory.Basics
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- HIGHER SET CONCEPT TESTS - EXECUTABLE
 -- =============================================================================

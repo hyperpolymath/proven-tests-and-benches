@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+= Benchmarks and the regression gate
+
+`+Benchmark.idr+` times four frozen workloads (median of 5 samples each) and
+writes JSON v1 with `+--json+`. CI uploads that JSON as the
+`+proven-bench-<run-id>+` artifact on every run, then
+`+scripts/check-bench-regression.sh+` compares it against
+`+baseline.json+` in the required job `+Build, test and benchmark+`.
+
+== What the gate compares
+
+Shared GitHub runners differ in CPU class from run to run, so absolute
+nanoseconds are not stable enough to gate on. The primary statistic is the
+*leave-one-out ratio*: a workload's median divided by the geometric mean of
+the other workloads' medians in the same run. A machine that is slower at
+everything cancels out. A workload that regresses on its own does not.
+
+* *Unacceptable (fails CI):* ratio above *2.0×* its baseline ratio, or
+  absolute median above *2.5×* its baseline mean. The absolute backstop is
+  there because the ratio cannot see a uniform slowdown.
+* *Extraordinary (passes, flagged):* ratio below 0.5× baseline.
+* *Ordinary:* everything else.
+
+A missing or malformed file, a workload present on one side only, a changed
+iteration count, or a false checksum exits 2: no check was performed, and that
+is not a pass.
+
+== Why 2.0× and not the taxonomy's 1.5×
+
+The taxonomy (Part IV) hard-fails at more than 50% regression and allows a
+manual override with a stated reason. This is that reason. Replaying every
+`+proven-bench+` artifact still retained on 2026-10-06 through the gate:
+
+[cols="2,1,1,1",options="header"]
+|===
+|Runs |Max ratio |Min ratio |Max absolute
+|28 `+main+` runs (31395958124 … 37471889673) |1.515 |0.672 |1.650
+|27 branch/PR runs |1.527 |0.672 |1.617
+|===
+
+All 55 pass at 2.0× / 2.5×. At 1.5× the green `+main+` run 31397293912
+would have failed. The margins are 1.31× (ratio) and 1.52× (absolute).
+Artifacts from before #85 carry the old XOR-parity checksum, which was false
+on every run, so the replay set `+checksum: true+` before checking. The live
+gate does vet the checksum.
+
+== Known blind spots
+
+* A *uniform* slowdown below 2.5× (every workload slower by the same factor)
+  passes, because it leaves every ratio unchanged.
+* A *correlated* slowdown of two workloads partly hides itself. Two workloads
+  2.5× slower each score 2.5 / 2.5^1/3^ ≈ 1.84×, which is under the limit.
+
+== The baseline
+
+`+baseline.json+` is the mean of the last 10 `+main+` runs (taxonomy: "mean of
+the last 10 CI runs on main"). Their run ids and commits are listed under
+`+sources+`, from run 34896163257 (`+ad86d0b+`) to run 37471889673
+(`+baaa236+`). The window crosses #85 (40fa9aa), which replaced the XOR
+checksum fold with a failure count. That changed the measuring loop, not any
+workload definition. `+git diff d1abbdf baaa236 -- benchmarks/Benchmark.idr+`
+shows the iteration counts unchanged, and `+coveredCatAspect+` still compares
+against 238, now named `+catAspectTotal+`. The two post-#85 runs sit inside
+the pre-#85 spread (ratios 0.83–1.11 against the baseline).
+
+To regenerate the baseline, download the artifacts of the last 10 `+main+`
+runs, one directory per run id, and run:
+
+[source,bash]
+----
+gh api repos/hyperpolymath/proven-tests-and-benches/actions/artifacts --paginate \
+  -q '.artifacts[] | select(.name|startswith("proven-bench"))
+      | select(.workflow_run.head_branch=="main") | .name'
+# for each name proven-bench-<id>:
+gh run download -R hyperpolymath/proven-tests-and-benches <id> \
+  -n proven-bench-<id> -D <dir>/<id>
+scripts/compute-bench-baseline.sh <dir>/<id>/proven-bench.json ... > benchmarks/baseline.json
+----
+
+The output is deterministic, so the same ten artifacts, passed in the
+order listed under `+sources+` (oldest first), reproduce the committed file
+byte for byte. Order matters because floating-point sums depend on it.
+Pick the 10 most recent `+main+` runs by `+created_at+`. Cut a new baseline at each minor version bump
+(taxonomy: baselines are versioned) and whenever a workload changes. The gate
+refuses a changed iteration count until you do.

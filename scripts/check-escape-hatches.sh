@@ -21,12 +21,32 @@
 
 set -uo pipefail
 
-SCOPE=(src tests benchmarks integrations)
+SCOPE=(src tests benchmarks integrations templates corpus)
 
 # Keep in lockstep with AGENTIC.a2ml `banned-proof-escape-hatches`.
 # `?hole` is matched as Idris2 hole syntax generally — `?` followed by an
 # identifier, in term position — not as the literal string "?hole".
-LITERAL_PATTERNS='believe_me|assert_total|%partial|unsafePerformIO|idris_crash'
+LITERAL_PATTERNS='believe_me|assert_total|assert_smaller|%partial|%default (partial|covering)|unsafePerformIO|idris_crash'
+# A `partial` modifier on a declaration opts that function out of totality
+# checking.
+PARTIAL_DECL='^[[:space:]]*((public )?export[[:space:]]+|private[[:space:]]+)?partial([[:space:]]|$)'
+# Function-level `covering` is the honest marker for an I/O entry point that
+# reads files (readFile consumes fuel until EOF); the totality checker still
+# verifies coverage. It is NOT allowed anywhere else, because it is also a hole
+# in the proof tier: an erased proof term may cite a non-terminating `covering`
+# theorem from inside a `covering` function, and nothing else would object.
+# So every `covering` declaration must be one of the exact file:function pairs
+# below; a new one, even in an allowlisted file, fails the lint.
+COVERING_DECL='^[[:space:]]*((public )?export[[:space:]]+|private[[:space:]]+)?covering([[:space:]]|$)'
+COVERING_ALLOWED=(
+  src/ProvenTests/Meta.idr:metaFailingSuiteDetected
+  src/ProvenTests/Meta.idr:metaNegativeCell
+  integrations/proven/src/ProvenSubject/Main.idr:readRequired
+  integrations/proven/src/ProvenSubject/Main.idr:readOwed
+  integrations/proven/src/ProvenSubject/Main.idr:runReport
+  integrations/proven/src/ProvenSubject/Main.idr:main
+  corpus/provenance/reflexive/cancelled-gate-void/Test.idr:main
+)
 HOLE_PATTERN='(^|[[:space:](=,[])\?[a-zA-Z_][a-zA-Z0-9_'"'"']*'
 
 missing=0
@@ -54,11 +74,41 @@ if grep -rnE "$HOLE_PATTERN" "${SCOPE[@]}" --include="*.idr"; then
   hits=1
 fi
 
+if grep -rnE "$PARTIAL_DECL" "${SCOPE[@]}" --include="*.idr"; then
+  hits=1
+fi
+
+# Each `covering` line names the function declared on the next line.
+while IFS=: read -r f ln _; do
+  name=$(sed -n "$((ln + 1))p" "$f" | sed -E 's/^[[:space:]]*([^[:space:]:]+).*/\1/')
+  allowed=0
+  for pair in "${COVERING_ALLOWED[@]}"; do
+    [ "$pair" = "$f:$name" ] && allowed=1
+  done
+  if [ "$allowed" -eq 0 ]; then
+    echo "$f:$ln: covering $name is not on the I/O allowlist"
+    hits=1
+  fi
+done < <(grep -rnE "$COVERING_DECL" "${SCOPE[@]}" --include="*.idr")
+
+# Every Idris2 file must declare `%default total`, so a new function is total
+# unless it says otherwise. Without this, a file that omits the pragma is
+# silently `covering`, and nothing above would notice.
+while IFS= read -r f; do
+  if ! grep -qE '^%default total([[:space:]]|$)' "$f"; then
+    echo "$f: missing '%default total'"
+    hits=1
+  fi
+done < <(find "${SCOPE[@]}" -name '*.idr' -type f)
+
 if [ "$hits" -ne 0 ]; then
   echo
   echo "FAIL: proof escape hatch found. Actually-Proven content may not use these."
-  echo "      Banned: believe_me, assert_total, %partial, unsafePerformIO,"
-  echo "              idris_crash, and hole syntax (?name)."
+  echo "      Banned: believe_me, assert_total, assert_smaller, %partial,"
+  echo "              %default partial|covering, partial declarations,"
+  echo "              covering outside the I/O allowlist,"
+  echo "              unsafePerformIO, idris_crash, and hole syntax (?name)."
+  echo "      Required: '%default total' in every .idr file."
   exit 1
 fi
 

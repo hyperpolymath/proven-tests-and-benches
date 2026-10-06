@@ -26,12 +26,11 @@ import Data.Nat
 -- a non-terminating term and Idris2 would accept it, which would make every
 -- claim below worthless. Totality is what makes these proofs mean something.
 --
--- NOTE ON ProofStep: the ladder passed to `provenTest` is METADATA — a
--- description, file, line and theorem name. It does not carry the proof. The
--- proof is here, and it is the typechecker accepting this file that
--- establishes it. A ProofStep pointing at a theorem that does not exist would
--- be a lie the framework cannot catch, so every ladder entry in
--- tests/ProvenLawsTests/ names a function defined in this file.
+-- NOTE ON THE LADDER: a test cites these theorems with `ProvenTests.Types.rung`,
+-- which takes the theorem's quoted name, checks it against the full statement
+-- and derives the printed citation from the same name. Renaming, deleting or
+-- weakening a theorem here therefore breaks the build of
+-- tests/ProvenLawsTests/LawsTests.idr, rather than leaving a stale string.
 
 -- --- Identity laws ------------------------------------------------------------
 

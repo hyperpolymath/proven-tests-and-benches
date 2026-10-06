@@ -9,6 +9,8 @@ import ProvenTests.TypeSafe.Ceremonial
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- CEREMONIAL TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================

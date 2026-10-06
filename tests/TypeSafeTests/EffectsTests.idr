@@ -9,6 +9,8 @@ import ProvenTests.TypeSafe.Effects
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- EFFECTS TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================

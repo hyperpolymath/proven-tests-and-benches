@@ -26,13 +26,55 @@ module needs `+STATE.a2ml+` `+library-modules+` updated, which this change
 does not touch.
 * *17 new Actually-Proven tests* in
 `+tests/ProvenLawsTests/TropicalLawsTests.idr+` (spec suite 75 → 92, 12 → 29
-Actually-Proven). Each cites its theorem at the full law statement, so the
-citation is type-checked. Two `+failing "Mismatch between"+` reject controls
+Actually-Proven). Each rung is built with `+rung+` at the full law
+statement, so the citation is the checked term. Two `+failing "Mismatch between"+` reject controls
 assert false laws (max-plus 0 annihilating `+`+`, min-plus `+⊗+`
 idempotence) do not typecheck.
 * *Wrong comment fixed* in `+src/ProvenTests/TypeSafe/Tropical.idr+`: `+min(x,
 0) = x+` is false; `+min+`'s identity is `+inf+`. The matching assertion
 message in `+tests/TypeSafeTests/TropicalTests.idr+` is corrected too.
+
+==== 2026-10-06 — rung citations are derived from the term (#87 review)
+
+* *`+rung+` macro* (`+src/ProvenTests/Types.idr+`): one quoted theorem name
+supplies both the proof term and the printed citation, elaborated against the
+full statement at compile time. Every ladder (Laws suite, Baton, Cells) is
+built with it, and no rung uses `+_+` as its statement any more.
+* *Correction to the entry below:* `+Witness+` alone did not stop a rung
+whose `+theorem+` string named a missing theorem; only its *term* had to
+exist. That is now true for every rung built with `+rung+`; a hand-built
+`+Witness+` with a free label still compiles and is kept as a residual control.
+* *SpecSuite controls* now pin the macro's own reflection errors, and a
+compile-time `+Refl+` checks that the derived citation is the literal name.
+* *`+covering+` is allowlisted:* `+scripts/check-escape-hatches.sh+` fails on
+any function-level `+covering+` that is not one of seven exact I/O
+file:function pairs, closing the route by which a `+covering+` citer could
+cite a non-terminating theorem. Three planted controls give rc=1.
+* *Dead `+emptyProofLadder+` / `+addProofStep+` removed*
+(`+src/ProvenTests/Classification.idr+`): `+List ProofStep+` helpers that
+nothing called.
+
+==== 2026-10-06 — the Actually-Proven tier carries its proofs
+
+* *`+proof_ladder+` is now `+List1 Witnessed+`* (`+src/ProvenTests/Types.idr+`):
+each rung holds an erased proof term at an explicit statement, so an
+Actually-Proven claim citing a missing theorem, or a real theorem for the
+wrong property, no longer compiles. Every existing ladder (Laws suite, Baton,
+Cells) was converted; all 12 polymorphic law statements typecheck.
+* *Three rejection controls* in `+tests/SpecSuite/Main.idr+` (`+failing+`
+blocks, exact errors measured first) plus one recorded positive control: the
+trivial witness `+Witness s () ()+` still compiles, and the docs say so.
+* *The dead `+ActuallyProvenEvidence+` record is removed*
+(`+src/ProvenTests/Classification.idr+`): strings-only, with a possibly-empty
+ladder, and used by nothing.
+* *`+integrations/proven+` no longer constructs in-build Actually-Proven
+evidence from another repo's ledger.* `+Graded+` separates the tier `+claimed+`
+from proven's ledgers from the provenance `+heldHere+` (at most
+Provisionally-Proven); report counts are unchanged and the sanity gate fails if
+any external module ever holds Actually-Proven.
+* *`+EchoTypes/README.adoc+` corrected:* `+echo-types+` holds 219 `+.agda+` files
+(217 `+--safe+`); the 07-28 "no formal artefacts" claim counted only
+`+.idr+`/`+.lean+`/`+.v+`.
 
 ==== 2026-10-03 — action-ref form and the lockfile, reconciled at the root (#34)
 

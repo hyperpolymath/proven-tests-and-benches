@@ -18,6 +18,8 @@ import Data.List
 import Data.Maybe
 import Data.Nat
 
+%default total
+
 -- =============================================================================
 -- HONEST BENCHMARK HARNESS
 -- =============================================================================
@@ -236,7 +238,7 @@ benchMain : IO ()
 benchMain = do
   args <- getArgs
   putStrLn "=== Proven-Tests Benchmark Suite ==="
-  putStrLn "(monotonic clock; median of samples; compare against baseline.json)"
+  putStrLn "(monotonic clock; median of samples; gated by scripts/check-bench-regression.sh against benchmarks/baseline.json)"
   putStrLn ""
   rs <- traverse (\(nm, n, f) => benchmark nm n f) WORKLOADS
   traverse_ (putStrLn . show) rs

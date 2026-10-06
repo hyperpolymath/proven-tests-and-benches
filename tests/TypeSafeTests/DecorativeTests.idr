@@ -9,6 +9,8 @@ import ProvenTests.TypeSafe.Decorative
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- DECORATIVE TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================

@@ -26,22 +26,22 @@ would have to come from somewhere, and the two candidate sources both fail:
 statement of what is preserved, under what operations, or what a violation looks
 like.
 
-**`hyperpolymath/echo-types` has no formal artefacts.** It is a large and
-serious repo — Pillars A–D landed, gates F1–F5 passed, a Buchholz rank-monotone
-ordinal umbrella closing 11/13 constructors, a retraction ledger — but measured
-on 2026-07-28 it contains:
+**`hyperpolymath/echo-types` formalises them in Agda, not Idris2.** The
+2026-07-28 measurement on this page counted `.idr`, `.lean` and `.v` files
+(zero of each) and concluded "no formal artefacts". That was an instrument
+bound read as an absence: the repo's formal content is Agda, which the count
+never looked for. Re-measured 2026-10-06 on `echo-types` `origin/main`
+`da140cc` (2026-10-03): **219 `.agda` files, 217 of them `--safe`**, the first
+added 2026-04-18 — so the original claim was already false when written.
 
-[cols="2,1"]
-|===
-| Artefact | Count
-
-| `.idr` | **0**
-| `.lean` | **0**
-| `.v` | **0**
-|===
-
-So there is no machine-checked definition to import, mirror, or even
-paraphrase. Its formal content is prose and audit trail.
+That changes the blocker, not the decision. A machine-checked definition now
+exists to mirror, but mirroring it here would be a hand-written Idris2 copy of
+an Agda result, checked against itself and not against the original. Under the
+proof-carrying tier (`Witnessed`, `src/ProvenTests/Types.idr`) such a copy
+could honestly be Actually-Proven *for the Idris2 statement* while silently
+diverging from the Agda one, which is the misleading-label failure this repo
+exists to prevent. A faithful port needs an agreed correspondence (which Agda
+definition maps to which Idris2 type), not just code.
 
 Inventing the semantics here would produce modules that typecheck, run green,
 and mean nothing — the exact failure this repo's three-tier `ProvenStatus`
@@ -53,8 +53,10 @@ there should not be.
 
 Any one of these, in decreasing order of strength:
 
-. A formalisation in `echo-types` — even a single `.idr` giving the echo-type
-  former and its invariant — that this module can import or mirror.
+. A stated correspondence between the Agda formalisation in `echo-types` and
+  an Idris2 encoding (echo-type former, invariant, the operations preserving
+  it), so a mirror here can be checked against the original rather than
+  against itself.
 . A precise statement in the spec: what an echo type *is*, which operations must
   preserve it, and what a counterexample looks like.
 . A ruling that the intended content is the `Tropical` and `Epistemic` work

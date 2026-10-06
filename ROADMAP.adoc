@@ -86,7 +86,12 @@ way of ending up ungated.
 *Done when:* an artificial slowdown is classified Unacceptable and fails
 CI.
 
-Debt: I-1. This is the *last unmet CRG C criterion*.
+*Status 2026-10-06: implemented and wired, not yet run in CI.*
+`+benchmarks/baseline.json+` and `+scripts/check-bench-regression.sh+`
+run in the required job, and the planted controls show a 3× slowdown
+classified Unacceptable with exit 1. Tolerances, replay evidence and blind
+spots are in `+benchmarks/README.adoc+`. Debt: I-1, which was the last
+unmet CRG C criterion.
 
 ==== 2b — `+scripts/check-doc-facts.sh+`, the anti-drift gate
 

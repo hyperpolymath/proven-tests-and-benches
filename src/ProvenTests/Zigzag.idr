@@ -9,6 +9,8 @@ import ProvenTests.Types
 import ProvenTests.Taxonomy
 import Data.List
 
+%default total
+
 -- =============================================================================
 -- THE ZIGZAG REGIMEN
 -- =============================================================================
