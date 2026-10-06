@@ -48,14 +48,20 @@ testSomeProperty =
 -- --- Promoting to Actually-Proven --------------------------------------------
 --
 -- Only when the property is quantified over ALL inputs and you have a term
--- inhabiting it. `provenTest` takes a `List1 ProofStep` ladder:
+-- inhabiting it. `provenTest` takes a `List1 Witnessed` ladder: each rung pairs
+-- the citation with the proof term itself, so the build fails if the theorem
+-- is missing, renamed, or no longer has the stated type:
 --
 --   public export
 --   testSomePropertyProven : ActuallyProvenTest
 --   testSomePropertyProven =
 --     provenTest (nameTestId 3) "Property holds for all inputs"
 --       (assertTrue True "witness discharged by the proof below")
---       (singleton (MkProofStep ...))
+--       (singleton (Witness (MkProofStep ...) _ somePropertyProof))
+--
+-- For a polymorphic theorem write the statement out instead of `_`
+-- (inference leaves its implicits unsolved), e.g.
+--   Witness (MkProofStep ...) ({0 a : Type} -> (xs : List a) -> xs ++ [] = xs) appendNilRightProof
 --
 -- Do NOT reach for this to make output look stronger. An ActuallyProven test
 -- whose ladder does not actually establish the property is the one failure mode

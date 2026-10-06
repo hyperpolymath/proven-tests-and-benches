@@ -52,22 +52,6 @@ tierCoord Wip         = MkCoord CoConception Human BuildTest Maintainability
 subjectFile : String -> Maybe String
 subjectFile name = Just ("proven: src/Proven/" ++ name ++ ".idr")
 
--- Build a proof ladder for a genuinely Actually-Proven module from its proof
--- count (we cite the module's own Proofs.idr; proven's ledger is the evidence).
-provenLadder : String -> Nat -> List1 ProofStep
-provenLadder name prf =
-  MkProofStep
-    (name ++ ": " ++ show prf ++ " discharged proofs, zero outstanding OWED axioms")
-    (subjectFile name) Nothing (Just (name ++ ".Proofs"))
-  ::: []
-
-provenDesign : String -> DesignSafetyProof
-provenDesign name =
-  MkDesignSafetyProof
-    (name ++ " — proven module graded from its own ledgers")
-    "Idris2 --total + discharged Proofs.idr (clean: zero OWED)"
-    ["dependent-type proofs"] ["graded from proven's self-audit; proofs not re-checked here"]
-
 provenCert : String -> TypeSafetyCertificate
 provenCert name = typeSafetyCert 6 "Idris2 dependent types" "proven MODULE-STATUS + STATE.a2ml" [name]
 
@@ -79,27 +63,48 @@ provenFramework =
     "proven MODULE-STATUS.txt"
 
 --/ The grade a module receives, and why.
+--/
+--/ `claimed` is the tier the reading assigns from proven's OWN ledgers.
+--/ `baton` carries the evidence-carrying provenance actually HELD in this
+--/ build. Actually-Proven provenance needs a typechecked proof term
+--/ (`Witnessed`), and proven's proofs live in another repository and are not
+--/ re-checked here, so the held provenance of an external module is at most
+--/ Provisionally-Proven: an Actually-Proven claim is counted, not certified.
 public export
 record Graded where
   constructor MkGraded
   modName    : String
   tier       : Tier
+  claimed    : ProvenStatus
   baton      : BatonSpec
   rationale  : String
 
+--/ The tier this reading claims for the module (from proven's own ledgers).
 public export
 statusOfGraded : Graded -> ProvenStatus
-statusOfGraded = batonStatus . baton
+statusOfGraded = claimed
+
+--/ The tier of the evidence this build actually holds for the module.
+public export
+heldHere : Graded -> ProvenStatus
+heldHere = batonStatus . baton
+
+-- External attestation: proven says so, this build has not re-checked it.
+attested : String -> Provenance
+attested nm = PProvisionallyProven (MkProvisionalEvidence provenFramework (provenCert nm))
 
 -- as-declared provenance
 declaredProvenance : ModuleStatus -> Provenance
 declaredProvenance ms = case tier ms of
-  FirstClass  =>
-    PActuallyProven (MkActualEvidence
-      (provenLadder (name ms) (fromMaybe 0 (proofs ms)))
-      (provenDesign (name ms)) (provenCert (name ms)))
-  SecondClass => PProvisionallyProven (MkProvisionalEvidence provenFramework (provenCert (name ms)))
+  FirstClass  => attested (name ms)
+  SecondClass => attested (name ms)
   Wip         => PUnproven
+
+-- as-declared claim: the MODULE-STATUS tier verbatim
+declaredClaim : Tier -> ProvenStatus
+declaredClaim FirstClass  = ActuallyProven
+declaredClaim SecondClass = ProvisionallyProven
+declaredClaim Wip         = Unproven
 
 --/ Grade one module under the STRICT (evidence-carrying) reading.
 public export
@@ -113,25 +118,24 @@ gradeStrict led ms =
   in case tier ms of
        FirstClass =>
          if clean && prf > 0
-           then MkGraded nm FirstClass
-                  (MkBatonSpec coord
-                    (PActuallyProven (MkActualEvidence (provenLadder nm prf)
-                       (provenDesign nm) (provenCert nm))) cost)
-                  ("Actually-Proven: FIRST-CLASS, " ++ show prf ++ " proofs, in clean set")
-           else MkGraded nm FirstClass
+           then MkGraded nm FirstClass ActuallyProven
+                  (MkBatonSpec coord (attested nm) cost)
+                  ("Actually-Proven (claimed): FIRST-CLASS, " ++ show prf
+                    ++ " proofs, in clean set; held here as Provisionally - not re-checked in this build")
+           else MkGraded nm FirstClass ProvisionallyProven
                   (MkBatonSpec coord
                     (PProvisionallyProven (MkProvisionalEvidence provenFramework (provenCert nm)))
                     (Fin 15))
                   ("CAPPED to Provisionally: FIRST-CLASS with " ++ show prf
                     ++ " proofs but NOT in the zero-OWED clean set (sits in the OWED ledger)")
        SecondClass =>
-         MkGraded nm SecondClass
+         MkGraded nm SecondClass ProvisionallyProven
            (MkBatonSpec coord
              (PProvisionallyProven (MkProvisionalEvidence provenFramework (provenCert nm))) cost)
            ("Provisionally-Proven: SECOND-CLASS safe wrapper (--total, no deep proofs)"
              ++ (if clean then "; clean (zero OWED)" else ""))
        Wip =>
-         MkGraded nm Wip (MkBatonSpec coord PUnproven cost)
+         MkGraded nm Wip Unproven (MkBatonSpec coord PUnproven cost)
            "Unproven: WIP — does not compile"
 
 --/ Grade one module under the AS-DECLARED reading (trust the tier verbatim).
@@ -140,7 +144,7 @@ gradeDeclared : ModuleStatus -> Graded
 gradeDeclared ms =
   let coord = tierCoord (tier ms)
       cost  = tierCost (tier ms) (fromMaybe 0 (proofs ms))
-  in MkGraded (name ms) (tier ms)
+  in MkGraded (name ms) (tier ms) (declaredClaim (tier ms))
        (MkBatonSpec coord (declaredProvenance ms) cost)
        ("As declared: " ++ show (tier ms))
 

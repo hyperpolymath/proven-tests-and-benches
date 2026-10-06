@@ -9,6 +9,7 @@ import ProvenTests.Proven.Laws
 import ProvenTests.Framework
 import ProvenTests.Types
 import Data.List1
+import Data.Nat
 
 -- =============================================================================
 -- ACTUALLY-PROVEN TESTS - THE FIRST IN THIS REPO
@@ -20,15 +21,18 @@ import Data.List1
 --
 -- READ THIS BEFORE ADDING ONE.
 --
--- The `List1 ProofStep` ladder is METADATA — description, file, line, theorem
--- name. It does NOT carry the proof and the framework cannot check it. Passing
--- a ladder that names a theorem which does not exist would produce a test
--- labelled [Actually-Proven] on the strength of a string, which is precisely
--- the failure the three tiers exist to prevent.
+-- The ladder is `List1 Witnessed`: each rung carries the citation (description,
+-- file, line, theorem name) AND the proof term at an explicit statement, both
+-- erased. The typechecker therefore rejects a rung that names a theorem which
+-- does not exist, or that cites a real theorem for a property it does not
+-- prove (tests/SpecSuite/Main.idr holds those rejections as `failing` blocks).
 --
--- So the rule for this file: every `theorem` field below names a function that
--- is defined and total in Laws.idr. If you cannot point at one, use
--- `provisionalTest`.
+-- What it cannot reject is a statement that is true but is not the property
+-- the test description names (`Witness s () ()` compiles). So the rule for
+-- this file: the statement passed to `step` is the law's full statement,
+-- written out, and the theorem field names the term passed beside it.
+-- Polymorphic laws need the implicits written out in order of appearance
+-- (`{0 a, b : Type} -> ...`); `_` cannot infer a polymorphic statement.
 --
 -- The runtime body is `assertTrue True` on purpose. The property was already
 -- discharged at compile time; re-checking it on one witness at run time would
@@ -40,10 +44,13 @@ lawsTestId : Nat -> TestId
 lawsTestId n =
   MkTestId "ProvenTests.Proven.LawsTests" ("test_" ++ show n) n
 
+--/ One proof-carrying rung citing Laws.idr: the citation plus the proposition
+--/ and the term that inhabits it. A missing, renamed or retyped theorem is a
+--/ compile error here, not a stale string.
 private
-step : String -> String -> Nat -> ProofStep
-step desc thm ln =
-  MkProofStep desc (Just "src/ProvenTests/Proven/Laws.idr") (Just ln) (Just thm)
+step : String -> String -> Nat -> (0 stmt : Type) -> (0 prf : stmt) -> Witnessed
+step desc thm ln stmt prf =
+  Witness (MkProofStep desc (Just "src/ProvenTests/Proven/Laws.idr") (Just ln) (Just thm)) stmt prf
 
 private
 discharged : String -> IO TestResult
@@ -59,7 +66,9 @@ testLeftIdentity =
     "id . f = f, for all f and x"
     (discharged "leftIdentityProof")
     (singleton (step "Definitional: (id . f) x reduces to f x"
-                     "leftIdentityProof" 41))
+                     "leftIdentityProof" 41
+                     ({0 a, b : Type} -> (f : a -> b) -> (x : a) -> (Prelude.id . f) x = f x)
+                     leftIdentityProof))
 
 public export
 testRightIdentity : ActuallyProvenTest
@@ -68,7 +77,9 @@ testRightIdentity =
     "f . id = f, for all f and x"
     (discharged "rightIdentityProof")
     (singleton (step "Definitional: (f . id) x reduces to f x"
-                     "rightIdentityProof" 46))
+                     "rightIdentityProof" 46
+                     ({0 a, b : Type} -> (f : a -> b) -> (x : a) -> (f . Prelude.id) x = f x)
+                     rightIdentityProof))
 
 public export
 testIdentityIdempotent : ActuallyProvenTest
@@ -76,7 +87,9 @@ testIdentityIdempotent =
   provenTest (lawsTestId 3)
     "id . id = id, for all x"
     (discharged "identityIdempotentProof")
-    (singleton (step "Definitional" "identityIdempotentProof" 51))
+    (singleton (step "Definitional" "identityIdempotentProof" 51
+                     ({0 a : Type} -> (x : a) -> (Prelude.id . Prelude.id) x = Prelude.id x)
+                     identityIdempotentProof))
 
 -- --- Functor laws ---------------------------------------------------------------
 
@@ -87,7 +100,9 @@ testMapIdentity =
     "map id = id, for ALL lists"
     (discharged "mapIdentityProof")
     (singleton (step "Induction on the list; cons case rewrites by the IH"
-                     "mapIdentityProof" 60))
+                     "mapIdentityProof" 60
+                     ({0 a : Type} -> (xs : List a) -> map Prelude.id xs = xs)
+                     mapIdentityProof))
 
 public export
 testMapFusion : ActuallyProvenTest
@@ -95,7 +110,9 @@ testMapFusion =
   provenTest (lawsTestId 5)
     "map g . map f = map (g . f), for ALL lists"
     (discharged "mapFusionProof")
-    (singleton (step "Induction on the list" "mapFusionProof" 66))
+    (singleton (step "Induction on the list" "mapFusionProof" 66
+                     ({0 b, c, a : Type} -> (g : b -> c) -> (f : a -> b) -> (xs : List a) -> map g (map f xs) = map (g . f) xs)
+                     mapFusionProof))
 
 public export
 testMapLength : ActuallyProvenTest
@@ -103,7 +120,9 @@ testMapLength =
   provenTest (lawsTestId 6)
     "map preserves length, for ALL lists"
     (discharged "mapLengthProof")
-    (singleton (step "Induction on the list" "mapLengthProof" 73))
+    (singleton (step "Induction on the list" "mapLengthProof" 73
+                     ({0 a, b : Type} -> (f : a -> b) -> (xs : List a) -> length (map f xs) = length xs)
+                     mapLengthProof))
 
 public export
 testMapMaybeIdentity : ActuallyProvenTest
@@ -112,7 +131,9 @@ testMapMaybeIdentity =
     "map id = id, for ALL Maybe values"
     (discharged "mapMaybeIdentityProof")
     (singleton (step "Case split; both cases definitional"
-                     "mapMaybeIdentityProof" 81))
+                     "mapMaybeIdentityProof" 81
+                     ({0 a : Type} -> (mx : Maybe a) -> map Prelude.id mx = mx)
+                     mapMaybeIdentityProof))
 
 -- --- Append and reverse ----------------------------------------------------------
 
@@ -123,7 +144,9 @@ testAppendNilRight =
     "xs ++ [] = xs, for ALL lists"
     (discharged "appendNilRightProof")
     (singleton (step "Induction; the left unit is definitional, this is not"
-                     "appendNilRightProof" 90))
+                     "appendNilRightProof" 90
+                     ({0 a : Type} -> (xs : List a) -> xs ++ [] = xs)
+                     appendNilRightProof))
 
 public export
 testAppendLength : ActuallyProvenTest
@@ -131,7 +154,9 @@ testAppendLength =
   provenTest (lawsTestId 9)
     "length (xs ++ ys) = length xs + length ys, for ALL lists"
     (discharged "appendLengthProof")
-    (singleton (step "Induction on the first list" "appendLengthProof" 96))
+    (singleton (step "Induction on the first list" "appendLengthProof" 96
+                     ({0 a : Type} -> (xs : List a) -> (ys : List a) -> length (xs ++ ys) = length xs + length ys)
+                     appendLengthProof))
 
 public export
 testReverseSingleton : ActuallyProvenTest
@@ -139,7 +164,9 @@ testReverseSingleton =
   provenTest (lawsTestId 10)
     "reverse [x] = [x], for all x"
     (discharged "reverseSingletonProof")
-    (singleton (step "Definitional" "reverseSingletonProof" 105))
+    (singleton (step "Definitional" "reverseSingletonProof" 105
+                     ({0 a : Type} -> (x : a) -> reverse [x] = [x])
+                     reverseSingletonProof))
 
 -- --- Affinity, proved rather than sampled -----------------------------------------
 
@@ -150,7 +177,8 @@ testEmptyTraceUseCount =
     "An unused variable has use-count 0, for ALL variables"
     (discharged "emptyTraceUseCountProof")
     (singleton (step "Definitional. AffinityTests checks this on one witness; here it holds for every variable."
-                     "emptyTraceUseCountProof" 117))
+                     "emptyTraceUseCountProof" 117
+                     _ emptyTraceUseCountProof))
 
 public export
 testFilterLengthBound : ActuallyProvenTest
@@ -159,7 +187,9 @@ testFilterLengthBound =
     "A use-count never exceeds the trace length, for ALL traces"
     (discharged "filterLengthBoundProof")
     (singleton (step "Induction with a with-split on the predicate; the bound that makes affinity's use-count meaningful."
-                     "filterLengthBoundProof" 124))
+                     "filterLengthBoundProof" 124
+                     ({0 a : Type} -> (p : a -> Bool) -> (xs : List a) -> LTE (length (filter p xs)) (length xs))
+                     filterLengthBoundProof))
 
 public export
 allProvenLawsTests : List ActuallyProvenTest

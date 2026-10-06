@@ -31,7 +31,10 @@ trustDisclaimer = unlines
   , "(MODULE-STATUS.txt + .machine_readable/descriptiles/STATE.a2ml). The proofs are NOT"
   , "re-checked here; the grading only reflects what proven already states about"
   , "itself. 'Actually-Proven' under the strict reading additionally requires a"
-  , "module to sit in proven's own zero-OWED clean set."
+  , "module to sit in proven's own zero-OWED clean set. Every tier below is a"
+  , "CLAIM counted from those ledgers: Actually-Proven evidence needs a proof"
+  , "term typechecked in THIS build, so the provenance held here for any proven"
+  , "module is at most Provisionally-Proven (checked by the sanity gate)."
   , "----------------------------------------------------------------------------" ]
 
 resolveRoot : List String -> IO String
@@ -138,7 +141,10 @@ runReport args = do
 
   -- Sanity gate mirroring the plan: strict Actually-Proven must be <= declared
   -- FIRST-CLASS count, and the whole report reconciles the module count.
-  let ok = actually sc <= actually dc && length mods > 0
+  -- And no external module may HOLD Actually-Proven evidence: that tier
+  -- requires a proof term typechecked in this build (ProvenTests.Types.Witnessed).
+  let heldActually = filter (\g => heldHere g == ActuallyProven) (declared ++ strict)
+  let ok = actually sc <= actually dc && length mods > 0 && null heldActually
   if ok
     then putStrLn "proven-subject-report: OK"
     else do putStrLn "proven-subject-report: FAILED sanity gate"

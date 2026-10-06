@@ -65,12 +65,12 @@ public export
 tropicalLawsClassification : TestMetadata
 tropicalLawsClassification =
   let tid    = MkTestId "ProvenTests.Tropical" "semiringLaws" 0
-      ladder = MkProofStep "min-plus (+) is commutative"      tropicalFile Nothing (Just "oplusComm")
-           ::: [ MkProofStep "(+) is associative"             tropicalFile Nothing (Just "oplusAssoc")
-               , MkProofStep "(+) is idempotent"              tropicalFile Nothing (Just "oplusIdem")
-               , MkProofStep "PosInf is the (+) identity"     tropicalFile Nothing (Just "oplusIdentityR")
-               , MkProofStep "Fin 0 is the (*) identity"      tropicalFile Nothing (Just "otimesIdentityR")
-               , MkProofStep "(*) is commutative"             tropicalFile Nothing (Just "otimesComm") ]
+      ladder = Witness (MkProofStep "min-plus (+) is commutative"  tropicalFile Nothing (Just "oplusComm")) _ oplusComm
+           ::: [ Witness (MkProofStep "(+) is associative"         tropicalFile Nothing (Just "oplusAssoc")) _ oplusAssoc
+               , Witness (MkProofStep "(+) is idempotent"          tropicalFile Nothing (Just "oplusIdem")) _ oplusIdem
+               , Witness (MkProofStep "PosInf is the (+) identity" tropicalFile Nothing (Just "oplusIdentityR")) _ oplusIdentityR
+               , Witness (MkProofStep "Fin 0 is the (*) identity"  tropicalFile Nothing (Just "otimesIdentityR")) _ otimesIdentityR
+               , Witness (MkProofStep "(*) is commutative"         tropicalFile Nothing (Just "otimesComm")) _ otimesComm ]
       design = MkDesignSafetyProof
                  "Tropical (min-plus) semiring over Nat union {PosInf}"
                  "Total, machine-checked Idris2 equality proofs"

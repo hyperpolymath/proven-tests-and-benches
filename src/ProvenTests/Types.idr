@@ -276,13 +276,31 @@ record ProvisionalEvidence where
   framework_safety : FrameworkSafetyProof
   test_safety      : TypeSafetyCertificate
 
+--/ One rung of an Actually-Proven ladder: the citation AND the proof term it
+--/ cites. `statement` is the proposition; `term` must inhabit it, so the
+--/ typechecker — not a reviewer — confirms the cited theorem exists, still has
+--/ the stated type, and is the term the ladder names. Both are erased (quantity
+--/ 0): the evidence is checked at compile time and costs nothing at run time.
+--/
+--/ What this does NOT stop: a deliberately trivial witness
+--/ (`Witness s () ()`) still compiles. That forgery is now a visible lie in
+--/ code rather than an unchecked string, and `tests/SpecSuite/Main.idr` keeps
+--/ it as a recorded positive control so nobody reads the tier as unforgeable.
+public export
+record Witnessed where
+  constructor Witness
+  step          : ProofStep
+  0 statement   : Type
+  0 term        : statement
+
 --/ Evidence required to justify an Actually-Proven classification.
---/ The proof ladder is a non-empty `List1`, so it is impossible to claim
---/ Actually-Proven with zero proof steps.
+--/ The proof ladder is a non-empty `List1` of proof-carrying rungs, so it is
+--/ impossible to claim Actually-Proven with zero proof steps, and every step
+--/ carries a typechecked proof term (see `Witnessed`).
 public export
 record ActualEvidence where
   constructor MkActualEvidence
-  proof_ladder : List1 ProofStep
+  proof_ladder : List1 Witnessed
   design_proof : DesignSafetyProof
   type_safety  : TypeSafetyCertificate
 
@@ -312,8 +330,8 @@ Show Provenance where
 -- specimen of the declared defect class, MUST fire — silence is a payload
 -- fault). "A test missing either fixture is *inadmissible*." This block makes
 -- that a type obligation rather than a review convention, following the
--- `List1 ProofStep` precedent that makes zero-step Actually-Proven
--- unrepresentable.
+-- `List1 Witnessed` precedent that makes zero-step (and proof-free)
+-- Actually-Proven unrepresentable.
 
 --/ Where a fixture lives. Runtime construction is legitimate (R10.7): a
 --/ fixture built by the test run itself cannot silently rot into validity
