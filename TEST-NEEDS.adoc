@@ -68,6 +68,12 @@ self-classification) |`+src/ProvenTests/Cells.idr+`
 iteration counts, `+--json+` emission
 |`+./benchmarks/build/exec/proven-bench --json+`, 2026-08-10
 
+|Benchmark regression gate |baseline = mean of last 10 `+main+` runs;
+fails at ratio > 2.0× or absolute > 2.5× baseline; 18 / 18 planted
+controls pass |`+scripts/check-bench-regression.sh+`,
+`+scripts/test/check-bench-regression.test.sh+`, 2026-10-06 (local; first
+CI run pending)
+
 |Category × aspect cells covered |40 / 238 (16.8%)
 |`+./build/exec/proven-tests+` run output, 2026-08-10
 
@@ -248,6 +254,21 @@ estate-wide reach.
 
 ==== Gap C — no benchmark baselines
 
+*CLOSED 2026-10-06.* `+benchmarks/baseline.json+` is the mean of the
+last 10 `+main+` runs, and `+scripts/check-bench-regression.sh+` runs in
+the required job `+Build, test and benchmark+`. It classifies each
+workload as Unacceptable (fails), Ordinary, or Extraordinary (passes,
+flagged). There is no separate Acceptable band, because runner noise
+already spans it. The statistic is a leave-one-out ratio (a workload's
+median over the geometric mean of the other workloads in the same run),
+so a slower runner cancels out. The limits are 2.0× on the ratio and
+2.5× on absolute time, which departs from the taxonomy's 1.5×. Replaying
+all 55 retained CI artifacts gave a maximum ratio of 1.527, so 1.5× would
+have failed green runs (`+benchmarks/README.adoc+` has the numbers).
+*Stated blind spots:* a uniform slowdown under 2.5× passes, and so can a
+correlated slowdown of two workloads (2.5× each scores 1.84×). The
+original analysis follows.
+
 The taxonomy requires benchmarks be baselined from the mean of the last
 10 main runs, classified on the Six Sigma scale (Unacceptable /
 Acceptable / Ordinary / Extraordinary) with defined CI actions, and
@@ -308,8 +329,9 @@ tests, all passing in home context, benchmarks baselined, deep
 annotation`", plus "`CI integration or equivalent automated validation
 in the home context`".
 
-*One* of those is not currently met: benchmarks are not baselined (Gap
-C).
+Until 2026-10-06 *one* of those was unmet: benchmarks were not baselined
+(Gap C). The baseline and its regression gate landed on that date. The
+first CI run of the gate is the first live evidence that it holds.
 
 Automated validation on push and PR *is* now met — `+ci.yml+` has run on
 `+push+` and `+pull_request+` since 2026-08-03 and CodeQL was restored
