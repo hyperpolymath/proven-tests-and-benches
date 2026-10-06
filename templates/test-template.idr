@@ -50,20 +50,26 @@ testSomeProperty =
 -- --- Promoting to Actually-Proven --------------------------------------------
 --
 -- Only when the property is quantified over ALL inputs and you have a term
--- inhabiting it. `provenTest` takes a `List1 Witnessed` ladder: each rung pairs
--- the citation with the proof term itself, so the build fails if the theorem
--- is missing, renamed, or no longer has the stated type:
+-- inhabiting it. `provenTest` takes a `List1 Witnessed` ladder. Build each rung
+-- with `rung` (import ProvenTests.Types): one quoted theorem name supplies both
+-- the proof term and the printed citation, checked against the full statement,
+-- so the build fails if the theorem is missing, renamed, or no longer has the
+-- stated type:
 --
 --   public export
 --   testSomePropertyProven : ActuallyProvenTest
 --   testSomePropertyProven =
 --     provenTest (nameTestId 3) "Property holds for all inputs"
 --       (assertTrue True "witness discharged by the proof below")
---       (singleton (Witness (MkProofStep ...) _ somePropertyProof))
+--       (singleton (rung "How the proof goes" (Just "src/Your/Laws.idr") Nothing
+--                     `{somePropertyProof}
+--                     ((w : Widget) -> someProperty w = True)))
 --
--- For a polymorphic theorem write the statement out instead of `_`
--- (inference leaves its implicits unsolved), e.g.
---   Witness (MkProofStep ...) ({0 a : Type} -> (xs : List a) -> xs ++ [] = xs) appendNilRightProof
+-- Write the statement out in full, never `_`. A polymorphic theorem needs its
+-- implicits written out in order of appearance, e.g.
+--   ({0 a : Type} -> (xs : List a) -> xs ++ [] = xs)
+-- Do not build a rung with the `Witness` constructor directly: its label is
+-- then a free string the typechecker does not compare with the term.
 --
 -- Do NOT reach for this to make output look stronger. An ActuallyProven test
 -- whose ladder does not actually establish the property is the one failure mode

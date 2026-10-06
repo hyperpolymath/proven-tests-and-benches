@@ -112,14 +112,6 @@ promoteToActuallyProven meta ladder design ts = case provenance meta of
 -- =============================================================================
 
 public export
-emptyProofLadder : List ProofStep
-emptyProofLadder = []
-
-public export
-addProofStep : ProofStep -> List ProofStep -> List ProofStep
-addProofStep step ladder = ladder ++ [step]
-
-public export
 proofStep : String -> Maybe String -> Maybe Nat -> Maybe String -> ProofStep
 proofStep desc file line theorem = MkProofStep desc file line theorem
 

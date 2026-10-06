@@ -108,23 +108,33 @@ K = MkCoord
 tropFile : Maybe String
 tropFile = Just "src/ProvenTests/Tropical.idr"
 
+--/ The rungs citing four min-plus laws, each checked against its full statement.
 tropLadder : List1 Witnessed
 tropLadder =
-  Witness (MkProofStep "min-plus (+) commutative" tropFile Nothing (Just "oplusComm")) _ oplusComm
-    ::: [ Witness (MkProofStep "(+) associative" tropFile Nothing (Just "oplusAssoc")) _ oplusAssoc
-        , Witness (MkProofStep "(+) idempotent"  tropFile Nothing (Just "oplusIdem")) _ oplusIdem
-        , Witness (MkProofStep "(*) commutative" tropFile Nothing (Just "otimesComm")) _ otimesComm ]
+  rung "min-plus (+) commutative" tropFile Nothing `{oplusComm}
+    ((a, b : ExtNat) -> oplus a b = oplus b a)
+    ::: [ rung "(+) associative" tropFile Nothing `{oplusAssoc}
+            ((a, b, c : ExtNat) -> oplus a (oplus b c) = oplus (oplus a b) c)
+        , rung "(+) idempotent" tropFile Nothing `{oplusIdem}
+            ((a : ExtNat) -> oplus a a = a)
+        , rung "(*) commutative" tropFile Nothing `{otimesComm}
+            ((a, b : ExtNat) -> otimes a b = otimes b a) ]
 
 -- proof ladder for the framework's own meta-theorems (cited from ProvenTests.Meta)
 metaFile : Maybe String
 metaFile = Just "src/ProvenTests/Meta.idr"
 
+--/ The rungs citing the framework's own meta-theorems in ProvenTests.Meta.
 metaLadder : List1 Witnessed
 metaLadder =
-  Witness (MkProofStep "statusOf never upgrades a tier" metaFile Nothing (Just "statusOfActual")) _ statusOfActual
-    ::: [ Witness (MkProofStep "a failed cell contributes no coverage" metaFile Nothing (Just "coveredFromExcludesFailure")) _ coveredFromExcludesFailure
-        , Witness (MkProofStep "a passed cell contributes exactly its coord" metaFile Nothing (Just "coveredFromIncludesPass")) _ coveredFromIncludesPass
-        , Witness (MkProofStep "empty coverage covers no cell" metaFile Nothing (Just "emptyCoverageIsEmpty")) _ emptyCoverageIsEmpty ]
+  rung "statusOf reports Actually-Proven evidence as Actually-Proven" metaFile Nothing `{statusOfActual}
+    ((e : ActualEvidence) -> statusOf (PActuallyProven e) = ActuallyProven)
+    ::: [ rung "a failed cell contributes no coverage" metaFile Nothing `{coveredFromExcludesFailure}
+            ((co : ZigzagCoord) -> (m : TestMetadata) -> (msg : String) -> coveredFrom [(co, m, Failed msg)] = [])
+        , rung "a passed cell contributes exactly its coord" metaFile Nothing `{coveredFromIncludesPass}
+            ((co : ZigzagCoord) -> (m : TestMetadata) -> coveredFrom [(co, m, Passed)] = [co])
+        , rung "empty coverage covers no cell" metaFile Nothing `{emptyCoverageIsEmpty}
+            ((c : TestCategory) -> (a : TestAspect) -> cellCoveredBy [] c a = False) ]
 
 -- A timed reproducibility/performance workload: fold ⊕/⊗ over a range, twice.
 tropWorkload : Nat -> ExtNat

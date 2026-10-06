@@ -77,8 +77,11 @@ Until 2026-10-06 the ladder was `List1 ProofStep`: **metadata** only
 exist yielded a test labelled `[Actually-Proven]` on the strength of a string.
 
 The ladder is now `List1 Witnessed` (`src/ProvenTests/Types.idr`). Each rung
-carries the citation *and* an erased proof term at an explicit statement, so
-the typechecker rejects, at build time:
+carries the citation *and* an erased proof term at an explicit statement, and
+every ladder builds its rungs with the `rung` macro (`src/ProvenTests/Types.idr`),
+which takes one quoted theorem name, checks it against the full statement and
+derives the printed citation from that same name. The typechecker rejects, at
+build time:
 
 * a rung citing a theorem that does not exist (renamed or deleted);
 * a rung citing a real theorem for a property it does not prove;
@@ -89,8 +92,10 @@ checked for its exact error before being placed there. The erasure means the
 proofs cost nothing at run time.
 
 **What it still cannot reject:** a statement that is true but is not the law the
-test description names. `Witness s () ()` compiles, and is kept in the spec
-suite as a recorded positive control so nobody reads the tier as unforgeable.
+test description names (`Witness s () ()` compiles), and a rung built with the
+`Witness` constructor directly instead of `rung`, whose label is then a free
+string beside the term. Both are kept in the spec suite as recorded positive
+controls so nobody reads the tier as unforgeable.
 That residual is now a visible lie in code, reviewable in a diff, where the old
 one was an invisible string. The review rule: the statement passed with a rung
 is the law's full statement, written out.
