@@ -9,6 +9,8 @@ import ProvenTests.HigherOrder.Projection
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- PROJECTION / LENS LAW TESTS - EXECUTABLE
 -- =============================================================================

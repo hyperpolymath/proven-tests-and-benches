@@ -9,6 +9,8 @@ import ProvenTests.TypeSafe.Tropical
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- TROPICAL TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================

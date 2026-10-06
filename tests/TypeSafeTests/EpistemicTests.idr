@@ -9,6 +9,8 @@ import ProvenTests.TypeSafe.Epistemic
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- EPISTEMIC TYPE TESTS - EXECUTABLE TESTS
 -- =============================================================================

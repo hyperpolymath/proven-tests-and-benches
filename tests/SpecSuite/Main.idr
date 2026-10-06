@@ -21,6 +21,8 @@ import SetTheoryTests.BasicsTests
 import SetTheoryTests.AdvancedTests
 import System
 
+%default total
+
 -- =============================================================================
 -- SPEC-RECONCILIATION SUITE ENTRY POINT
 -- =============================================================================

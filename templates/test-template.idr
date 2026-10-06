@@ -15,6 +15,8 @@ import ProvenTests.Area.Name   -- the module under test
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- <NAME> TESTS - EXECUTABLE
 -- =============================================================================

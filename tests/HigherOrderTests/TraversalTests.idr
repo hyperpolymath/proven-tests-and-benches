@@ -9,6 +9,8 @@ import ProvenTests.HigherOrder.Traversal
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- TRAVERSAL LAW TESTS - EXECUTABLE
 -- =============================================================================

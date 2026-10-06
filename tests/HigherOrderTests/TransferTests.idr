@@ -9,6 +9,8 @@ import ProvenTests.HigherOrder.Transfer
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- TRANSFER LAW TESTS - EXECUTABLE
 -- =============================================================================

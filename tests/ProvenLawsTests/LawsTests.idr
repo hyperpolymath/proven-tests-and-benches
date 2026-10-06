@@ -11,6 +11,8 @@ import ProvenTests.Types
 import Data.List1
 import Data.Nat
 
+%default total
+
 -- =============================================================================
 -- ACTUALLY-PROVEN TESTS - THE FIRST IN THIS REPO
 -- =============================================================================

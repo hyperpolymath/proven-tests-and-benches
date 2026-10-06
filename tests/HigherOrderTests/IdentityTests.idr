@@ -9,6 +9,8 @@ import ProvenTests.HigherOrder.Identity
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- IDENTITY LAW TESTS - EXECUTABLE
 -- =============================================================================

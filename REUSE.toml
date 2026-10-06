@@ -117,6 +117,14 @@ SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.je
 SPDX-License-Identifier = "MPL-2.0"
 
 [[annotations]]
+# Machine artefact: the benchmark baseline is generated JSON
+# (scripts/compute-bench-baseline.sh) and cannot carry comments.
+path = "benchmarks/baseline.json"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
+
+[[annotations]]
 # .mailmap is a git identity-normalisation table; git honours # comments but an
 # SPDX header inside it would be read as a (bogus) mapping by some tooling, so
 # it is declared here instead of in-file.
