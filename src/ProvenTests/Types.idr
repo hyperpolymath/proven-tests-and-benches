@@ -168,7 +168,7 @@ Eq TypeSafeCategory where
 -- TestCategory and TestAspect live here (rather than in ProvenTests.Taxonomy,
 -- which re-exports them) so that TestMetadata below can carry *typed* axes
 -- without an import cycle. The taxonomy source of truth is
--- standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc.
+-- standards/3-practice/testing-and-benchmarking/TESTING-TAXONOMY.adoc.
 
 --/ All test categories from the Hyperpolymath Testing Taxonomy
 public export
