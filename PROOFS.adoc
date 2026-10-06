@@ -200,6 +200,9 @@ is quantified over all inputs with a term inhabiting it.
 ! Induction with a with-split; the bound that makes affinity's use-count meaningful
 !===
 
+The last two matter most: they are the AffineScript affinity properties
+*proved* rather than sampled.
+
 ==== Actually-Proven tropical and max-plus laws (17 theorems)
 
 `src/ProvenTests/Tropical.idr`, exercised by
@@ -239,9 +242,6 @@ checker to reject false laws â€” max-plus `0` annihilating `+`, and min-plus `âŠ
 idempotence. Planting either one as a true statement (`= 3`, `= Fin 4`) turns the build
 red with "Failing block did not fail", so each block rejects for the stated
 reason.
-
-The last two matter most: they are the AffineScript affinity properties
-*proved* rather than sampled.
 
 ==== Provisionally-Proven (63 tests)
 
