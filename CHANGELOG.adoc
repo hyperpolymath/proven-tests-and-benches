@@ -8,6 +8,25 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === [Unreleased]
 
+==== 2026-10-07 — first proofs about another repository's code
+
+* *proven's vector-clock merge proved a join-semilattice, against proven
+itself.* `+integrations/proven/src/ProvenSubject/OrderingLaws.idr+` imports
+`+Proven.SafeOrdering+` from proven at `+integrations/proven/PROVEN_PIN+`
+(`+53600326+`) and proves eight laws of its `+mergeVT+`/`+zeroVT+`/`+tickVT+`:
+commutativity, associativity, idempotence, two-sided `+zeroVT+` identity, both
+upper bounds, and `+tickVT+` advancing its own entry by one. They are tested
+in the new `+proven-ordering-laws+` executable (8 Actually-Proven, three reject
+controls). They are not counted in the spec suite's 29.
+* `+scripts/build-proven-laws.sh+` builds them against a throwaway package
+prefix, so the toolchain prefix stays clean. CI fetches the pinned commit and
+runs it as a hard gate. A `+mergeVT+` mutated to `+(+)+` fails it with five
+compile errors. `+scripts/ci-build.sh+` runs it locally when the proven
+checkout holds the pin.
+* `+scripts/ci-build.sh+` now looks for proven at
+`+$HOME/developer/hyper-repos/CORE/proven+`, where the clone now lives, and no
+longer at the dead `+/home/user/proven+`.
+
 ==== 2026-10-06 — the min-plus semiring completed; max-plus for bench bounds
 
 * *Min-plus is now a full commutative semiring, every axiom proved.*
