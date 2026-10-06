@@ -18,7 +18,7 @@ commutativity, associativity, idempotence, two-sided `+zeroVT+` identity, both
 upper bounds, and `+tickVT+` advancing its own entry by one. They are tested
 in the new `+proven-ordering-laws+` executable (8 Actually-Proven, three reject
 controls). They are not counted in the spec suite's 29.
-* `+scripts/build-proven-laws.sh+` builds them against a throwaway package
+* `+scripts/prove-proven-ordering.sh+` builds them against a throwaway package
 prefix, so the toolchain prefix stays clean. CI fetches the pinned commit and
 runs it as a hard gate. A `+mergeVT+` mutated to `+(+)+` fails it with five
 compile errors. `+scripts/ci-build.sh+` runs it locally when the proven

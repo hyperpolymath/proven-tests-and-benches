@@ -207,21 +207,21 @@ jobs:
       - name: Check benchmark against baseline
         run: bash scripts/check-bench-regression.sh build/report/proven-bench.json benchmarks/baseline.json
 
-      # --- Laws proved against proven's own code, at a pinned SHA ---
+      # --- Properties proved of proven's own code, at a pinned SHA ---
       # Unlike subject grading below, this is a hard gate: the commit is pinned
       # in integrations/proven/PROVEN_PIN, so what it checks is this
       # repository's invariant, not an external repository's current state. A
-      # pin bump that breaks a vector-clock law fails here at compile time.
+      # pin bump that breaks a vector-clock property fails here at compile time.
       - name: Fetch `proven` at PROVEN_PIN
         run: |
           pin="$(tr -d '[:space:]' < integrations/proven/PROVEN_PIN)"
           git init -q "$RUNNER_TEMP/proven-pinned"
           git -C "$RUNNER_TEMP/proven-pinned" fetch --depth 1 https://github.com/hyperpolymath/proven.git "$pin"
 
-      - name: Prove proven's vector-clock laws at PROVEN_PIN
+      - name: Prove proven's vector-clock ordering properties at PROVEN_PIN
         run: |
           export PATH="$HOME/.idris2/bin:$PATH"
-          bash scripts/build-proven-laws.sh "$RUNNER_TEMP/proven-pinned"
+          bash scripts/prove-proven-ordering.sh "$RUNNER_TEMP/proven-pinned"
 
       # --- Subject grading ---
       # scripts/ci-build.sh grades the external `proven` subject when a checkout

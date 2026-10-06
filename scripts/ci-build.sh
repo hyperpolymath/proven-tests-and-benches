@@ -100,7 +100,7 @@ fi
 proven_pin="$(tr -d '[:space:]' < integrations/proven/PROVEN_PIN)"
 if git -C "$PROVEN_ROOT" cat-file -e "${proven_pin}^{commit}" 2>/dev/null; then
   echo "--- proving proven's vector-clock laws at $proven_pin ---"
-  bash scripts/build-proven-laws.sh "$PROVEN_ROOT"
+  bash scripts/prove-proven-ordering.sh "$PROVEN_ROOT"
 else
   echo "--- SKIPPED: proven ordering laws — $PROVEN_ROOT does not hold PROVEN_PIN $proven_pin ---" >&2
   echo "    CI runs this as a hard gate; locally, fetch proven so it holds that commit." >&2

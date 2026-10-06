@@ -5,7 +5,7 @@
 #
 # Prove proven's vector-clock laws against proven itself, at a pinned SHA.
 #
-# Usage: scripts/build-proven-laws.sh <proven_git_checkout>
+# Usage: scripts/prove-proven-ordering.sh <proven_git_checkout>
 #
 # integrations/proven/PROVEN_PIN names one commit of hyperpolymath/proven. This
 # script extracts proven's src/ at exactly that commit (`git archive`, so the
@@ -35,7 +35,7 @@ pin_file="$repo_root/integrations/proven/PROVEN_PIN"
 die() {
   local status="$1"
   shift
-  echo "build-proven-laws: $*" >&2
+  echo "prove-proven-ordering: $*" >&2
   exit "$status"
 }
 

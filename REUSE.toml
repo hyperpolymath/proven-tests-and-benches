@@ -126,7 +126,7 @@ SPDX-License-Identifier = "MPL-2.0"
 
 [[annotations]]
 # Machine artefact: the pin is one bare 40-hex SHA read by
-# scripts/build-proven-laws.sh and the CI fetch step, so it carries no header.
+# scripts/prove-proven-ordering.sh and the CI fetch step, so it carries no header.
 path = "integrations/proven/PROVEN_PIN"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"

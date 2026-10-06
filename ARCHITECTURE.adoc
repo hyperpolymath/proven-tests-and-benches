@@ -82,7 +82,7 @@ Actually-Proven) |the installed library
 |`+proven-ordering-laws+` (8 Actually-Proven laws of proven's `+mergeVT+`)
 |the installed library + `+proven-safeordering+` (proven at
 `+PROVEN_PIN+`, installed into a throwaway prefix by
-`+scripts/build-proven-laws.sh+`)
+`+scripts/prove-proven-ordering.sh+`)
 |===
 
 The suite builds _against the installed library_ rather than against the

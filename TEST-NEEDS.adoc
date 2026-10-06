@@ -67,7 +67,7 @@ self-classification) |`+src/ProvenTests/Cells.idr+`
 
 |proven ordering laws (proven's own `+mergeVT+`/`+tickVT+` at
 `+integrations/proven/PROVEN_PIN+`) |*8 / 8 passing*, all Actually-Proven;
-hard CI gate |`+scripts/build-proven-laws.sh+`, 2026-10-07 (mergeVT
+hard CI gate |`+scripts/prove-proven-ordering.sh+`, 2026-10-07 (mergeVT
 mutated to `+(+)+`: exit 1)
 
 |Benchmark harness |runs; 4 workloads, 5 samples each, calibrated

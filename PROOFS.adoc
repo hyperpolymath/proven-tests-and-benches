@@ -347,7 +347,7 @@ and three reject controls are in `OrderingLawsTests.idr`: merge is not a sum,
 tick is not idempotent, and a rung citing `mergeVTIdem` for commutativity does
 not elaborate.
 
-*How it is run.* `scripts/build-proven-laws.sh <proven checkout>` extracts
+*How it is run.* `scripts/prove-proven-ordering.sh <proven checkout>` extracts
 proven's `src/` at the pin with `git archive` and installs `Proven.SafeOrdering`
 into a throwaway package prefix. It then builds and runs the
 `proven-ordering-laws` executable. CI fetches the pinned commit and runs this

@@ -7,7 +7,7 @@ main = ProvenSubject.OrderingLawsMain
 executable = "proven-ordering-laws"
 
 -- proven-safeordering is proven's Proven.SafeOrdering at PROVEN_PIN, installed
--- by scripts/build-proven-laws.sh; it is not a package proven itself ships.
+-- by scripts/prove-proven-ordering.sh; it is not a package proven itself ships.
 depends = proven-tests, proven-safeordering
 
 modules = ProvenSubject.OrderingLaws,
