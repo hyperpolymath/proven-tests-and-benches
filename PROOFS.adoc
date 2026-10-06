@@ -203,9 +203,9 @@ is quantified over all inputs with a term inhabiting it.
 ==== Actually-Proven tropical and max-plus laws (17 theorems)
 
 `src/ProvenTests/Tropical.idr`, exercised by
-`tests/ProvenLawsTests/TropicalLawsTests.idr`. Each test passes the theorem to
-`cite` at the law's full statement, so a deleted or weakened theorem stops the
-suite compiling — the citation is type-checked, not only a string.
+`tests/ProvenLawsTests/TropicalLawsTests.idr`. Each rung is built with
+`rung` at the law's full statement, so a deleted or weakened theorem stops the
+suite compiling, and the printed citation is the checked term.
 
 [cols="3,3"]
 !===
