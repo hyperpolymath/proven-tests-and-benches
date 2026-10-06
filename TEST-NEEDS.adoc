@@ -1,7 +1,7 @@
 == TEST-NEEDS: proven-tests-and-benches
 
 *Standard:*
-https://github.com/hyperpolymath/standards/blob/main/testing-and-benchmarking/TESTING-TAXONOMY.adoc[Testing
+https://github.com/hyperpolymath/standards/blob/main/3-practice/testing-and-benchmarking/TESTING-TAXONOMY.adoc[Testing
 & Benchmarking Taxonomy v1.0.0] *Grading standard:*
 https://github.com/hyperpolymath/standards/tree/main/component-readiness-grades[Component
 Readiness Grades v2.2] *Last measured:* 2026-08-07, by a full
@@ -252,7 +252,7 @@ The taxonomy requires benchmarks be baselined from the mean of the last
 10 main runs, classified on the Six Sigma scale (Unacceptable /
 Acceptable / Ordinary / Extraordinary) with defined CI actions, and
 retained for trend analysis. This repo has an honest measuring harness —
-monotonic clock, index-varied workloads, a checksum to defeat dead-code
+monotonic clock, index-varied workloads, a checksum (asserted since 2026-10-06) to defeat dead-code
 elimination — and *no baseline, no thresholds, no history, and no
 regression gate*. Benchmarks currently print numbers that nothing
 compares against. CRG C requires "`benchmarks baselined`".

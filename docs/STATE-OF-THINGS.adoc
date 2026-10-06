@@ -92,7 +92,7 @@ This taxonomy is the strongest part of the repository and is largely real.
 * *Nine TypeSafe modules plus a runner* containing genuine, non-decorative
   property logic. All suites pass at runtime (10/10 including self-classification).
 * *An honest benchmark* (`benchmarks/Benchmark.idr` + `benchmark.ipkg`) reporting
-  real ns/iteration with a printed checksum.
+  real ns/iteration with a checksum that is printed and asserted (exit non-zero on any failing iteration).
 * *The Zigzag regimen* (`src/ProvenTests/Zigzag.idr` + `docs/ZIGZAG-REGIMEN.adoc`)
   — an organising principle: a co-phase x actor x category x aspect lattice
   (3570 coordinates) with a boustrophedon traversal, exercised on every run.
@@ -166,8 +166,9 @@ now return `Maybe` instead of fabricating a bogus "Cannot promote" record.
 The old `timeAction` was a mock returning `0`. The harness now uses
 `System.Clock` (monotonic), runs index-varied workloads drawn from the real
 predicates (`effectStackValid`, `relationTransitive`, `ceremonyEndsProperly`) so
-results are not memoised, and folds every result into a printed checksum so the
-optimiser cannot elide the work. It reports total and per-iteration nanoseconds.
+results are not memoised, and counts every failing result into a checksum so the
+optimiser cannot elide the work, and asserts it: the bench exits non-zero if
+any iteration of any workload returned False. It reports total and per-iteration nanoseconds.
 
 === 4. Test-category directories are (mostly) empty stubs
 

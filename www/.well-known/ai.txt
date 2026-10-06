@@ -21,7 +21,7 @@ Source: https://github.com/hyperpolymath/proven-tests-and-benches
 # NOTE TO AUTOMATED AGENTS EDITING THIS REPOSITORY
 # Read AGENTS.md before making changes. This repository is the estate's
 # canonical source of test definitions: per
-# standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc, other repositories
+# standards/3-practice/testing-and-benchmarking/TESTING-TAXONOMY.adoc, other repositories
 # are directed to copy tests from here in preference to writing their own.
 # A test added here that passes without asserting anything will be propagated
 # outward and read as evidence elsewhere. Do not add one.

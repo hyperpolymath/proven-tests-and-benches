@@ -8,7 +8,7 @@ the standing self-audit and is deliberately unflattering; treat it as
 the current account of what is real here, not as marketing.
 
 *This repository is upstream of every other repo’s tests.*
-`+standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc+` §Provenance
+`+standards/3-practice/testing-and-benchmarking/TESTING-TAXONOMY.adoc+` §Provenance
 directs every estate repo to draw tests from here _first_ — ahead of the
 standard’s own examples, ahead of a sibling repo, ahead of writing a new
 one. A vacuous test added here does not stay here; it is copied outward
