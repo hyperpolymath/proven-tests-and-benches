@@ -65,6 +65,11 @@ self-classification) |`+src/ProvenTests/Cells.idr+`
 |`+./build/exec/proven-spec-suite+`, 2026-10-06 (first gated run
 2026-08-07: 75/75, 12 Actually-Proven)
 
+|proven ordering laws (proven's own `+mergeVT+`/`+tickVT+` at
+`+integrations/proven/PROVEN_PIN+`) |*8 / 8 passing*, all Actually-Proven;
+hard CI gate |`+scripts/build-proven-laws.sh+`, 2026-10-07 (mergeVT
+mutated to `+(+)+`: exit 1)
+
 |Benchmark harness |runs; 4 workloads, 5 samples each, calibrated
 iteration counts, `+--json+` emission
 |`+./benchmarks/build/exec/proven-bench --json+`, 2026-08-10
