@@ -255,16 +255,24 @@ mutable ref, contradicting the repository’s own 40-char-SHA discipline
 [width="100%",cols="20%,20%,20%,20%,20%",options="header",]
 |===
 |ID |Sev |Item |Evidence |Next move
-|*I-1* |HIGH |*Benchmarks gate nothing.* The harness is honest —
-monotonic clock, index-varied workloads, a checksum defeating
-dead-code elimination (until 2026-10-06 an XOR parity that was False on
-every even iteration count, i.e. always, and blind to an even number of
-failures; now a failure count, asserted by `+assertChecksums+`) — but there is no baseline, no thresholds, no
-history and no regression gate. `+benchmarks/+` holds exactly three
-files. The numbers are compared against nothing. |`+ls benchmarks/+` → 3
-files |This is the *last unmet CRG C criterion*. `+ROADMAP.md+` item 2.
-Note the trap: with no history σ cannot be computed, so the gate must
-announce its own inertness loudly (exit 2) rather than return success.
+|*I-1* |RESOLVED |*Benchmarks gated nothing* (until 2026-10-06). The
+harness was honest — monotonic clock, index-varied workloads, a checksum
+defeating dead-code elimination (until 2026-10-06 an XOR parity that was
+False on every even iteration count, i.e. always, and blind to an even
+number of failures; now a failure count, asserted by
+`+assertChecksums+`) — but there was no baseline, no threshold and no
+regression gate. Now `+benchmarks/baseline.json+` holds the mean of the
+last 10 `+main+` runs (run ids recorded in it), and
+`+scripts/check-bench-regression.sh+` runs in the required job
+`+Build, test and benchmark+`. It fails when a workload's leave-one-out
+ratio exceeds 2.0× its baseline or its absolute median exceeds 2.5×, and
+it exits 2 when no check can be performed. |Replay of 55 retained
+artifacts (28 `+main+`, 27 branch): all pass, max ratio 1.527, max
+absolute 1.650 (`+benchmarks/README.adoc+`). Planted controls:
+`+bash scripts/test/check-bench-regression.test.sh+` → 18/18 |*Resolved.*
+The first CI evidence is this change's own run. Blind spots are stated in
+`+benchmarks/README.adoc+`: a uniform slowdown under 2.5×, and correlated
+two-workload slowdowns.
 
 |*I-2* |HIGH |*`+scripts/wire-zero-minute-gate.sh+` would weaken branch
 protection if run.* It `+PUT+`s protection with
