@@ -21,12 +21,17 @@
 
 set -uo pipefail
 
-SCOPE=(src tests benchmarks integrations)
+SCOPE=(src tests benchmarks integrations templates corpus)
 
 # Keep in lockstep with AGENTIC.a2ml `banned-proof-escape-hatches`.
 # `?hole` is matched as Idris2 hole syntax generally — `?` followed by an
 # identifier, in term position — not as the literal string "?hole".
-LITERAL_PATTERNS='believe_me|assert_total|%partial|unsafePerformIO|idris_crash'
+LITERAL_PATTERNS='believe_me|assert_total|assert_smaller|%partial|%default (partial|covering)|unsafePerformIO|idris_crash'
+# A `partial` modifier on a declaration opts that function out of totality
+# checking. Function-level `covering` stays allowed: it is the honest marker
+# for I/O entry points that read files (readFile consumes fuel until EOF), and
+# the totality checker still verifies coverage.
+PARTIAL_DECL='^[[:space:]]*((public )?export[[:space:]]+|private[[:space:]]+)?partial([[:space:]]|$)'
 HOLE_PATTERN='(^|[[:space:](=,[])\?[a-zA-Z_][a-zA-Z0-9_'"'"']*'
 
 missing=0
@@ -54,11 +59,27 @@ if grep -rnE "$HOLE_PATTERN" "${SCOPE[@]}" --include="*.idr"; then
   hits=1
 fi
 
+if grep -rnE "$PARTIAL_DECL" "${SCOPE[@]}" --include="*.idr"; then
+  hits=1
+fi
+
+# Every Idris2 file must declare `%default total`, so a new function is total
+# unless it says otherwise. Without this, a file that omits the pragma is
+# silently `covering`, and nothing above would notice.
+while IFS= read -r f; do
+  if ! grep -qE '^%default total([[:space:]]|$)' "$f"; then
+    echo "$f: missing '%default total'"
+    hits=1
+  fi
+done < <(find "${SCOPE[@]}" -name '*.idr' -type f)
+
 if [ "$hits" -ne 0 ]; then
   echo
   echo "FAIL: proof escape hatch found. Actually-Proven content may not use these."
-  echo "      Banned: believe_me, assert_total, %partial, unsafePerformIO,"
-  echo "              idris_crash, and hole syntax (?name)."
+  echo "      Banned: believe_me, assert_total, assert_smaller, %partial,"
+  echo "              %default partial|covering, partial declarations,"
+  echo "              unsafePerformIO, idris_crash, and hole syntax (?name)."
+  echo "      Required: '%default total' in every .idr file."
   exit 1
 fi
 

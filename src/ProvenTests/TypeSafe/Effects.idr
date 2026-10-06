@@ -9,6 +9,8 @@ import ProvenTests.Types
 import ProvenTests.Classification
 import Data.String
 
+%default total
+
 -- =============================================================================
 -- EFFECTS SYSTEM TESTS
 -- =============================================================================

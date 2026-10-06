@@ -125,11 +125,20 @@ estate.
 === Design principles that are actually enforced
 
 * *No proof escape hatches.* `+believe_me+`, `+assert_total+`,
-`+%partial+`, `+idris_crash+` and `+unsafePerformIO+` appear nowhere in
-the Idris2 sources. `+just lint+` fails on any of them.
-* *Totality where it carries weight.* `+%default total+` is set in
-`+Tropical+`, `+Coverage+`, `+Meta+`, `+Baton+`, `+GoldenVectors+`,
-`+Grading+` and `+Ledger+`.
+`+assert_smaller+`, `+%partial+`, `+%default partial+`/`+covering+`, a
+`+partial+` declaration modifier, `+idris_crash+`, `+unsafePerformIO+` and
+hole syntax appear nowhere in `+src+`, `+tests+`, `+benchmarks+`,
+`+integrations+`, `+templates+` or `+corpus+`.
+`+scripts/check-escape-hatches.sh+` fails on any of them, in CI and in
+`+just lint+`.
+* *Totality everywhere, checked.* Every `+.idr+` file in that scope declares
+`+%default total+`, and the same script fails on a file that does not. The
+only functions that opt out are the five I/O functions on a `+readFile+` path
+(it consumes fuel until EOF, so it cannot be total): `+readRequired+`,
+`+readOwed+`, `+runReport+` and `+main+` in
+`+integrations/proven/src/ProvenSubject/Main.idr+`, and `+main+` in the
+corpus unit. Each carries an explicit function-level
+`+covering+`, which the totality checker still verifies.
 * *One toolchain version.* Seven artefacts name an Idris2 version;
 `+scripts/check-toolchain-pins.sh+` fails if any disagree.
 * *Typed taxonomy axes.* Categories and aspects are enums, not strings,

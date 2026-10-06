@@ -9,6 +9,8 @@ import ProvenTests.AffineScript.Borrow
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- BORROW TESTS - EXECUTABLE
 -- =============================================================================

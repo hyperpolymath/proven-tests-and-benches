@@ -14,6 +14,8 @@ import ProvenTests.Baton
 import ProvenTests.Framework
 import Data.List
 
+%default total
+
 -- =============================================================================
 -- FIRST POPULATED ZIGZAG CELL — a real End-to-End test
 -- =============================================================================

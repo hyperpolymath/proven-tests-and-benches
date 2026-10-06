@@ -8,6 +8,8 @@ module ProvenTests.Classification
 import ProvenTests.Types
 import Data.List1
 
+%default total
+
 -- =============================================================================
 -- ACTUALLY-PROVEN CLASSIFICATION
 -- =============================================================================

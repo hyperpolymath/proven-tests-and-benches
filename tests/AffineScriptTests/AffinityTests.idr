@@ -9,6 +9,8 @@ import ProvenTests.AffineScript.Affinity
 import ProvenTests.Framework
 import ProvenTests.Types
 
+%default total
+
 -- =============================================================================
 -- AFFINITY TESTS - EXECUTABLE
 -- =============================================================================

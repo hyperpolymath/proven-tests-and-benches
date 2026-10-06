@@ -15,7 +15,7 @@ import System.File
 import Data.String
 import Data.List
 
-%default covering
+%default total
 
 -- =============================================================================
 -- proven-subject-report — grade proven's modules by three-tier provenance
@@ -42,6 +42,9 @@ resolveRoot args = do
     (Nothing, (_ :: r :: _)) => r
     _                    => "/home/user/proven"
 
+-- `covering`, not total: readFile consumes fuel until EOF (Data.Fuel.forever).
+-- Every pure function in this package remains under %default total.
+covering
 readRequired : String -> IO String
 readRequired path = do
   result <- readFile path
@@ -51,6 +54,7 @@ readRequired path = do
       putStrLn ("ERROR: cannot read " ++ path ++ ": " ++ show err)
       exitFailure
 
+covering
 readOwed : String -> IO (String, String)
 readOwed root = do
   let canonicalPath = root ++ "/.machine_readable/descriptiles/STATE.a2ml"
@@ -84,6 +88,7 @@ partition3 gs =
   , filter (\g => statusOfGraded g == ProvisionallyProven) gs
   , filter (\g => statusOfGraded g == Unproven) gs )
 
+covering
 runReport : List String -> IO ()
 runReport args = do
   root <- resolveRoot args
@@ -144,6 +149,7 @@ runReport args = do
     else do putStrLn "proven-subject-report: FAILED sanity gate"
             exitFailure
 
+covering
 main : IO ()
 main = do
   args <- getArgs

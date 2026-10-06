@@ -8,27 +8,24 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === [Unreleased]
 
-==== 2026-10-06 — the benchmark regression gate (ultraplan Phase 3b; DEBT I-1)
+==== 2026-10-06 — totality is the default everywhere, and the lint checks it
 
-* *`+benchmarks/baseline.json+`* is the mean of the last 10 `+main+` runs
-(34896163257 … 37471889673, with run ids and commits recorded in the
-file). `+scripts/compute-bench-baseline.sh+` cuts it from downloaded
-artifacts, refuses to work from fewer than 10 runs, and reproduces the
-committed file byte for byte.
-* *`+scripts/check-bench-regression.sh+`* runs in the required job
-`+Build, test and benchmark+`, after the artifact upload. Each workload is
-compared as a leave-one-out ratio, so runner speed cancels out. It fails
-at a ratio above 2.0× baseline or an absolute median above 2.5×, and
-names every Unacceptable workload. A missing or malformed file, a
-workload missing on either side, a changed iteration count, or a false
-checksum exits 2: no check was performed, and that is not a pass. The
-limits depart from the taxonomy's 1.5× on measured evidence: across 55
-retained artifacts the maximum ratio was 1.527 (`+benchmarks/README.adoc+`).
-* *`+scripts/test/check-bench-regression.test.sh+`* has 18 planted
-controls and runs in the same job before the real check. It is also
-covered by the `+Shellcheck+` step.
-* `+Benchmark.idr+` stops pointing readers to a `+baseline.json+` that did
-not exist and names the gate instead.
+* *`+%default total+` in every Idris2 file* (49 files gained it; 10 had it).
+A file without the pragma was silently `+covering+`, so a non-terminating
+helper could have sat beside a proof unremarked.
+* *Two real totality gaps closed* in
+`+src/ProvenTests/TypeSafe/Choreographic.idr+`: `+choreographicEndsProperly+`
+and `+choreographicNoOrphanedChoices+` recursed through `+all+`, which hides
+the structural descent from the checker. Each now recurses through a local
+helper over the branch list.
+* *The five `+readFile+` I/O functions say `+covering+` explicitly*:
+`+readFile+` consumes fuel until EOF and cannot be total. Every pure
+function around them stays total.
+* *`+scripts/check-escape-hatches.sh+` widened.* It now also bans
+`+assert_smaller+`, `+%default partial+`/`+covering+` and a `+partial+`
+declaration modifier; requires `+%default total+` in every `+.idr+` file; and
+scans `+templates/+` and `+corpus/+`, which it previously skipped. Each new
+rule was shown to fire on a planted file (exit 1) before it was trusted.
 
 ==== 2026-10-03 — action-ref form and the lockfile, reconciled at the root (#34)
 

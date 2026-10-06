@@ -7,6 +7,8 @@ module ProvenTests.AffineScript.Affinity
 
 import Data.List
 
+%default total
+
 -- =============================================================================
 -- AFFINITY: NO USE AFTER MOVE
 -- =============================================================================

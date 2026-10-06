@@ -17,6 +17,8 @@ import ProvenTests.TypeSafe.Decorative
 import ProvenTests.TypeSafe.Ceremonial
 import ProvenTests.TypeSafe.Dyadic
 
+%default total
+
 -- =============================================================================
 -- ECHO-TYPES INTEGRATION BRIDGE (STAND-IN)
 -- =============================================================================
