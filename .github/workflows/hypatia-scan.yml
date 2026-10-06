@@ -15,7 +15,15 @@ on:
   # No branches: filter — see governance.yml.
   pull_request:
   schedule:
-    - cron: "40 5 * * 1"
+    # Re-touched 2026-10-06. This cron line landed in #32, merged by
+    # gitar-bot[bot]; from 2026-08-17 every scheduled run (8/8) fired as that App
+    # and died at startup with referenced_workflows: [] while push and PR runs of
+    # the same workflow were green. Later edits (#81) never touched this line.
+    # HYPOTHESIS, not a documented guarantee: GitHub documents an actor change
+    # only when a cron edit reactivates a disabled workflow; this one is active.
+    # The minute moved 40 -> 47 so the edit is a real schedule change. Proven
+    # only when the next scheduled run shows actor hyperpolymath and jobs > 0.
+    - cron: "47 5 * * 1"
   workflow_dispatch:
 
 permissions:
