@@ -284,7 +284,7 @@ Unproven and is _promoted_ only when matching evidence is supplied.
 
 * Idris2 — https://idris2.readthedocs.io
 * `AUDIT.adoc` — repo-local audit gate (honesty posture)
-* `standards/testing-and-benchmarking/TESTING-TAXONOMY.adoc` — canonical taxonomy
+* `standards/3-practice/testing-and-benchmarking/TESTING-TAXONOMY.adoc` — canonical taxonomy
 * `standards/component-readiness-grades/COMPONENT-READINESS-GRADES.md` — CRG scale
 * G. Tene, "How NOT to Measure Latency" (coordinated omission)
 * K. Beck, _Test-Driven Development by Example_ (FIRST, AAA)

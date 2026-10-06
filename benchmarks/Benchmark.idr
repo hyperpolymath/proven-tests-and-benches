@@ -24,7 +24,9 @@ import Data.Nat
 -- Real wall-clock timing via the monotonic clock. Workloads are indexed by the
 -- iteration counter so results are NOT memoised, and every result is folded
 -- into a checksum that is printed, so the optimiser cannot eliminate the work
--- as dead code.
+-- as dead code. Since 2026-10-06 the checksum is also ASSERTED: it is True only
+-- when every iteration of every sample held, and `benchMain` exits non-zero
+-- otherwise, after writing the JSON so the artifact survives the red.
 --
 -- MEASUREMENT DISCIPLINE (2026-08-10, ultraplan Phase 3a)
 -- -------------------------------------------------------
@@ -53,7 +55,7 @@ record BenchmarkResult where
   iterations : Nat
   samples_ns : List Integer  -- one total per repetition, in run order
   median_ns  : Integer       -- headline: median of samples
-  checksum   : Bool
+  checksum   : Bool          -- True iff every iteration of every sample held
 
 --/ Median of a list of Integers (0 for empty — callers never pass empty).
 --/ For even lengths this takes the upper middle: with REPS = 5 the length is
@@ -86,28 +88,35 @@ timeIO act = do
   end   <- clockTime Monotonic
   pure (res, toNanos end - toNanos start)
 
--- Strict loop: applies the index-varied workload n times, threading the result
--- through a running XOR checksum so nothing can be elided.
-benchLoop : Nat -> (Nat -> Bool) -> Bool -> Bool
-benchLoop Z     _ acc = acc
-benchLoop (S k) f acc = benchLoop k f (acc /= f (S k))
+--/ Strict loop: applies the index-varied workload at every index 1..n and
+--/ counts the indices at which it returned False. Every call feeds the
+--/ accumulator, so none can be elided as dead code. A COUNT, not a parity: the
+--/ XOR fold this replaces read False on every even iteration count even when
+--/ all predicates held, and was blind to any even number of failures.
+benchLoop : Nat -> (Nat -> Bool) -> Nat -> Nat
+benchLoop Z     _ bad = bad
+benchLoop (S k) f bad = benchLoop k f (if f (S k) then bad else S bad)
 
--- One timed sample of `n` iterations. The `if` forces the loop's result to be
--- evaluated between the two clock reads.
-sample : Nat -> (Nat -> Bool) -> IO (Bool, Integer)
-sample n f = timeIO (if benchLoop n f False then pure True else pure False)
+--/ One timed sample of `n` iterations, returning the failure count and the
+--/ elapsed nanoseconds. The `if` forces the loop to run between the two clock
+--/ reads rather than when the IO action is constructed.
+sample : Nat -> (Nat -> Bool) -> IO (Nat, Integer)
+sample n f = timeIO (case benchLoop n f Z of
+                         Z   => pure Z
+                         bad => pure bad)
 
 --/ Repetitions per workload per run.
 public export
 REPS : Nat
 REPS = 5
 
--- Run a named workload REPS times and record every sample.
+--/ Run a named workload REPS times and record every sample. The checksum is
+--/ True only if no sample saw a single failing iteration.
 benchmark : String -> Nat -> (Nat -> Bool) -> IO BenchmarkResult
 benchmark nm n f = do
   results <- traverse (\_ => sample n f) [1 .. REPS]
   let times = map snd results
-  let chk = foldl (\a, (b, _) => a /= b) False results
+  let chk = all (\(bad, _) => bad == Z) results
   pure (MkBenchmarkResult nm n times (median times) chk)
 
 -- =============================================================================
@@ -139,7 +148,7 @@ wlCeremony i =
 wlCoverage : Nat -> Bool
 wlCoverage i =
   let cells = replicate i (MkCoord CoImplementation Collective EndToEnd Dependability)
-  in coveredCatAspect cells <= 238
+  in coveredCatAspect cells <= catAspectTotal
 
 -- Per-workload iteration counts, calibrated 2026-08-10 on the reference dev
 -- box so a single sample costs tens of milliseconds (see the discipline note).
@@ -206,6 +215,18 @@ envOr key dflt = do
   v <- getEnv key
   pure (fromMaybe dflt v)
 
+--/ Rung-5 gate on the checksums: exit non-zero, naming every workload whose
+--/ predicate returned False at any index of any sample. Called AFTER the JSON
+--/ is written so the artifact records the red instead of vanishing with it.
+assertChecksums : List BenchmarkResult -> IO ()
+assertChecksums rs =
+  case map name (filter (not . checksum) rs) of
+    []     => putStrLn "bench: checksum OK - every iteration of every workload held"
+    failed => do
+      putStrLn ("bench: CHECKSUM FAILED for " ++ show failed
+                ++ " - a workload predicate returned False; its timings measure a broken workload")
+      exitFailure
+
 -- =============================================================================
 -- BENCHMARK ENTRY POINT
 -- =============================================================================
@@ -229,6 +250,7 @@ benchMain = do
             putStrLn ("bench: could not write " ++ path ++ ": " ++ show err)
             exitFailure
       putStrLn ("bench: wrote " ++ path)
+  assertChecksums rs
 
 main : IO ()
 main = benchMain
