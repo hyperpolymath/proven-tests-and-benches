@@ -9,6 +9,7 @@ import Proven.SafeOrdering
 import ProvenSubject.OrderingLaws
 import ProvenTests.Framework
 import ProvenTests.Types
+import ProvenTests.Classification
 import Data.List1
 import Data.Vect
 
@@ -43,11 +44,30 @@ discharged : String -> IO TestResult
 discharged thm =
   assertTrue True ("discharged at compile time by " ++ thm ++ " in OrderingLaws.idr")
 
+||| Build an Actually-Proven law test. Unlike the legacy `provenTest`, which
+||| records `FixtureDebt`, this states the fixture position honestly: the law
+||| is a total compile-time proof, so no runtime firing fixture can exist
+||| (the same annotation as ProvenTests.Baton's semiring laws). The
+||| compile-time rejections in this module play the firing role.
+private
+lawTest : TestId -> String -> IO TestResult -> List1 Witnessed -> ActuallyProvenTest
+lawTest tid desc func ladder =
+  let design = MkDesignSafetyProof
+                 "proven's vector clocks (Proven.SafeOrdering at PROVEN_PIN)"
+                 "Total, machine-checked Idris2 equality and LTE proofs"
+                 ["mergeVT join-semilattice with bottom zeroVT", "tickVT advances one entry"]
+                 ["proven's src/ at the pinned commit only; a pin bump re-proves or fails"]
+      cert   = MkTypeSafetyCertificate 6 "Idris2 dependent types" "idris2 --build (total proofs)"
+                 ["proven vector-clock laws"]
+      meta   = classifyActuallyProven tid desc ladder design cert
+                 (CannotFailByDesign "vector-clock laws are total machine-checked proofs about proven's code (see proof ladder); the property is compile-time enforced, so no runtime firing fixture can exist")
+  in MkActuallyProvenTest meta func ladder
+
 ||| mergeVT is commutative (theorem `mergeVTComm`).
 public export
 testMergeVTComm : ActuallyProvenTest
 testMergeVTComm =
-  provenTest (orderingLawsTestId 1)
+  lawTest (orderingLawsTestId 1)
     "proven mergeVT: commutative"
     (discharged "mergeVTComm")
     (singleton (rung "Total proof under %default total"
@@ -58,7 +78,7 @@ testMergeVTComm =
 public export
 testMergeVTAssoc : ActuallyProvenTest
 testMergeVTAssoc =
-  provenTest (orderingLawsTestId 2)
+  lawTest (orderingLawsTestId 2)
     "proven mergeVT: associative"
     (discharged "mergeVTAssoc")
     (singleton (rung "Total proof under %default total"
@@ -70,7 +90,7 @@ testMergeVTAssoc =
 public export
 testMergeVTIdem : ActuallyProvenTest
 testMergeVTIdem =
-  provenTest (orderingLawsTestId 3)
+  lawTest (orderingLawsTestId 3)
     "proven mergeVT: idempotent"
     (discharged "mergeVTIdem")
     (singleton (rung "Total proof under %default total"
@@ -81,7 +101,7 @@ testMergeVTIdem =
 public export
 testMergeVTZeroL : ActuallyProvenTest
 testMergeVTZeroL =
-  provenTest (orderingLawsTestId 4)
+  lawTest (orderingLawsTestId 4)
     "proven mergeVT: zeroVT is a left identity"
     (discharged "mergeVTZeroL")
     (singleton (rung "Total proof under %default total"
@@ -93,7 +113,7 @@ testMergeVTZeroL =
 public export
 testMergeVTZeroR : ActuallyProvenTest
 testMergeVTZeroR =
-  provenTest (orderingLawsTestId 5)
+  lawTest (orderingLawsTestId 5)
     "proven mergeVT: zeroVT is a right identity"
     (discharged "mergeVTZeroR")
     (singleton (rung "Total proof under %default total"
@@ -105,7 +125,7 @@ testMergeVTZeroR =
 public export
 testMergeVTUpperL : ActuallyProvenTest
 testMergeVTUpperL =
-  provenTest (orderingLawsTestId 6)
+  lawTest (orderingLawsTestId 6)
     "proven mergeVT: dominates its left input at every process"
     (discharged "mergeVTUpperL")
     (singleton (rung "Total proof under %default total"
@@ -117,7 +137,7 @@ testMergeVTUpperL =
 public export
 testMergeVTUpperR : ActuallyProvenTest
 testMergeVTUpperR =
-  provenTest (orderingLawsTestId 7)
+  lawTest (orderingLawsTestId 7)
     "proven mergeVT: dominates its right input at every process"
     (discharged "mergeVTUpperR")
     (singleton (rung "Total proof under %default total"
@@ -129,7 +149,7 @@ testMergeVTUpperR =
 public export
 testTickVTAdvances : ActuallyProvenTest
 testTickVTAdvances =
-  provenTest (orderingLawsTestId 8)
+  lawTest (orderingLawsTestId 8)
     "proven tickVT: advances its own entry by one"
     (discharged "tickVTAdvances")
     (singleton (rung "Total proof under %default total"
