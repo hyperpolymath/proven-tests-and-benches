@@ -69,8 +69,7 @@ if [ -z "${PROVEN_ROOT:-}" ]; then
   for candidate in \
     "$(dirname "$PWD")/proven" \
     "$PWD/../proven" \
-    "$HOME/developer/hyper-repos/proven" \
-    "/home/user/proven"
+    "$HOME/developer/hyper-repos/CORE/proven"
   do
     if [ -f "$candidate/MODULE-STATUS.txt" ]; then
       PROVEN_ROOT="$candidate"
@@ -89,6 +88,20 @@ else
   # Deliberately loud. A skip here is NOT a pass, and the CRG evidence in
   # READINESS.adoc depends on this step having run.
   echo "--- SKIPPED: proven subject report — no proven checkout found ---" >&2
-  echo "    Searched: ../proven, \$HOME/developer/hyper-repos/proven" >&2
+  echo "    Searched: ../proven, \$HOME/developer/hyper-repos/CORE/proven" >&2
   echo "    Set PROVEN_ROOT to grade the subject. A skip is not a pass." >&2
+fi
+
+# Laws of proven's vector clocks, proved against proven's own code at
+# integrations/proven/PROVEN_PIN. CI fetches that commit itself (ci.yml, "Prove
+# proven's vector-clock laws at PROVEN_PIN") and gates on it; locally this runs
+# whenever the proven checkout found above is a git clone holding the pinned
+# commit, and says so loudly when it does not.
+proven_pin="$(tr -d '[:space:]' < integrations/proven/PROVEN_PIN)"
+if git -C "$PROVEN_ROOT" cat-file -e "${proven_pin}^{commit}" 2>/dev/null; then
+  echo "--- proving proven's vector-clock laws at $proven_pin ---"
+  bash scripts/prove-proven-ordering.sh "$PROVEN_ROOT"
+else
+  echo "--- SKIPPED: proven ordering laws — $PROVEN_ROOT does not hold PROVEN_PIN $proven_pin ---" >&2
+  echo "    CI runs this as a hard gate; locally, fetch proven so it holds that commit." >&2
 fi

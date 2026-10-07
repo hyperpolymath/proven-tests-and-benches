@@ -318,6 +318,54 @@ reverse round trip would be false, and a false test is worse than a missing one.
 `traverse` on the empty list is `Just []`, so there is nothing to short-circuit.
 That vacuity is stated in the source rather than hidden behind a passing tick.
 
+=== `proven-ordering-laws` — laws of proven's own code (8 theorems)
+
+Added 2026-10-07. Every other proof in this document is about code this
+repository defines. These eight are about code another estate repository ships:
+`mergeVT`, `zeroVT` and `tickVT` from `Proven.SafeOrdering` in
+https://github.com/hyperpolymath/proven[hyperpolymath/proven], *imported, not
+copied*, at the commit pinned in `integrations/proven/PROVEN_PIN`
+(`53600326ca31f6f99767c5371cc77af2dade996c`).
+
+[cols="2,5"]
+|===
+| Theorem | Statement (all `n`, all clocks)
+
+| `mergeVTComm` | `mergeVT a b = mergeVT b a`
+| `mergeVTAssoc` | `mergeVT a (mergeVT b c) = mergeVT (mergeVT a b) c`
+| `mergeVTIdem` | `mergeVT a a = a`
+| `mergeVTZeroL` / `mergeVTZeroR` | `zeroVT` is a two-sided identity of `mergeVT`
+| `mergeVTUpperL` / `mergeVTUpperR` | each entry of either input is `LTE` the same entry of the merge
+| `tickVTAdvances` | `tickVT i` raises entry `i` by exactly one
+|===
+
+Together these make `mergeVT` a join-semilattice with `zeroVT` as bottom. That
+is what lets a vector clock be merged in any message order, any grouping, and
+with redelivery, without changing the result. Proofs are in
+`integrations/proven/src/ProvenSubject/OrderingLaws.idr`. The rung-built tests
+and three reject controls are in `OrderingLawsTests.idr`: merge is not a sum,
+tick is not idempotent, and a rung citing `mergeVTIdem` for commutativity does
+not elaborate.
+
+*How it is run.* `scripts/prove-proven-ordering.sh <proven checkout>` extracts
+proven's `src/` at the pin with `git archive` and installs `Proven.SafeOrdering`
+into a throwaway package prefix. It then builds and runs the
+`proven-ordering-laws` executable. CI fetches the pinned commit and runs this
+as a hard gate. Unlike subject grading, it is not `continue-on-error`: the pin
+makes it this repository's invariant.
+
+*Verified 2026-10-07.* At the pin: **8/8 Actually-Proven, exit 0**. With
+proven's `mergeVT` mutated from pointwise `max` to pointwise `+` and pinned:
+**exit 1**, with five laws rejected at compile time (`mergeVTComm`,
+`mergeVTAssoc`, `mergeVTIdem`, `mergeVTZeroL`, `mergeVTUpperL`). The rest fail
+with them because they are built from those five. A malformed pin, or a pin
+missing from the checkout, exits 2.
+
+*What this does not cover.* These eight tests are a separate executable. They
+are not counted in the spec suite's 29 Actually-Proven properties above. They
+prove laws of proven at one commit, not of proven's `main`. A pin bump is
+the moment they are re-checked.
+
 == Not implemented, on purpose
 
 `EchoTypes/Safety.idr` and `EchoTypes/Invariance.idr` are named in the spec and
