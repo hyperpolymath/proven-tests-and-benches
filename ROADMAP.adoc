@@ -176,15 +176,18 @@ Debt: C-2, C-3, C-4, D-9.
 
 === 6 — Release engineering
 
-Now that the repository is public, its absence of release machinery is
-visible. `+CHANGELOG.md+` has a `+[0.1.0]+` entry and there is *no tag*.
-No issue or PR templates, no `+SUPPORT.md+`, no `+CITATION.cff+` on a
-research-adjacent repository that cites standards.
+*Tags exist (2026-10-07).* `+v0.1.0+` was tagged retroactively at
+`+a4e589a+` (PR #12, the last commit of 2026-06-24). It is *not*
+gate-verified: no CI ran at that commit. `+v0.2.0+` is the first tag placed
+on a commit whose `+Build, test and benchmark+` run on `+main+` was green.
+Both are signed annotated tags with GitHub releases. Issue and PR templates,
+`+SUPPORT.adoc+` and `+CITATION.cff+` are present.
 
-Tag `+v0.1.0+` against a commit whose gate is green, then add release
-automation.
+What remains is release automation. Today a release is cut by hand: a
+CHANGELOG/`+.ipkg+` version PR, then a signed tag on its merge commit once
+that commit's `+main+` run is green.
 
-Debt: I-8, I-9, D-6.
+Debt: I-8 (release automation only), I-9, D-6.
 
 === 7 — Decisions the owner owes the repository
 

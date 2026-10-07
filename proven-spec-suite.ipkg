@@ -1,6 +1,6 @@
 package proven-spec-suite
 
-version = 0.1.0
+version = 0.2.0
 sourcedir = "tests"
 
 main = SpecSuite.Main

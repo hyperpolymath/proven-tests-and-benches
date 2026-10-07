@@ -319,8 +319,10 @@ GitHub only |Keep, with the header. Fix the four documents (D-1).
 
 |*I-8* |LOW |No `+ISSUE_TEMPLATE/+`, no `+PULL_REQUEST_TEMPLATE.md+`, no
 `+SUPPORT.md+`, no release automation. `+CHANGELOG.md+` has a
-`+[0.1.0]+` entry and there is *no tag*. |`+git tag+` → empty |Now that
-the repo is public these matter. `+ROADMAP.md+` item 6.
+`+[0.1.0]+` entry and there is *no tag*. |`+git tag+` → empty |*Partly
+fixed* 2026-10-07. Templates and `+SUPPORT.adoc+` are present.
+`+v0.1.0+` is tagged retroactively (not gate-verified) and `+v0.2.0+` is the
+first gate-green tag. *Open:* release automation. `+ROADMAP.adoc+` item 6.
 
 |*I-9* |LOW |No `+CITATION.cff+`, `+.zenodo.json+` or `+codemeta.json+`,
 on a research-adjacent repository that cites standards. |file listing
