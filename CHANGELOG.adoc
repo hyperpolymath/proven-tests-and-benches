@@ -8,6 +8,20 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === [Unreleased]
 
+=== [0.2.0] - 2026-10-07
+
+The first release whose tagged commit passed CI. `+v0.2.0+` is tagged on the
+squash merge of this release PR, after the push-to-`+main+` run of
+`+Build, test and benchmark+` on that same commit came back green. All six
+`+.ipkg+` packages now declare `+version = 0.2.0+`.
+
+`+v0.1.0+` was tagged retroactively on 2026-10-07 at `+a4e589a+` (PR #12, the
+last commit of 2026-06-24). No CI ran at that commit, and this changelog had
+no `+[0.1.0]+` section when it was made; see that section below.
+
+The entries below, collected under `+[Unreleased]+` from 2026-06-25 to
+2026-10-07, make up 0.2.0.
+
 ==== 2026-10-07 — first proofs about another repository's code
 
 * *proven's vector-clock merge proved a join-semilattice, against proven
@@ -277,6 +291,10 @@ instead of hardcoding `+idris2-0.7.0+`; builds and runs the suite
 package.
 
 === [0.1.0] - 2026-06-24
+
+Tagged retroactively as `+v0.1.0+` on 2026-10-07, at `+a4e589a+` (the merge of
+PR #12). This section was written after that date, and no CI gate ran at
+that commit: `+ci.yml+` was dispatch-only and had never run.
 
 ==== Added
 
