@@ -188,7 +188,7 @@ jobs:
       # (taxonomy §Baseline Management: mean of the last 10 CI runs on main) by
       # scripts/compute-bench-baseline.sh — computed, never asserted.
       - name: Upload benchmark result artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: proven-bench-${{ github.run_id }}
           path: build/report/proven-bench.json
