@@ -1,0 +1,2 @@
+job cargo-check-clippy-fmt failed-at setup
+verdict FAIL

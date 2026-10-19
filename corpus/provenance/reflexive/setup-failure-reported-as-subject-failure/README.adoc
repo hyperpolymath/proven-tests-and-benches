@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+= Corpus unit: setup-failure-reported-as-subject-failure
+
+*Battery* provenance · *Category* ReflexiveTest · *Aspect* Dependability ·
+*Tier* proven-exact
+
+== What it checks
+
+A CI gate report — per-job *where it failed* (`setup`, `subject`, `none`) plus
+the verdict the gate claimed — must not claim *FAIL* when every failure it
+records is a setup failure. A job that died installing its toolchain, checking
+out, or validating an action's inputs never ran the check it carried; a FAIL
+verdict over it attributes to the subject a judgement nobody made. The only
+honest verdict is VOID. Reporting it as FAIL is the defect class
+`setup-failure-reported-as-subject-failure`.
+
+This is the estate's ground truth made permanent: from 2026-09-29 to
+2026-10-14 `rust-ci / Cargo check + clippy + fmt` on plasma-parser-writer was
+red on every run (e.g. run 38564229091). The job died in its first real step —
+`'toolchain' is a required input`, from a SHA-pinned `dtolnay/rust-toolchain`
+given no `toolchain:` — before a compiler existed, and every red read as a code
+failure. The fix was a one-line pin move (plasma-parser-writer#107); the
+fortnight of misattributed red is what this unit polices.
+
+== Why it can fail
+
+Run the harness against `fixture-firing/report.txt` — identical to the silent
+fixture except for *exactly one word* (the failing job's location, `subject` →
+`setup`) — and it exits 1. It has demonstrably fired (2026-10-19; see
+`stability.a2ml`). A unit that cannot fail is not a test.
+
+== Exit convention
+
+[cols="1,4"]
+|===
+| 0 | check ran, report consistent (silent)
+| 1 | check ran, defect present (fired)
+| 2 | NO CHECK WAS PERFORMED — unreadable, unparseable, or incomplete payload.
+      `calibration/empty-report.txt` pins this: an empty payload must exit 2,
+      so absence of input can never masquerade as a pass.
+|===
+
+== Build and run
+
+[source,shell]
+----
+idris2 Test.idr -o setup-failure-reported-as-subject-failure
+./build/exec/setup-failure-reported-as-subject-failure fixture-silent/report.txt      # exit 0
+./build/exec/setup-failure-reported-as-subject-failure fixture-silent/void-report.txt # exit 0 (the honest form)
+./build/exec/setup-failure-reported-as-subject-failure fixture-firing/report.txt      # exit 1
+./build/exec/setup-failure-reported-as-subject-failure calibration/empty-report.txt   # exit 2
+----
+
+Base library only; no `.ipkg`; compiles alone. The proven-exact warrant is in
+the file itself: `firesOnSetupOnlyFail`, `silentOnSubjectFail` and
+`silentOnNoFailure` are total, universally quantified lemmas, so alpha = beta =
+0 *by construction* within the declared fixture grammar (parse failures are
+VOID by construction). The VOID-claim confusable is discharged by
+`voidClaimNeverFires` — see `diagnosticity.a2ml`.

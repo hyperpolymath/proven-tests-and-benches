@@ -1,0 +1,4 @@
+job detect expected yes conclusion success
+job check expected yes conclusion success
+job coverage expected no conclusion skipped
+verdict PASS

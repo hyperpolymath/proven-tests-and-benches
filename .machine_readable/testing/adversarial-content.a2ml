@@ -18,6 +18,12 @@ corpus_calibration = "corpus/**/calibration/ — deliberately empty or stub payl
 # fired. A fixture that has never fired is a finding, not a fixture.
 u1_firing = "corpus/provenance/reflexive/cancelled-gate-void/fixture-firing/report.txt -> target: cancelled-gate-void checker; defect class cancelled-adjudicator-reported-as-pass; last fired 2026-08-31 (exit 1)"
 u1_calibration = "corpus/provenance/reflexive/cancelled-gate-void/calibration/empty-report.txt -> target: same checker; must exit 2; last verified 2026-08-31"
+u2_firing = "corpus/provenance/reflexive/setup-failure-reported-as-subject-failure/fixture-firing/report.txt -> target: setup-failure-reported-as-subject-failure checker; defect class setup-failure-reported-as-subject-failure; last fired 2026-10-19 (exit 1)"
+u2_calibration = "corpus/provenance/reflexive/setup-failure-reported-as-subject-failure/calibration/empty-report.txt -> target: same checker; must exit 2; last verified 2026-10-19"
+u3_firing = "corpus/provenance/reflexive/skipped-mandatory-reported-as-pass/fixture-firing/report.txt -> target: skipped-mandatory-reported-as-pass checker; defect class skipped-mandatory-reported-as-pass; last fired 2026-10-19 (exit 1)"
+u3_calibration = "corpus/provenance/reflexive/skipped-mandatory-reported-as-pass/calibration/empty-report.txt -> target: same checker; must exit 2; last verified 2026-10-19"
+u4_firing = "corpus/provenance/reflexive/proof-claim-without-prover/fixture-firing/report.txt and hollow-report.txt -> target: proof-claim-without-prover checker; defect class proof-claim-without-prover; last fired 2026-10-19 (exit 1)"
+u4_calibration = "corpus/provenance/reflexive/proof-claim-without-prover/calibration/empty-report.txt -> target: same checker; must exit 2; last verified 2026-10-19"
 
 [future_trees]
 mutants = "mutants/ — declared by the doctrine for the mutation phase; not yet present, and its absence is stated in the doctrine rather than an empty directory landing here"

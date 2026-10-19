@@ -1,0 +1,2 @@
+prover creusot claimed yes ran yes obligations none
+verdict PASS

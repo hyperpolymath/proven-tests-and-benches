@@ -46,6 +46,9 @@ COVERING_ALLOWED=(
   integrations/proven/src/ProvenSubject/Main.idr:runReport
   integrations/proven/src/ProvenSubject/Main.idr:main
   corpus/provenance/reflexive/cancelled-gate-void/Test.idr:main
+  corpus/provenance/reflexive/setup-failure-reported-as-subject-failure/Test.idr:main
+  corpus/provenance/reflexive/skipped-mandatory-reported-as-pass/Test.idr:main
+  corpus/provenance/reflexive/proof-claim-without-prover/Test.idr:main
 )
 HOLE_PATTERN='(^|[[:space:](=,[])\?[a-zA-Z_][a-zA-Z0-9_'"'"']*'
 

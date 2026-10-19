@@ -452,11 +452,13 @@ never use it. |`+grep -rn "B2-LEGACY-SUITE" src/+` (9 sites)
 helpers, battery by battery.
 
 |*S-9* |MEDIUM |*Corpus units have no CI gate and no second-machine run.*
-Corpus unit #1 (`+corpus/provenance/reflexive/cancelled-gate-void/+`) is
-verified by session runs only: no CI job compiles and runs corpus units
-standalone (the per-unit matrix job of Phase ★.1), and the X.8 stability
-record shows `+reproduce = no+` — the unit has never run on a second
-machine. Until the gate exists, `+corpus/COUNT.a2ml+` is hand-written and
+The four corpus units (`+corpus/provenance/reflexive/+`: cancelled-gate-void,
+setup-failure-reported-as-subject-failure, skipped-mandatory-reported-as-pass,
+proof-claim-without-prover) are compiled and fired by `+corpus-check.yml+`
+on every PR, but each X.8 stability record still shows `+reproduce = no+`
+— no unit has run on a second machine, and the three units added
+2026-10-19 were authored on Idris2 0.8.0 with their first run at the
+pinned 0.7.0 being that CI job. Until the gate exists, `+corpus/COUNT.a2ml+` is hand-written and
 its numbers are warranted by the stability record, not by an independent
 check. |`+corpus/COUNT.a2ml+` `+[deficits]+` section;
 `+corpus/provenance/reflexive/cancelled-gate-void/stability.a2ml+`

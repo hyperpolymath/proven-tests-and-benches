@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Diagnosticity contract for corpus unit provenance/reflexive/skipped-mandatory-reported-as-pass.
+# Every confusable below is either discharged by distinguishing evidence or
+# declared in does_not_distinguish — nothing is silently unresolved.
+
+[detects]
+condition = "a CI gate report that claims verdict PASS while at least one job the gate declared mandatory has conclusion `skipped`"
+defect_class = "skipped-mandatory-reported-as-pass"
+ground_truth = "platform behaviour, not yet a dated estate run: a GitHub Actions job skipped by its `if:` concludes `skipped`, and a required status check with conclusion `skipped` does not block a merge — the reason every cicd-suite language gate (rust-ci, creusot-gate, spark-gate) carries a verdict job (cicd-suite#54). When an estate run exhibits this, record it here and retire manifest.a2ml [classification].warrant_note"
+
+[sensitivity]
+# Variants of the detected condition this unit provably catches. The warrant is
+# a total lemma, not a sample: firesOnSkippedMandatoryPass in Test.idr
+# quantifies over ALL job lists, so every arity and position is covered.
+variant_1 = "any number of jobs, skipped mandatory job in any position — covered by the universally quantified lemma firesOnSkippedMandatoryPass"
+variant_2 = "several mandatory jobs skipped at once (a detect output never written, so every gated job skips) — the same lemma; anySkippedMandatory is a disjunction"
+firing_fixture = "fixture-firing/report.txt (mandatory `check` skipped, verdict PASS)"
+
+[confusables]
+# Other causes producing a similar surface signal, each discharged or declared.
+optional_skip = "a job the gate declared NOT expected on this tree (coverage with no floor set, a language gate on a tree without that language) is condition-gated and INTENTIONAL; it must not fire this unit"
+failed_mandatory = "a mandatory job that RAN and failed is a real failure, reported red by any gate; it is not a skip and is outside this unit's axis"
+void_claim = "a VOID claim over a skipped mandatory job is the HONEST form and must not fire"
+
+[distinguishing_evidence]
+optional_skip = "the grammar carries `expected yes|no` from the gate's own declaration; the total lemma optionalSkipIsNotMandatory proves an optional skipped job can never satisfy the firing predicate"
+failed_mandatory = "the grammar carries `failure` and `skipped` as distinct tokens; failedMandatoryIsNotSkipped proves a failed mandatory job never satisfies the predicate"
+void_claim = "the checker never inspects the jobs of a VOID (or FAIL) claim; both clauses of check are literally Silent"
+emitted = "exit code (0/1/2) plus a one-line verdict naming the defect class when fired; parse failures emit NO CHECK PERFORMED, never silence"
+
+[does_not_distinguish]
+skip_cause = "whether the skip came from a mis-evaluated `if:`, an upstream job that never wrote the output, or a path/branch filter — the grammar carries the conclusion only"
+cancelled = "a cancelled mandatory job is provenance/reflexive/cancelled-gate-void's axis; this grammar has no `cancelled` token, and such a report is VOID here (exit 2), never silence"

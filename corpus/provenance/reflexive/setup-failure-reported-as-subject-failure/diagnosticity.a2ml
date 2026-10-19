@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Diagnosticity contract for corpus unit provenance/reflexive/setup-failure-reported-as-subject-failure.
+# Every confusable below is either discharged by distinguishing evidence or
+# declared in does_not_distinguish — nothing is silently unresolved.
+
+[detects]
+condition = "a CI gate report that claims verdict FAIL while every failure it records is a setup failure (toolchain install, checkout, action input validation) — no subject step ran"
+defect_class = "setup-failure-reported-as-subject-failure"
+ground_truth = "plasma-parser-writer `rust-ci / Cargo check + clippy + fmt`, 2026-09-29 to 2026-10-14 (run 38564229091 among others): `'toolchain' is a required input` in the toolchain-install step, no cargo command executed, check reported FAIL on every PR and on main"
+
+[sensitivity]
+# Variants of the detected condition this unit provably catches. The warrant is
+# a total lemma, not a sample: firesOnSetupOnlyFail in Test.idr quantifies over
+# ALL job lists, so every arity and every position of the setup failure is
+# covered, including several setup failures at once.
+variant_1 = "any number of jobs, setup failure in any position, no subject failure anywhere — covered by the universally quantified lemma firesOnSetupOnlyFail"
+variant_2 = "several setup failures at once (a whole matrix dying in Set up job) — the same lemma; anySetup is a disjunction"
+firing_fixture = "fixture-firing/report.txt (the only job failed at setup, verdict FAIL)"
+
+[confusables]
+# Other causes producing a similar surface signal, each discharged or declared.
+subject_failure_too = "a report where a subject step ALSO failed is a real FAIL: the verdict is warranted whatever else died, and must not fire this unit"
+void_claim = "a report that claims VOID over a setup failure is the HONEST form and must not fire"
+no_failure_fail = "a FAIL claim over a report with no failure at all is a different defect (a verdict with no evidence either way)"
+
+[distinguishing_evidence]
+subject_failure_too = "the grammar carries `subject` and `setup` as distinct tokens; the checker asks the subject question FIRST, and the total lemma silentOnSubjectFail proves a report with any subject failure yields Silent for every job list"
+void_claim = "the checker never inspects the jobs of a VOID claim; voidClaimNeverFires proves Silent for every job list"
+no_failure_fail = "silentOnNoFailure proves a FAIL claim with neither failure kind yields Silent; it is out of axis, not undetected by accident"
+emitted = "exit code (0/1/2) plus a one-line verdict naming the defect class when fired; parse failures emit NO CHECK PERFORMED, never silence"
+
+[does_not_distinguish]
+setup_cause = "which setup step failed (toolchain, checkout, input validation, runner loss) — the grammar carries the location class only, not the cause"
+misclassified_location = "a producer that labels a subject failure `setup` (or the reverse) produces a parse-valid report this unit judges as written; classification correctness is the producer's precondition (depends.a2ml)"
+no_failure_fail = "a FAIL over nothing is declared out of axis above and stays silent here; it belongs to a sibling unit"

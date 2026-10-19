@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Unit manifest for corpus/provenance/reflexive/proof-claim-without-prover.
+
+[identity]
+battery = "provenance"
+category = "ReflexiveTest"
+aspect = "Dependability"
+defect_class = "proof-claim-without-prover"
+
+[classification]
+proof_system = "Idris2 total functions with machine-checked equality proofs"
+type_level = "dependent equality types over the report grammar"
+semiotic_level = "semantic"
+semiotic_justification = "the check adjudicates what the report MEANS — whether a PASS verdict over a verification claim is warranted by a prover event — not merely whether it parses; it stops short of pragmatic (it does not read a README or run a prover itself)"
+warrant_class = "design-contract"
+warrant_note = "grounded in the estate's own gate design (standards' SPARK Theatre Gate; cicd-suite's spark-gate and creusot-gate theatre jobs) and the open ruling hyperpolymath/standards#692; the estate instance that motivated the theatre gate predates this corpus and is not dated here — when a dated estate firing exists, record it in diagnosticity.a2ml [detects].ground_truth"
+
+[subject_shape]
+input = "a verification report in the declared line grammar (see regime.a2ml); producible from any gate that can say, per prover, whether the tree claims it (README/badge/manifest scan), whether a prover job ran, and whether obligations were discharged (gnatprove --report=all summary; cargo creusot prove output)"
+build = "standalone: `idris2 Test.idr -o proof-claim-without-prover` — base library only, no .ipkg, no sibling imports"
+
+[shared_dependencies]
+# Triangulation ledger entry (X.6): components shared with other units, which
+# bound any claimed independence.
+toolchain = "idris2 0.8.0 (Chez Scheme backend) for the recorded runs; the repository's CI pin is 0.7.0 — see stability.a2ml [toolchain_note]"
+harness_lineage = "hand-written, modelled on cancelled-gate-void's parser and lemma shape; no shared fixture generator; fixtures are hand-authored on-disk pairs"
+
+[adversarial]
+# ⚠ THIRD assertion site for one fact. The same date is asserted in
+# stability.a2ml [firing_history] and derived into corpus/COUNT.a2ml.
+# stability.a2ml is the AUTHORITY; check_unit_ledger (check-doc-facts.sh)
+# fails the tree if this line and stability.a2ml disagree.
+last_fired = "2026-10-19"
