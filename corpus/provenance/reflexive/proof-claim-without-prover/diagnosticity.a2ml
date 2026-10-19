@@ -31,6 +31,6 @@ fail_claim = "the FAIL clause of check is literally Silent; the checker never in
 emitted = "exit code (0/1/2) plus a one-line verdict naming the defect class when fired; parse failures emit NO CHECK PERFORMED, never silence"
 
 [does_not_distinguish]
-obligation_count = "how many obligations were discharged, or whether the prover PROVED them — `obligations some` means at least one was attempted; a prover that ran over obligations and failed them is a red prover job, outside this unit's axis"
+obligation_count = "how many obligations were discharged, or whether the prover PROVED them — `obligations some` means at least one was discharged (Test.idr's reading); a prover that ran over obligations and failed them is a red prover job, outside this unit's axis"
 claim_surface = "where the claim lives (README, badge, manifest field) — the grammar carries the fact of a claim, not its surface"
 trusted_axioms = "a proof resting on `#[trusted]` or `pragma Assume` is a claim with a prover behind it; the residue is cicd-suite's creusot-gate/spark-gate theatre-job axis (T3), not this unit's"

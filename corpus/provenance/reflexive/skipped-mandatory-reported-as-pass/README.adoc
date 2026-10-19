@@ -28,9 +28,11 @@ started and killed; here it was never started. Both read green.
 
 == Why it can fail
 
-Run the harness against `fixture-firing/report.txt` — identical to the silent
-fixture except for *exactly one word* (the mandatory `check` job's conclusion,
-`success` → `skipped`) — and it exits 1. It has demonstrably fired (2026-10-19;
+Run the harness against `fixture-firing/report.txt` — the silent fixture with
+the mandatory `check` job's conclusion changed from `success` to `skipped`
+and the optional `coverage` job's line dropped (an optional skip is not the
+defect, so the firing fixture carries only the mandatory one) — and it
+exits 1. It has demonstrably fired (2026-10-19;
 see `stability.a2ml`). A unit that cannot fail is not a test.
 
 == Exit convention
