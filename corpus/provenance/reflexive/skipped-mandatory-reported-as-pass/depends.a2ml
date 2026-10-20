@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Validity preconditions (exactness spine X.5). Violation of any precondition
+# yields exit 2 (VOID), and VOID propagates: a battery must reclassify any
+# green downstream of this unit's VOID as VOID.
+
+[upstream_units]
+value = "none — the unit compiles and runs alone; it is the skipped twin of provenance/reflexive/cancelled-gate-void and shares its defect family (a verdict that outruns its evidence) but depends on no other unit's output"
+
+[preconditions]
+fixture_readable = "the report file must exist and be readable — violation exits 2 (NO CHECK PERFORMED)"
+fixture_in_grammar = "the report must parse under the declared grammar — violation exits 2"
+expectation_declared = "the producer must carry the gate's OWN declaration of which jobs were mandatory (`expected yes`); a producer that guesses expectations from job names produces parse-valid reports this unit judges as written"
+
+[void_behaviour]
+convention = "exit 2 means NO CHECK WAS PERFORMED; it is never a pass and never a failure — a crash is 2, an empty payload is 2 (see calibration/)"

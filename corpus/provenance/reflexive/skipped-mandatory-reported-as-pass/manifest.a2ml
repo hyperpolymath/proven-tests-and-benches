@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Unit manifest for corpus/provenance/reflexive/skipped-mandatory-reported-as-pass.
+
+[identity]
+battery = "provenance"
+category = "ReflexiveTest"
+aspect = "Dependability"
+defect_class = "skipped-mandatory-reported-as-pass"
+
+[classification]
+proof_system = "Idris2 total functions with machine-checked equality proofs"
+type_level = "dependent equality types over the report grammar"
+semiotic_level = "semantic"
+semiotic_justification = "the check adjudicates what the report MEANS — whether a PASS verdict is warranted when a job the gate itself declared mandatory never ran — not merely whether it parses; it stops short of pragmatic (it does not observe a live gate in use)"
+warrant_class = "platform-behaviour"
+warrant_note = "grounded in documented GitHub Actions behaviour (a job skipped by `if:` concludes `skipped`, and a required check so concluded does not block a merge) and in the cicd-suite verdict-job design that exists because of it; NOT grounded in a dated estate run — the first estate instance, when measured, must be recorded in diagnosticity.a2ml [detects].ground_truth and this note retired"
+
+[subject_shape]
+input = "a gate report in the declared line grammar (see regime.a2ml); producible from any CI system that exposes per-job conclusions plus the gate's own declaration of which jobs it expected (for cicd-suite gates: the detect job's outputs; for GitHub Actions generally: jobs[].conclusion via the runs API)"
+build = "standalone: `idris2 Test.idr -o skipped-mandatory-reported-as-pass` — base library only, no .ipkg, no sibling imports"
+
+[shared_dependencies]
+# Triangulation ledger entry (X.6): components shared with other units, which
+# bound any claimed independence.
+toolchain = "idris2 0.8.0 (Chez Scheme backend) for the recorded runs; the repository's CI pin is 0.7.0 — see stability.a2ml [toolchain_note]"
+harness_lineage = "hand-written, modelled on cancelled-gate-void's parser and lemma shape; no shared fixture generator; fixtures are hand-authored on-disk pairs"
+
+[adversarial]
+# ⚠ THIRD assertion site for one fact. The same date is asserted in
+# stability.a2ml [firing_history] and derived into corpus/COUNT.a2ml.
+# stability.a2ml is the AUTHORITY; check_unit_ledger (check-doc-facts.sh)
+# fails the tree if this line and stability.a2ml disagree.
+last_fired = "2026-10-19"

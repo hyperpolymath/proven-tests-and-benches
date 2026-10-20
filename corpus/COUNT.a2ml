@@ -14,20 +14,20 @@
 # and a fresh walk disagree, so a hand-edit here is drift, not an update.
 
 [count]
-deployed = "1"
-fired_with_date = "1"
-diagnosticity_complete = "1"
-proven_exact = "1"
+deployed = "4"
+fired_with_date = "4"
+diagnosticity_complete = "4"
+proven_exact = "4"
 statistical_with_declared_operating_point = "0"
-repeat_tested = "1"
+repeat_tested = "4"
 
 [detail]
-last_fired = "2026-09-15T02:06:33Z (provenance/reflexive/cancelled-gate-void)"
+last_fired = "2026-10-19T12:20:22Z (provenance/reflexive/proof-claim-without-prover)"
 authority = "each unit stability.a2ml [firing_history].last_fired; this line is DERIVED"
 
 [deficits]
-reproduce_tested = "0 of 1 — second-machine runs owed (DEBT S-9)"
-replicate_tested = "0 of 1 — different-setup runs owed (DEBT S-9)"
+reproduce_tested = "0 of 4 — second-machine runs owed (DEBT S-9)"
+replicate_tested = "0 of 4 — different-setup runs owed (DEBT S-9)"
 
 # Each zero below names the CHECK that enforces it. A zero asserted by
 # nobody is a wish; a zero enforced by a named gate is a measurement. This
@@ -39,3 +39,6 @@ void_counted_as_pass = "0 — enforced by corpus_fire <unit> calibration 2 (chec
 
 [units]
 u1 = "provenance/reflexive/cancelled-gate-void tier=proven-exact runs=3 last_fired=2026-09-15T02:06:33Z"
+u2 = "provenance/reflexive/proof-claim-without-prover tier=proven-exact runs=3 last_fired=2026-10-19T12:20:22Z"
+u3 = "provenance/reflexive/setup-failure-reported-as-subject-failure tier=proven-exact runs=3 last_fired=2026-10-19T12:20:05Z"
+u4 = "provenance/reflexive/skipped-mandatory-reported-as-pass tier=proven-exact runs=3 last_fired=2026-10-19T12:20:13Z"

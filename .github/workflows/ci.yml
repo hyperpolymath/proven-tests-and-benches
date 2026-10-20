@@ -154,12 +154,35 @@ jobs:
 
       # --- Toolchain ---
 
+      # The cached ~/.idris2 holds a Chez-compiled idris2.so. A fasl-object is
+      # only loadable by the Chez that wrote it, and `ubuntu-latest` moved to a
+      # newer image (26.04) with a newer Chez, so the old cache restored an
+      # idris2.so the new Chez refuses:
+      #   Exception: incompatible fasl-object version 0.0.0-pre-release.73
+      # (corpus-check run 39254816071, 2026-10-19). The installed chezscheme
+      # package version is therefore part of the cache key, so an image or
+      # package bump rebuilds Idris 2 once instead of loading a stale build.
+      # chezscheme is installed here, before the cache step, because the key
+      # has to be known before the restore; scripts/install-idris2.sh installs
+      # it again idempotently. Same shape as hyperpolymath/hypatia#930; keep
+      # this step and the key identical in ci.yml and corpus-check.yml, which
+      # share one cache entry on purpose.
+      - name: Chez Scheme version (Idris 2 cache key)
+        id: chez
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends chezscheme
+          v="$(dpkg-query -W -f='${Version}' chezscheme | tr -c 'A-Za-z0-9.' '-')"
+          [ -n "$v" ]
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
       - name: Cache Idris2 toolchain
         id: cache-idris2
         uses: actions/cache@v6.1.0
         with:
           path: ~/.idris2
-          key: idris2-v${{ env.IDRIS2_VERSION }}-${{ runner.os }}
+          key: idris2-v${{ env.IDRIS2_VERSION }}-${{ runner.os }}-chez${{ steps.chez.outputs.version }}
 
       - name: Install Idris2
         run: bash scripts/install-idris2.sh

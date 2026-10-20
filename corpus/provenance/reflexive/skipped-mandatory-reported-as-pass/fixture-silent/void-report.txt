@@ -1,0 +1,3 @@
+job detect expected yes conclusion success
+job check expected yes conclusion skipped
+verdict VOID

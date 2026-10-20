@@ -1,0 +1,2 @@
+prover gnatprove claimed yes ran yes obligations some
+verdict PASS

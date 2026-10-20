@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Stability record (exactness spine X.8): repeat / reproduce / replicate,
+# with dates. A unit never run twice has an unmeasured alpha and cannot be
+# counted — this file is what makes the count honest.
+
+[repeat]
+machine = "same machine (cloud container, Linux 6.18.44-fc-v139, idris2 0.8.0, Chez backend)"
+runs = "3"
+date = "2026-10-19T12:20:05Z"
+protocol = "full triple per run from a clean build/: fixture-silent (2 payloads), fixture-firing, calibration/empty-report"
+outcomes = "identical across all 3 runs: silent=0,0 firing=1 calibration=2"
+variance = "0 — deterministic pure function of input bytes, no timing component"
+provenance = "SCRIPTED (one loop, three clean compiles, every exit code captured); the run log is the [machine_compile] record below"
+
+[machine_compile]
+date = "2026-10-19T12:20:05Z"
+toolchain = "Idris 2, version 0.8.0 (Chez backend), nix store idris2-wrapped-0.8.0, cloud container"
+source_sha256 = "1bc8a8ecf6a5d48fbc2a3312f4bbaaaeda5920e7468925b0bcc4d3743e8eaf35"
+invocation = "idris2 Test.idr -o setup-failure-reported-as-subject-failure — standalone, NO .ipkg, no -p flag (R-43)"
+build_state = "rm -rf build before every run; nothing pre-existing was reused"
+rc = "0"
+error_lines = "0"
+binary = "build/exec/setup-failure-reported-as-subject-failure — PRESENT and executable"
+verdict = "COMPILED under the three-signal predicate below"
+
+[compile_predicate]
+definition = "compiled IFF rc == 0 AND build/exec/<name> exists and is executable AND zero ^Error: lines on combined stdout+stderr"
+why_rc_insufficient = "an unresolvable import exits 0 while printing Error: and emitting no binary (measured on 0.7.0 by cancelled-gate-void; on 0.8.0 the same probe still exits 0 — see [toolchain_note])"
+why_binary_insufficient = "a type error exits 1 yet a binary IS still emitted under -o"
+enforcement = "corpus-check.yml, through check-doc-facts.sh corpus"
+
+[triple]
+silent = "fixture-silent/report.txt -> rc=0 -- SILENT: no FAIL claim rests on setup failures alone; fixture-silent/void-report.txt -> rc=0 (the honest VOID form)"
+firing = "fixture-firing/report.txt -> rc=1 -- FIRED: setup-failure-reported-as-subject-failure — verdict FAIL while every failure is a setup failure; the subject was never checked (must be VOID)"
+calibration = "calibration/empty-report.txt -> rc=2 -- NO CHECK PERFORMED: fixture unparseable or incomplete"
+result = "all three MATCH the declared outcomes; the firing arm and the silent arm are both reachable (verification rule 4)"
+
+[toolchain_note]
+# Stated so the surrounding record cannot be over-read. The repository pins
+# Idris2 0.7.0 in CI (corpus-check.yml, .mise.toml). The runs above are on
+# 0.8.0, the only Idris2 available on the authoring machine. The first compile
+# at the pinned 0.7.0 is therefore CI's corpus-check job on the PR that adds
+# this unit; until that job is green, "compiled at the pinned toolchain" is
+# NOT a claim this file makes.
+pinned_toolchain_run = "owed — first 0.7.0 compile is the corpus-check job on the introducing PR"
+
+[isolation]
+# R-43: isolation is REAL, not declared. The unit is a bare `module Test` with
+# base-library imports only; the badimport selftest tree of check-doc-facts.sh
+# is the gate that proves an accidental library import fails to compile.
+probe = "not separately re-run for this unit; covered by the harness's badimport selftest (corpus-selftest), which runs before every corpus compile in CI"
+
+[reproduce]
+performed = "no"
+owed = "run on a second machine; recorded as DEBT S-9 until done — the deficit is declared, not hidden"
+
+[replicate]
+performed = "no"
+owed = "different setup (the pinned 0.7.0, or a different backend); the 0.7.0 run in CI will be the first replicate and must be recorded here when it lands"
+
+[firing_history]
+# The adversarial-manifest rule: a fixture that has never fired is a finding,
+# not a fixture. This fixture HAS fired.
+first_fired = "2026-10-19T12:19:59Z"
+last_fired = "2026-10-19T12:20:05Z"
+last_fired_by = "machine (scripted triple, run 3 of 3)"

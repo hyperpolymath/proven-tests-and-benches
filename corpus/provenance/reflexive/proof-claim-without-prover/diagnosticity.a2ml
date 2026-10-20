@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Diagnosticity contract for corpus unit provenance/reflexive/proof-claim-without-prover.
+# Every confusable below is either discharged by distinguishing evidence or
+# declared in does_not_distinguish — nothing is silently unresolved.
+
+[detects]
+condition = "a verification report that claims verdict PASS while at least one prover is claimed by the tree and either did not run or ran over no obligations"
+defect_class = "proof-claim-without-prover"
+ground_truth = "design contract, not yet a dated estate run: hyperpolymath/standards' spark-theatre-gate.yml fails a 'formally verified' banner with no prover (T1), and cicd-suite#54's creusot-gate and spark-gate run a theatre job before proving for the same reason (hyperpolymath/standards#692). When an estate run exhibits this, record it here and retire manifest.a2ml [classification].warrant_note"
+
+[sensitivity]
+# Variants of the detected condition this unit provably catches. The warrant is
+# a total lemma, not a sample: firesOnTheatrePass in Test.idr quantifies over
+# ALL prover lists, so every arity and position is covered.
+variant_1 = "claimed prover that never ran, in any position among any number of provers — covered by the universally quantified lemma firesOnTheatrePass"
+variant_2 = "claimed prover that ran over zero obligations (a hollow dependency, contracts-free SPARK_Mode) — the same lemma; theatre is a disjunction of the two"
+firing_fixture = "fixture-firing/report.txt (claimed, never ran); fixture-firing/hollow-report.txt (claimed, ran over nothing)"
+
+[confusables]
+# Other causes producing a similar surface signal, each discharged or declared.
+unadvertised_proof = "a prover that ran with obligations but is claimed nowhere is unadvertised proof, not theatre; it must not fire this unit"
+discharged_claim = "a claimed prover that ran and discharged obligations is proof; the claim is backed and must not fire"
+fail_claim = "a FAIL verdict over theatre is the honest report and must not fire"
+
+[distinguishing_evidence]
+unadvertised_proof = "the grammar carries `claimed yes|no`; the total lemma unclaimedIsNotTheatre proves an unclaimed prover never satisfies the theatre predicate, whatever ran or did not"
+discharged_claim = "dischargedClaimIsNotTheatre proves the claimed-ran-obligations row is not theatre"
+fail_claim = "the FAIL clause of check is literally Silent; the checker never inspects the provers of a FAIL claim"
+emitted = "exit code (0/1/2) plus a one-line verdict naming the defect class when fired; parse failures emit NO CHECK PERFORMED, never silence"
+
+[does_not_distinguish]
+obligation_count = "how many obligations were discharged, or whether the prover PROVED them — `obligations some` means at least one was discharged (Test.idr's reading); a prover that ran over obligations and failed them is a red prover job, outside this unit's axis"
+claim_surface = "where the claim lives (README, badge, manifest field) — the grammar carries the fact of a claim, not its surface"
+trusted_axioms = "a proof resting on `#[trusted]` or `pragma Assume` is a claim with a prover behind it; the residue is cicd-suite's creusot-gate/spark-gate theatre-job axis (T3), not this unit's"

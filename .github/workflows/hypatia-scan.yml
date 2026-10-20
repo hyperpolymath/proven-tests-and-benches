@@ -33,5 +33,8 @@ permissions:
 
 jobs:
   hypatia:
-    uses: hyperpolymath/standards/.github/workflows/hypatia-scan-reusable.yml@71bb615e234133d22f04106c812aad9fcb269aa5
-    secrets: inherit
+    uses: hyperpolymath/standards/.github/workflows/hypatia-scan-reusable.yml@75bd5994470661a099df562d6d5ad2fe744dbd66
+    # Only the one secret the callee declares (standards#1108 §6b); WH008
+    # flags `secrets: inherit`.
+    secrets:
+      HYPATIA_SCAN_PAT: ${{ secrets.HYPATIA_SCAN_PAT }}

@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+= Corpus unit: proof-claim-without-prover
+
+*Battery* provenance · *Category* ReflexiveTest · *Aspect* Dependability ·
+*Tier* proven-exact
+
+== What it checks
+
+A verification report — per prover, whether the tree *claims* verification by
+it, whether the prover *ran* in the gate, and whether it discharged any
+obligations — plus the verdict the gate claimed, must not claim *PASS* while
+some prover is claimed but never ran, or ran over nothing. A README banner that
+says "formally verified with SPARK" or "verified with Creusot" with no prover
+event behind it is proof theatre; a gate that accepts it reports assurance that
+nothing produced. That is the defect class `proof-claim-without-prover`.
+
+This is the contract of hyperpolymath/standards' SPARK Theatre Gate (a
+"formally verified" banner with no prover is a hard failure) and of
+hyperpolymath/standards#692 for Rust/Creusot, stated once and firable forever.
+cicd-suite's `spark-gate.yml` and `creusot-gate.yml` (cicd-suite#54) each run
+a *theatre* job before their *prove* job for exactly this reason; this unit is
+what that job must never contradict.
+
+== Why it can fail
+
+Run the harness against `fixture-firing/report.txt` — identical to the silent
+fixture except for *two words* (`ran yes obligations some` → `ran no
+obligations none`) — and it exits 1. `fixture-firing/hollow-report.txt` is the
+subtler form: the prover ran, over no obligations at all (a `creusot-std`
+dependency annotating nothing). It has demonstrably fired (2026-10-19; see
+`stability.a2ml`). A unit that cannot fail is not a test.
+
+== Exit convention
+
+[cols="1,4"]
+|===
+| 0 | check ran, report consistent (silent)
+| 1 | check ran, defect present (fired)
+| 2 | NO CHECK WAS PERFORMED — unreadable, unparseable, or incomplete payload.
+      `calibration/empty-report.txt` pins this: an empty payload must exit 2,
+      so absence of input can never masquerade as a pass.
+|===
+
+== Build and run
+
+[source,shell]
+----
+idris2 Test.idr -o proof-claim-without-prover
+./build/exec/proof-claim-without-prover fixture-silent/report.txt            # exit 0 (claimed, ran, obligations)
+./build/exec/proof-claim-without-prover fixture-silent/unclaimed-report.txt  # exit 0 (nothing claimed)
+./build/exec/proof-claim-without-prover fixture-firing/report.txt            # exit 1 (claimed, never ran)
+./build/exec/proof-claim-without-prover fixture-firing/hollow-report.txt     # exit 1 (claimed, ran over nothing)
+./build/exec/proof-claim-without-prover calibration/empty-report.txt         # exit 2
+----
+
+Base library only; no `.ipkg`; compiles alone. The proven-exact warrant is in
+the file itself: `firesOnTheatrePass` and `silentOnHonestPass` are total,
+universally quantified lemmas, so alpha = beta = 0 *by construction* within the
+declared fixture grammar. The unadvertised-proof and discharged-claim
+confusables are discharged by `unclaimedIsNotTheatre` and
+`dischargedClaimIsNotTheatre` — see `diagnosticity.a2ml`.
