@@ -101,6 +101,9 @@ jobs:
       - name: Check the downstream integration contract
         run: bash scripts/check-integration-contract.sh
 
+      - name: Test the Rust downstream twin
+        run: cargo test --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml
+
       # REUSE compliance was claimed in REUSE.toml and gated nowhere (DEBT L-4).
       # One tolerance, scoped and named: LICENSES/AGPL-3.0-or-later.txt is
       # deliberately unused pending an owner-only licensing decision (DEBT L-1,
