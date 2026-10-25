@@ -415,13 +415,18 @@ def validate_file(path: str, surface: str) -> int:
 def main(argv: list[str]) -> int:
     """Dispatch CLI arguments, including the program name, and return a status.
 
-    Surface commands run cases; validate-file checks one file. Dispatched
-    errors propagate. Unsupported arguments raise AttributeError.
+    Surface commands run cases; validate-file checks one file. ContractError
+    becomes status 2; other errors propagate. Unsupported arguments raise
+    AttributeError.
     """
-    if len(argv) >= 2 and argv[1] in ("proven-tests", "cicd-squabbler"):
-        return run_surface(argv[1])
-    if len(argv) == 4 and argv[1] == "validate-file":
-        return validate_file(argv[2], argv[3])
+    try:
+        if len(argv) >= 2 and argv[1] in ("proven-tests", "cicd-squabbler"):
+            return run_surface(argv[1])
+        if len(argv) == 4 and argv[1] == "validate-file":
+            return validate_file(argv[2], argv[3])
+    except ContractError as exc:
+        print(f"NO CHECK PERFORMED: {exc}")
+        return 2
     print(__doc__.strip())
     print("\nusage: check_contract.py <proven-tests|cicd-squabbler>")
     print("       check_contract.py validate-file <path> <proven-tests|cicd-squabbler>")

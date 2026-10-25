@@ -44,7 +44,7 @@ Stability rules:
 | Surface | Pin | Notes
 
 | Proven-Tests contract + fixtures
-| `proven-tests-and-benches@eca682bcd419554f6779e72969902e6faef4fd9d`
+| `proven-tests-and-benches@2eaa6535cf90f5079ecfc2b3d8e22b41b4efbd06`
 | The commit at which this contract and its fixtures are published.
 
 | Proven-Tests toolchain
