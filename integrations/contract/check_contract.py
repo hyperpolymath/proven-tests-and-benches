@@ -74,6 +74,7 @@ class ContractError(Exception):
 # ════════════════════════════════════════════════════════════════════════════
 
 def _cell(entry: dict) -> tuple[str, str] | None:
+    """Return the category/aspect pair, or None if either value is falsey."""
     cat, asp = entry.get("category"), entry.get("aspect")
     if cat and asp:
         return (cat, asp)
@@ -86,7 +87,13 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
     Returns (violations, derived_covered_cells). An empty violations list means
     the report is contract-conformant. derived_covered_cells is computed from
     the entries alone, so a caller can compare it against the report's own
-    summary.
+    summary. Only distinct cells with truthy category and aspect values on
+    passed, non-debt entries count. FixtureDebt entries still count towards
+    tier totals, but not outcome totals or coverage.
+
+    Raise ContractError if doc is not an object or has no entries array.
+    Other detected violations are returned; malformed nested evidence or
+    coordinates may instead propagate AttributeError or TypeError.
     """
     v: list[str] = []
     if not isinstance(doc, dict):
@@ -213,13 +220,24 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
 # ════════════════════════════════════════════════════════════════════════════
 
 def _kind(run: Any) -> str:
+    """Map a recognised run label to its gate kind.
+
+    Raise ContractError for a non-string or unrecognised label.
+    """
     if not isinstance(run, str) or run not in RUN_KIND:
         raise ContractError(f"unrecognised check run {run!r}")
     return RUN_KIND[run]
 
 
 def evaluate_gate(checks: list[dict]) -> str:
-    """The engine's Gate::evaluate, over realised runs. Green is computed."""
+    """Compute the engine's Gate::evaluate verdict over realised runs.
+
+    A non-empty set of passed, skipped or neutral runs is Green. Any failed
+    run, error, timeout, cancellation or startup failure makes it Red;
+    otherwise it is Blocked, including an empty set.
+    Missing run keys raise KeyError; unrecognised runs raise ContractError
+    when encountered.
+    """
     if not checks:
         return "Blocked"  # an empty requirement set is unprotected, not won
     if all(_kind(c["run"]) in ("Passed", "Skipped") for c in checks):
@@ -238,6 +256,10 @@ def legitimate_green(required: list[str], checks: list[dict]) -> bool:
     a gate missing a required context it never lists is Green over a reduced set
     and is a bypass, not a win. Neither may be reported downstream as a
     legitimate green.
+
+    Every supplied check must be passed, skipped or neutral, with at least
+    one passed run and every required context present. Missing check keys or
+    unrecognised runs may propagate KeyError or ContractError respectively.
     """
     if evaluate_gate(checks) != "Green":
         return False
@@ -255,11 +277,22 @@ def legitimate_green(required: list[str], checks: list[dict]) -> bool:
 
 
 def evidence_free(checks: list[dict]) -> int:
+    """Count skipped and neutral runs, which carry no passing evidence.
+
+    Raise KeyError for a missing run key or ContractError for an invalid run.
+    """
     return sum(1 for c in checks if _kind(c["run"]) == "Skipped")
 
 
 def validate_squabbler_gate(doc: Any) -> tuple[str, bool, int]:
-    """Return (gate_state, is_legitimate_green, evidence_free_count)."""
+    """Return (gate_state, is_legitimate_green, evidence_free_count).
+
+    Raise ContractError for a non-object, missing context/check arrays,
+    a check without a context or an unrecognised run. Unhashable contexts
+    propagate TypeError. A structurally valid Red or
+    Blocked gate is returned normally; skipped and neutral runs count as
+    evidence-free.
+    """
     if not isinstance(doc, dict):
         raise ContractError("gate is not a JSON object")
     required = doc.get("required_contexts")
@@ -283,6 +316,11 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 def _load(path: str) -> Any:
+    """Read a UTF-8 JSON file.
+
+    Raise ContractError for a missing file or invalid JSON. File access and
+    decoding errors propagate as OSError and UnicodeError respectively.
+    """
     if not os.path.isfile(path):
         raise ContractError(f"missing file: {path}")
     try:
@@ -293,6 +331,12 @@ def _load(path: str) -> Any:
 
 
 def run_surface(surface: str) -> int:
+    """Run the named surface's fixture cases and print their verdicts.
+
+    Use proven-tests report rules for 'proven-tests', otherwise gate rules.
+    Return 1 for an unmet expectation or a fixture ContractError, else 0.
+    Errors loading the case list and errors other than ContractError propagate.
+    """
     surface_dir = os.path.join(ROOT, surface)
     cases = _load(os.path.join(surface_dir, "cases.json"))
     failures = 0
@@ -336,6 +380,13 @@ def run_surface(surface: str) -> int:
 
 
 def validate_file(path: str, surface: str) -> int:
+    """Print a file's report violations or gate verdict and return its status.
+
+    Use report rules for 'proven-tests', otherwise gate rules. Return 1 for
+    report violations, 2 for a validation ContractError, else 0; an illegitimate
+    green alone does not change the status. File-loading errors and other
+    validation exceptions propagate.
+    """
     doc = _load(path)
     try:
         if surface == "proven-tests":
@@ -362,6 +413,11 @@ def validate_file(path: str, surface: str) -> int:
 
 
 def main(argv: list[str]) -> int:
+    """Dispatch CLI arguments, including the program name, and return a status.
+
+    Surface commands run cases; validate-file checks one file. Dispatched
+    errors propagate. Unsupported arguments raise AttributeError.
+    """
     if len(argv) >= 2 and argv[1] in ("proven-tests", "cicd-squabbler"):
         return run_surface(argv[1])
     if len(argv) == 4 and argv[1] == "validate-file":

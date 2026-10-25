@@ -36,11 +36,26 @@ OBLIGATIONS = ("Fixtures", "CannotFailByDesign", "FixtureDebt")
 
 
 def fail(msg: str, code: int) -> "None":
+    """Print an error to stderr and raise SystemExit with the supplied code."""
     print(f"emit_report: {msg}", file=sys.stderr)
     raise SystemExit(code)
 
 
 def emit(input_doc: Any) -> dict:
+    """Build a schema_version-2 report from a flat tests array without running tests.
+
+    Accept Unproven or ProvisionallyProven facts, requiring both safety
+    certificates for the latter. Coverage counts distinct truthy category/aspect
+    pairs on passed, non-debt entries. FixtureDebt entries count towards tier
+    totals only. The lattice size is copied from cat_aspect_cells, defaulting
+    to 238; line and duration_ms values are converted to integers (milliseconds
+    for duration).
+
+    Print a diagnostic and raise SystemExit(2) for a non-object or missing
+    tests array, or SystemExit(1) for rejected test facts. Integer conversion
+    errors and unhashable coverage coordinates propagate as TypeError,
+    ValueError or OverflowError rather than being converted to exit codes.
+    """
     if not isinstance(input_doc, dict):
         fail("input is not a JSON object", 2)
     tests = input_doc.get("tests")
@@ -145,6 +160,13 @@ def emit(input_doc: Any) -> dict:
 
 
 def main(argv: list[str]) -> int:
+    """Read runner facts and overwrite a JSON report using two CLI paths.
+
+    argv includes the program name. Return 0 after writing the report.
+    Input access or JSON syntax errors raise SystemExit(2); emit errors and
+    output access or serialisation errors propagate. An invalid argument count
+    raises AttributeError.
+    """
     if len(argv) != 3:
         print(__doc__.strip(), file=sys.stderr)
         return 2

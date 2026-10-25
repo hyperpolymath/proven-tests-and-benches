@@ -35,6 +35,7 @@ pub const FIXTURE_OBLIGATIONS: [&str; 3] = ["Fixtures", "CannotFailByDesign", "F
 /// integrations/contract/contract-version.json.
 pub const LATTICE_CELLS: i64 = 238;
 
+/// Map a provenance tier to its summary key, defaulting to `unproven`.
 fn summary_key(tier: &str) -> &'static str {
     match tier {
         "ActuallyProven" => "actually_proven",
@@ -123,6 +124,8 @@ pub struct Report {
 
 /// Parse the whole report. A structural problem (no `entries`, a malformed
 /// entry) is an Err — no check could be performed on it.
+/// A schema version other than 2 also returns Err. Successful parsing does
+/// not validate evidence or check that the summary agrees with the entries.
 pub fn parse(doc: &Value) -> Result<Report, String> {
     let report: Report = serde_json::from_value(doc.clone())
         .map_err(|e| format!("report is malformed: {e}"))?;
@@ -135,10 +138,16 @@ pub fn parse(doc: &Value) -> Result<Report, String> {
     Ok(report)
 }
 
-/// The normative validation, mirroring `validate_proven_report` in
-/// check_contract.py. Returns the list of violations; an empty list means the
-/// report is contract-conformant. A structural problem (not an object, no
-/// `entries` array) is an Err.
+/// Validate tier evidence, fixture obligations and derived summary counts.
+///
+/// Returns detected violations, including malformed entries and an absent
+/// summary. Like `validate_proven_report` in check_contract.py, coverage counts
+/// distinct cells from passed, non-debt entries. This checks `covered_cells`,
+/// outcome counts, `total` and tier tallies; it does not check `lattice_covered`
+/// or `cat_aspect_cells`.
+///
+/// # Errors
+/// Returns Err if the report is not an object or has no `entries` array.
 pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
     let mut v: Vec<String> = Vec::new();
     if !doc.is_object() {
@@ -314,6 +323,11 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
 /// Derive the summary from the entries alone. Nothing is read out of the
 /// report's own summary: `covered_cells` and `lattice_covered` are the distinct
 /// (category, aspect) cells of the entries that ran and passed.
+///
+/// `FixtureDebt` entries contribute only to recognised tier tallies. The
+/// `lattice_cells` value is copied to `cat_aspect_cells` without validation;
+/// an empty slice produces zero entry and coverage counts. Entries are not validated:
+/// unrecognised outcomes count as skipped and unrecognised tiers are not tallied.
 pub fn summarise(entries: &[Entry], lattice_cells: i64) -> Summary {
     let mut passed = 0i64;
     let mut failed = 0i64;
@@ -360,6 +374,10 @@ pub fn summarise(entries: &[Entry], lattice_cells: i64) -> Summary {
 
 /// Recompute the summary and compare it against the submitted one. The summary
 /// is a derived view; if it disagrees with the entries, the report is malformed.
+/// The submitted `cat_aspect_cells` is reused, so the lattice size is not checked.
+///
+/// # Errors
+/// Returns Err describing the computed and submitted summaries if they differ.
 pub fn assert_summary_matches(
     entries: &[Entry],
     submitted: &Summary,

@@ -22,11 +22,13 @@
 use serde_json::Value;
 use std::process::exit;
 
+/// Print the accepted emit and check command forms to stderr.
 fn usage() {
     eprintln!("usage: proven-evidence emit <report.json> <summary.json>");
     eprintln!("       proven-evidence check <report.json> <summary.json>");
 }
 
+/// Read a UTF-8 JSON file, returning Err for file access, decoding or JSON errors.
 fn read_json(path: &str) -> Result<Value, String> {
     let raw = std::fs::read_to_string(path).map_err(|e| format!("cannot read {path}: {e}"))?;
     let value: Value = serde_json::from_str(&raw)
@@ -34,6 +36,10 @@ fn read_json(path: &str) -> Result<Value, String> {
     Ok(value)
 }
 
+/// Validate a report before emitting or checking its summary.
+///
+/// Exit 0 on success, 1 for violations, a summary mismatch or an output failure,
+/// and 2 for invalid arguments or unreadable or malformed input.
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let (mode, input) = match args.get(1).map(String::as_str) {
@@ -87,6 +93,8 @@ enum Mode {
     Check,
 }
 
+/// Read `summary.cat_aspect_cells`, defaulting to LATTICE_CELLS when absent
+/// or not representable as an i64. Negative values are returned unchanged.
 fn lattice_cells(doc: &Value) -> i64 {
     doc.get("summary")
         .and_then(|s| s.get("cat_aspect_cells"))
@@ -95,6 +103,9 @@ fn lattice_cells(doc: &Value) -> i64 {
 }
 
 /// Derive the summary from the entries and write it.
+///
+/// Overwrite `output` with pretty JSON using the lattice size from `doc`.
+/// Exit 0 on success or 1 on serialisation or write failure.
 fn emit_summary(input: &str, output: &str, doc: &Value, report: &proven_evidence::Report) -> ! {
     let summary = proven_evidence::summarise(&report.entries, lattice_cells(doc));
     let text = match serde_json::to_string_pretty(&summary) {
@@ -116,6 +127,10 @@ fn emit_summary(input: &str, output: &str, doc: &Value, report: &proven_evidence
 }
 
 /// Refuse a submitted summary that disagrees with the report's entries.
+///
+/// Read `summary_path`. The submitted lattice size is reused without checking
+/// it against the report. Exit 0 for a match, 1 for a mismatch, or 2 if the
+/// summary cannot be read or deserialised.
 fn check_summary(
     input: &str,
     summary_path: &str,
