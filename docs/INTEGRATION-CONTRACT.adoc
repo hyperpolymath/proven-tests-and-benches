@@ -280,13 +280,24 @@ mechanical mapping:
 |===
 | Your runner produces | Contract input field
 
-| one executed test | one object in `tests` |
-| module + name + line | `module`, `name`, `line` |
-| pass / fail / error / skip | `outcome` |
-| taxonomy coordinate | `category`, `aspect` |
-| evidence tier | `tier` (`Unproven` or `ProvisionallyProven`) |
-| duration | `duration_ms` |
-|====
+| one executed test
+| one object in `tests`
+
+| module + name + line
+| `module`, `name`, `line`
+
+| pass / fail / error / skip
+| `outcome`
+
+| taxonomy coordinate
+| `category`, `aspect`
+
+| evidence tier
+| `tier` (`Unproven` or `ProvisionallyProven`)
+
+| duration
+| `duration_ms`
+|===
 
 Then call `emit_report.py` to produce the document. If the repository carries
 no Python, build
