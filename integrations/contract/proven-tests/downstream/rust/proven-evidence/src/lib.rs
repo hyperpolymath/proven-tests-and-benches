@@ -35,6 +35,18 @@ pub const FIXTURE_OBLIGATIONS: [&str; 3] = ["Fixtures", "CannotFailByDesign", "F
 /// integrations/contract/contract-version.json.
 pub const LATTICE_CELLS: i64 = 238;
 
+/// Python truthiness for JSON values, used by the normative checker.
+fn is_truthy(value: &Value) -> bool {
+    match value {
+        Value::Null => false,
+        Value::Bool(value) => *value,
+        Value::Number(value) => value.as_f64() != Some(0.0),
+        Value::String(value) => !value.is_empty(),
+        Value::Array(value) => !value.is_empty(),
+        Value::Object(value) => !value.is_empty(),
+    }
+}
+
 fn summary_key(tier: &str) -> &'static str {
     match tier {
         "ActuallyProven" => "actually_proven",
@@ -192,7 +204,7 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
                     v.push(format!("{where_} claims ActuallyProven with an empty proof ladder"));
                 }
                 for (j, rung) in entry.proof_ladder.iter().enumerate() {
-                    if rung.theorem.is_none() {
+                    if !is_truthy(&e["proof_ladder"][j]["theorem"]) {
                         v.push(format!("{where_}.proof_ladder[{j}] has no cited theorem"));
                     }
                     if rung.statement.trim().is_empty() {
@@ -203,12 +215,12 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
                 }
             }
             "ProvisionallyProven" => {
-                if entry.evidence.get("framework_safety").is_none() {
+                if !is_truthy(&entry.evidence["framework_safety"]) {
                     v.push(format!(
                         "{where_} claims ProvisionallyProven without framework_safety"
                     ));
                 }
-                if entry.evidence.get("test_safety").is_none() {
+                if !is_truthy(&entry.evidence["test_safety"]) {
                     v.push(format!(
                         "{where_} claims ProvisionallyProven without test_safety"
                     ));
@@ -231,12 +243,12 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
                 "{where_}.fixture_obligation {ob:?} is not one of {FIXTURE_OBLIGATIONS:?}"
             ));
         }
-        if ob == "FixtureDebt" && entry.fixture_debt_ref.is_none() {
+        if ob == "FixtureDebt" && !is_truthy(&e["fixture_debt_ref"]) {
             v.push(format!("{where_} is FixtureDebt without a fixture_debt_ref"));
         }
         if ob == "Fixtures" {
-            let has_silence = entry.fixtures.as_ref().and_then(|f| f.get("silence")).is_some();
-            let has_firing = entry.fixtures.as_ref().and_then(|f| f.get("firing")).is_some();
+            let has_silence = is_truthy(&e["fixtures"]["silence"]);
+            let has_firing = is_truthy(&e["fixtures"]["firing"]);
             if !has_silence || !has_firing {
                 v.push(format!("{where_} is Fixtures without a silence/firing pair"));
             }

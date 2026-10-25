@@ -180,3 +180,112 @@ fn malformed_entries_are_reported_not_skipped() {
     let violations = proven_evidence::validate(&broken).unwrap();
     assert!(violations.iter().any(|x| x.contains("malformed")));
 }
+
+// These are Python's falsey JSON values. Each field is removed as well, to
+// exercise the distinction between a missing key and a present empty value.
+#[test]
+fn evidence_presence_matches_python_truthiness() {
+    let falsey = [
+        json!(null), json!({}), json!(""), json!([]),
+        json!(false), json!(0), json!(0.0), json!(-0.0),
+    ];
+    let truthy = [
+        json!({"certificate": false}), json!([null]), json!(" "),
+        json!(true), json!(1), json!(-1), json!(0.5),
+    ];
+    for (container, field, reason) in [
+        ("evidence", "framework_safety", "framework_safety"),
+        ("evidence", "test_safety", "test_safety"),
+        ("fixtures", "silence", "silence/firing pair"),
+        ("fixtures", "firing", "silence/firing pair"),
+    ] {
+        let mut e = entry("ProvisionallyProven", "passed", "wiring", "boundary");
+        e["evidence"] = json!({"framework_safety": "cert", "test_safety": "cert"});
+        let baseline = conforming(vec![e]);
+        assert!(proven_evidence::validate(&baseline).unwrap().is_empty());
+        for value in std::iter::once(None).chain(falsey.iter().map(Some)) {
+            let mut doc = baseline.clone();
+            let fields = doc["entries"][0][container].as_object_mut().unwrap();
+            match value {
+                Some(value) => {
+                    fields.insert(field.to_string(), value.clone());
+                }
+                None => {
+                    fields.remove(field);
+                }
+            }
+            let violations = proven_evidence::validate(&doc).unwrap();
+            assert!(
+                violations.iter().any(|v| v.contains(reason)),
+                "{container}.{field}={value:?}: {violations:?}"
+            );
+        }
+        for value in &truthy {
+            let mut doc = baseline.clone();
+            doc["entries"][0][container][field] = value.clone();
+            assert!(
+                proven_evidence::validate(&doc).unwrap().is_empty(),
+                "{container}.{field}={value}"
+            );
+        }
+    }
+}
+
+#[test]
+fn theorem_and_debt_references_must_be_nonempty() {
+    for field in ["theorem", "fixture_debt_ref"] {
+        let mut e = entry("ActuallyProven", "passed", "wiring", "boundary");
+        e["proof_ladder"] = json!([{"statement": "law", "theorem": "proof"}]);
+        if field == "fixture_debt_ref" {
+            e["fixture_obligation"] = json!("FixtureDebt");
+            e[field] = json!("DEBT-1");
+        }
+        let baseline = conforming(vec![e]);
+        assert!(proven_evidence::validate(&baseline).unwrap().is_empty());
+        for value in [
+            None, Some(json!(null)), Some(json!("")), Some(json!({})),
+            Some(json!([])), Some(json!(false)), Some(json!(0)),
+        ] {
+            let mut doc = baseline.clone();
+            let fields = if field == "theorem" {
+                &mut doc["entries"][0]["proof_ladder"][0]
+            } else {
+                &mut doc["entries"][0]
+            }
+            .as_object_mut()
+            .unwrap();
+            match &value {
+                Some(value) => {
+                    fields.insert(field.to_string(), value.clone());
+                }
+                None => {
+                    fields.remove(field);
+                }
+            }
+            let violations = proven_evidence::validate(&doc).unwrap();
+            // Non-string references are already rejected by typed parsing.
+            let reason = if value
+                .as_ref()
+                .is_some_and(|v| !v.is_null() && !v.is_string())
+            {
+                "malformed"
+            } else if field == "theorem" {
+                "no cited theorem"
+            } else {
+                "without a fixture_debt_ref"
+            };
+            assert!(
+                violations.iter().any(|v| v.contains(reason)),
+                "{field}={value:?}: {violations:?}"
+            );
+        }
+        // Whitespace is truthy in Python; do not trim evidence references.
+        let mut doc = baseline;
+        if field == "theorem" {
+            doc["entries"][0]["proof_ladder"][0][field] = json!(" ");
+        } else {
+            doc["entries"][0][field] = json!(" ");
+        }
+        assert!(proven_evidence::validate(&doc).unwrap().is_empty());
+    }
+}

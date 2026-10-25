@@ -6,7 +6,7 @@
   "pins": {
     "proven-tests-and-benches": {
       "repository": "hyperpolymath/proven-tests-and-benches",
-      "commit": "eca682bcd419554f6779e72969902e6faef4fd9d",
+      "commit": "2eaa6535cf90f5079ecfc2b3d8e22b41b4efbd06",
       "idris2": "0.7.0",
       "backend": "chezscheme",
       "toolchain_installer": "scripts/install-idris2.sh"

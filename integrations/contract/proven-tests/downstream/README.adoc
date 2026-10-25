@@ -47,15 +47,15 @@ produces: a flat list of executed tests. The mapping is mechanical:
 
 [cols="1,3"]
 |===
-| Your runner produces | Contract input field |
+| Your runner produces | Contract input field
 
-| one executed test | one object in `tests` |
-| its module + name | `module`, `name`, `line` |
-| its pass/fail/error/skip | `outcome` ∈ `passed|failed|error|skipped` |
-| its taxonomy coordinate | `category`, `aspect` |
-| its evidence tier | `tier` ∈ `Unproven|ProvisionallyProven` |
-| its duration | `duration_ms` |
-|====
+| one executed test | one object in `tests`
+| its module + name | `module`, `name`, `line`
+| its pass/fail/error/skip | `outcome` ∈ `passed\|failed\|error\|skipped`
+| its taxonomy coordinate | `category`, `aspect`
+| its evidence tier | `tier` ∈ `Unproven\|ProvisionallyProven`
+| its duration | `duration_ms`
+|===
 
 `emit_report.py` turns that list into the report the contract actually speaks:
 a `schema_version-2` document whose `entries` carry the full evidence.
@@ -64,16 +64,16 @@ a `schema_version-2` document whose `entries` carry the full evidence.
 
 [cols="1,3"]
 |===
-| `schema_version` | must be `2` |
-| `entries[]` | one per executed test |
-| `entries[].test_id` | `module_path`, `test_name`, `line_number` |
-| `entries[].provenance` | `ActuallyProven|ProvisionallyProven|Unproven` |
-| `entries[].result.outcome` | `passed|failed|error|skipped` |
-| `entries[].proof_ladder` | for `ActuallyProven`: rungs with a `theorem` + `statement` |
-| `entries[].evidence` | for `ProvisionallyProven`: `framework_safety` + `test_safety` |
-| `entries[].fixture_obligation` | `Fixtures|CannotFailByDesign|FixtureDebt` |
-| `summary` | the derived counts — validated, never trusted |
-|====
+| `schema_version` | must be `2`
+| `entries[]` | one per executed test
+| `entries[].test_id` | `module_path`, `test_name`, `line_number`
+| `entries[].provenance` | `ActuallyProven\|ProvisionallyProven\|Unproven`
+| `entries[].result.outcome` | `passed\|failed\|error\|skipped`
+| `entries[].proof_ladder` | for `ActuallyProven`: rungs with a `theorem` + `statement`
+| `entries[].evidence` | for `ProvisionallyProven`: `framework_safety` + `test_safety`
+| `entries[].fixture_obligation` | `Fixtures\|CannotFailByDesign\|FixtureDebt`
+| `summary` | the derived counts — validated, never trusted
+|===
 
 == The honesty rules, enforced at emit time
 

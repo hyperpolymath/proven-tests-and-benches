@@ -362,10 +362,14 @@ def validate_file(path: str, surface: str) -> int:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) >= 2 and argv[1] in ("proven-tests", "cicd-squabbler"):
-        return run_surface(argv[1])
-    if len(argv) == 4 and argv[1] == "validate-file":
-        return validate_file(argv[2], argv[3])
+    try:
+        if len(argv) >= 2 and argv[1] in ("proven-tests", "cicd-squabbler"):
+            return run_surface(argv[1])
+        if len(argv) == 4 and argv[1] == "validate-file":
+            return validate_file(argv[2], argv[3])
+    except ContractError as exc:
+        print(f"NO CHECK PERFORMED: {exc}")
+        return 2
     print(__doc__.strip())
     print("\nusage: check_contract.py <proven-tests|cicd-squabbler>")
     print("       check_contract.py validate-file <path> <proven-tests|cicd-squabbler>")
