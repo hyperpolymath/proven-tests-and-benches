@@ -12,6 +12,9 @@
       "aspect": "Functionality",
       "tier": "Unproven",
       "outcome": "passed",
+      "fixture_obligation": "Fixtures",
+      "silence": {"source": "RuntimeConstructed", "description": "adder returns 4 for 2 + 2"},
+      "firing": {"source": "RuntimeConstructed", "defect_class": "addition returns an incorrect sum for 2 + 2"},
       "duration_ms": 1
     },
     {
@@ -22,6 +25,9 @@
       "aspect": "Functionality",
       "tier": "Unproven",
       "outcome": "passed",
+      "fixture_obligation": "Fixtures",
+      "silence": {"source": "RuntimeConstructed", "description": "adder returns 3 for 5 - 2"},
+      "firing": {"source": "RuntimeConstructed", "defect_class": "subtraction returns an incorrect difference for 5 - 2"},
       "duration_ms": 1
     },
     {
@@ -32,6 +38,9 @@
       "aspect": "Safety",
       "tier": "ProvisionallyProven",
       "outcome": "passed",
+      "fixture_obligation": "Fixtures",
+      "silence": {"source": "RuntimeConstructed", "description": "parser rejects malformed input"},
+      "firing": {"source": "RuntimeConstructed", "defect_class": "parser accepts malformed input"},
       "duration_ms": 3,
       "framework_safety": {
         "framework_name": "parser",
@@ -49,6 +58,9 @@
       "aspect": "Safety",
       "tier": "Unproven",
       "outcome": "skipped",
+      "fixture_obligation": "Fixtures",
+      "silence": {"source": "RuntimeConstructed", "description": "parser rejects malformed input"},
+      "firing": {"source": "RuntimeConstructed", "defect_class": "parser accepts malformed input"},
       "message": "not applicable on this target"
     }
   ]
