@@ -54,6 +54,8 @@ produces: a flat list of executed tests. The mapping is mechanical:
 | its pass/fail/error/skip | `outcome` ∈ `passed|failed|error|skipped` |
 | its taxonomy coordinate | `category`, `aspect` |
 | its evidence tier | `tier` ∈ `Unproven|ProvisionallyProven` |
+| its fixture position | `fixture_obligation` ∈ `Fixtures|CannotFailByDesign|FixtureDebt` |
+| its fixture pair (when `Fixtures`) | `silence`, `firing` (required, including for skipped tests) |
 | its duration | `duration_ms` |
 |====
 
