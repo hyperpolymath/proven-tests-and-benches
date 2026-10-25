@@ -236,7 +236,7 @@ def legitimate_green(required: list[str], checks: list[dict]) -> bool:
     """
     if evaluate_gate(checks) != "Green":
         return False
-    if not checks:
+    if not required or not checks:
         return False
     present = {c["required_context"] for c in checks}
     if any(r not in present for r in required):
