@@ -108,12 +108,12 @@ def emit(input_doc: Any) -> dict:
         if t.get("duration_ms") is not None:
             entry["duration_ms"] = int(t["duration_ms"])
 
+        tiers[tier] += 1
         if ob == "FixtureDebt":
             debt += 1
             entry["fixture_debt_ref"] = t["fixture_debt_ref"]
         else:
             counts[outcome] += 1
-            tiers[tier] += 1
             if outcome == "passed" and t.get("category") and t.get("aspect"):
                 covered.add((t["category"], t["aspect"]))
 
