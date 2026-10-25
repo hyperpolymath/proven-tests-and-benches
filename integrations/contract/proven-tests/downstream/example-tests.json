@@ -1,0 +1,67 @@
+{
+  "suite": "downstream-rust-fixture",
+  "generated_at": "2026-10-25T00:00:00Z",
+  "toolchain": {"idris2": "0.7.0", "backend": "chezscheme"},
+  "cat_aspect_cells": 238,
+  "tests": [
+    {
+      "module": "adder",
+      "name": "adds_two",
+      "line": 12,
+      "category": "Unit",
+      "aspect": "Functionality",
+      "tier": "Unproven",
+      "outcome": "passed",
+      "fixture_obligation": "Fixtures",
+      "silence": {"source": "RuntimeConstructed", "description": "adder returns 4 for 2 + 2"},
+      "firing": {"source": "RuntimeConstructed", "defect_class": "addition returns an incorrect sum for 2 + 2"},
+      "duration_ms": 1
+    },
+    {
+      "module": "adder",
+      "name": "subtracts",
+      "line": 20,
+      "category": "Unit",
+      "aspect": "Functionality",
+      "tier": "Unproven",
+      "outcome": "passed",
+      "fixture_obligation": "Fixtures",
+      "silence": {"source": "RuntimeConstructed", "description": "adder returns 3 for 5 - 2"},
+      "firing": {"source": "RuntimeConstructed", "defect_class": "subtraction returns an incorrect difference for 5 - 2"},
+      "duration_ms": 1
+    },
+    {
+      "module": "parser",
+      "name": "rejects_bad_input",
+      "line": 40,
+      "category": "Contract",
+      "aspect": "Safety",
+      "tier": "ProvisionallyProven",
+      "outcome": "passed",
+      "fixture_obligation": "Fixtures",
+      "silence": {"source": "RuntimeConstructed", "description": "parser rejects malformed input"},
+      "firing": {"source": "RuntimeConstructed", "defect_class": "parser accepts malformed input"},
+      "duration_ms": 3,
+      "framework_safety": {
+        "framework_name": "parser",
+        "type_safety": {"kategoria_level": 6, "type_system": "Rust + Idris2 FFI", "verified_by": "idris2 --build", "scope": ["parser"]},
+        "test_safety": {"kategoria_level": 6, "type_system": "Rust + Idris2 FFI", "verified_by": "idris2 --build", "scope": ["parser"]},
+        "documentation": "parser safety certificate"
+      },
+      "test_safety": {"kategoria_level": 6, "type_system": "Rust + Idris2 FFI", "verified_by": "idris2 --build", "scope": ["parser"]}
+    },
+    {
+      "module": "parser",
+      "name": "rejects_bad_input_skipped",
+      "line": 55,
+      "category": "Contract",
+      "aspect": "Safety",
+      "tier": "Unproven",
+      "outcome": "skipped",
+      "fixture_obligation": "Fixtures",
+      "silence": {"source": "RuntimeConstructed", "description": "parser rejects malformed input"},
+      "firing": {"source": "RuntimeConstructed", "defect_class": "parser accepts malformed input"},
+      "message": "not applicable on this target"
+    }
+  ]
+}

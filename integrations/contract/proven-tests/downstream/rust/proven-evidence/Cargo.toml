@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Minimal downstream fixture: emit and validate a Proven-Tests schema_version-2
+# run report with no Python or Idris2 dependency on the runner.
+#
+# This is the Rust-native twin of emit_report.py / check_contract.py. Both
+# implement the contract in docs/INTEGRATION-CONTRACT.adoc; the unit tests in
+# tests/contract.rs pin the shared semantics.
+
+[package]
+name = "proven-evidence"
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0"
+description = "Emit and validate a Proven-Tests schema_version-2 run report."
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+serde_json = "1"

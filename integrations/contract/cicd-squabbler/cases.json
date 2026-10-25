@@ -1,0 +1,88 @@
+{
+  "surface": "cicd-squabbler",
+  "cases": [
+    {
+      "id": "all-passed-is-legitimate-green",
+      "fixture": "fixtures/green-passed.json",
+      "expect": {
+        "gate_state": "Green",
+        "legitimate_green": true,
+        "evidence_free": 0
+      }
+    },
+    {
+      "id": "skipped-only-is-not-legitimate",
+      "fixture": "fixtures/skipped-only.json",
+      "expect": {
+        "gate_state": "Green",
+        "legitimate_green": false,
+        "evidence_free": 1
+      }
+    },
+    {
+      "id": "missing-required-is-blocked",
+      "fixture": "fixtures/missing-required.json",
+      "expect": {
+        "gate_state": "Blocked",
+        "legitimate_green": false
+      }
+    },
+    {
+      "id": "cancelled-required-is-red",
+      "fixture": "fixtures/cancelled-required.json",
+      "expect": {
+        "gate_state": "Red",
+        "legitimate_green": false
+      }
+    },
+    {
+      "id": "failing-required-is-red",
+      "fixture": "fixtures/failing-required.json",
+      "expect": {
+        "gate_state": "Red",
+        "legitimate_green": false
+      }
+    },
+    {
+      "id": "pending-required-is-blocked",
+      "fixture": "fixtures/pending-required.json",
+      "expect": {
+        "gate_state": "Blocked",
+        "legitimate_green": false
+      }
+    },
+    {
+      "id": "empty-gate-is-blocked",
+      "fixture": "fixtures/empty-gate.json",
+      "expect": {
+        "gate_state": "Blocked",
+        "legitimate_green": false
+      }
+    },
+    {
+      "id": "dropped-requirement-is-not-legitimate",
+      "fixture": "fixtures/dropped-requirement.json",
+      "expect": {
+        "gate_state": "Green",
+        "legitimate_green": false
+      }
+    },
+    {
+      "id": "renamed-requirement-is-blocked",
+      "fixture": "fixtures/renamed-requirement.json",
+      "expect": {
+        "gate_state": "Blocked",
+        "legitimate_green": false
+      }
+    },
+    {
+      "id": "mixed-evidence-green-is-legitimate",
+      "fixture": "fixtures/green-mixed-evidence.json",
+      "expect": {
+        "gate_state": "Green",
+        "legitimate_green": true,
+        "evidence_free": 1
+      }
+    }
+  ]
+}

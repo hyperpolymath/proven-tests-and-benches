@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+//
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+//
+= Downstream integration contract — contents
+:toc: left
+:toclevels: 2
+
+The executable half of `docs/INTEGRATION-CONTRACT.adoc`. Everything here is
+pinned to the commit recorded in `contract-version.json`; nothing references a
+moving branch.
+
+== Layout
+
+[source]
+----
+integrations/contract/
+├── contract-version.json        # machine-readable pins (the contract's anchor)
+├── check_contract.py            # normative conformance checker (stdlib only)
+├── README.adoc                  # this file
+├── proven-tests/
+│   ├── cases.json               # expected verdicts for the fixtures below
+│   ├── fixtures/                # schema_version-2 run reports (pure inputs)
+│   └── downstream/              # minimal runnable producer + Rust twin
+│       ├── emit_report.py       # runner output -> schema_version-2 report
+│       ├── run.sh               # emit + validate, chained
+│       └── rust/proven-evidence/  # the same contract in Rust
+└── cicd-squabbler/
+    ├── cases.json
+    └── fixtures/                # (required-context set, realised runs) gate pairs
+----
+
+The fixtures are *pure inputs*: expectations live in `cases.json`, never inside
+a fixture, so a fixture cannot assert its own verdict.
+
+== Run the conformance suite
+
+[source,bash]
+----
+bash scripts/check-integration-contract.sh
+# or one surface at a time:
+python3 integrations/contract/check_contract.py proven-tests
+python3 integrations/contract/check_contract.py cicd-squabbler
+# or validate a single submitted document:
+python3 integrations/contract/check_contract.py validate-file <report.json> proven-tests
+----
+
+Exit `0` every case ran and held; `1` a wrong verdict; `2` a missing or
+unparseable file — never a pass.
+
+== The minimal downstream fixture
+
+`proven-tests/downstream/` is a runnable example of a downstream repository
+producing and validating a report. See its own `README.adoc`. A repository that
+carries no Python builds the Rust twin instead and drives it with
+`proven-evidence emit` / `proven-evidence check` against the same report.

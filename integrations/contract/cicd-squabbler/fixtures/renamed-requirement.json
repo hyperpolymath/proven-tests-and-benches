@@ -1,0 +1,12 @@
+{
+  "required_contexts": [
+    "CodeQL"
+  ],
+  "checks": [
+    {
+      "required_context": "CodeQL",
+      "run": "missing",
+      "missing_cause": "no_such_job"
+    }
+  ]
+}

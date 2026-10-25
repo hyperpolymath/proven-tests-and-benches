@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "suite": "proven-tests-contract-fixture",
+  "generated_at": "2026-10-25T00:00:00Z",
+  "toolchain": {
+    "idris2": "0.7.0",
+    "backend": "chezscheme"
+  },
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "total": 1,
+    "actually_proven": 0,
+    "provisionally_proven": 1,
+    "unproven": 0,
+    "covered_cells": 1,
+    "cat_aspect_cells": 238,
+    "lattice_covered": 1
+  },
+  "entries": [
+    {
+      "test_id": {
+        "module_path": "fixture.NoCert",
+        "test_name": "t_prop",
+        "line_number": 1
+      },
+      "category": "Property",
+      "aspect": "Dependability",
+      "typesafe_category": null,
+      "provenance": "ProvisionallyProven",
+      "evidence": {},
+      "proof_ladder": [],
+      "result": {
+        "outcome": "passed"
+      },
+      "fixture_obligation": "Fixtures",
+      "fixtures": {
+        "silence": {
+          "source": "RuntimeConstructed",
+          "description": "clean input, no defect member"
+        },
+        "firing": {
+          "source": "RuntimeConstructed",
+          "defect_class": "the declared defect class"
+        }
+      },
+      "duration_ms": 1
+    }
+  ]
+}

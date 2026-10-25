@@ -1,0 +1,11 @@
+{
+  "required_contexts": [
+    "build / test"
+  ],
+  "checks": [
+    {
+      "required_context": "build / test",
+      "run": "pending"
+    }
+  ]
+}

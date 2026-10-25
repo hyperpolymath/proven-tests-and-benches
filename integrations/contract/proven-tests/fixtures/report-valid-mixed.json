@@ -1,0 +1,132 @@
+{
+  "schema_version": 2,
+  "suite": "proven-tests-contract-fixture",
+  "generated_at": "2026-10-25T00:00:00Z",
+  "toolchain": {
+    "idris2": "0.7.0",
+    "backend": "chezscheme"
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 1,
+    "total": 3,
+    "actually_proven": 0,
+    "provisionally_proven": 1,
+    "unproven": 2,
+    "covered_cells": 2,
+    "cat_aspect_cells": 238,
+    "lattice_covered": 2
+  },
+  "entries": [
+    {
+      "test_id": {
+        "module_path": "fixture.Mixed",
+        "test_name": "t_prop",
+        "line_number": 1
+      },
+      "category": "Unit",
+      "aspect": "Functionality",
+      "typesafe_category": null,
+      "provenance": "ProvisionallyProven",
+      "evidence": {
+        "framework_safety": {
+          "framework_name": "fixture",
+          "type_safety": {
+            "kategoria_level": 6,
+            "type_system": "Idris2 dependent types",
+            "verified_by": "idris2 --build",
+            "scope": []
+          },
+          "test_safety": {
+            "kategoria_level": 6,
+            "type_system": "Idris2 dependent types",
+            "verified_by": "idris2 --build",
+            "scope": []
+          },
+          "documentation": "fixture"
+        },
+        "test_safety": {
+          "kategoria_level": 6,
+          "type_system": "Idris2 dependent types",
+          "verified_by": "idris2 --build",
+          "scope": []
+        }
+      },
+      "proof_ladder": [],
+      "result": {
+        "outcome": "passed"
+      },
+      "fixture_obligation": "Fixtures",
+      "fixtures": {
+        "silence": {
+          "source": "RuntimeConstructed",
+          "description": "clean input, no defect member"
+        },
+        "firing": {
+          "source": "RuntimeConstructed",
+          "defect_class": "the declared defect class"
+        }
+      },
+      "duration_ms": 1
+    },
+    {
+      "test_id": {
+        "module_path": "fixture.Mixed",
+        "test_name": "t_p2p",
+        "line_number": 1
+      },
+      "category": "PointToPoint",
+      "aspect": "Dependability",
+      "typesafe_category": null,
+      "provenance": "Unproven",
+      "evidence": {},
+      "proof_ladder": [],
+      "result": {
+        "outcome": "passed"
+      },
+      "fixture_obligation": "Fixtures",
+      "fixtures": {
+        "silence": {
+          "source": "RuntimeConstructed",
+          "description": "clean input, no defect member"
+        },
+        "firing": {
+          "source": "RuntimeConstructed",
+          "defect_class": "the declared defect class"
+        }
+      },
+      "duration_ms": 1
+    },
+    {
+      "test_id": {
+        "module_path": "fixture.Mixed",
+        "test_name": "t_skip",
+        "line_number": 1
+      },
+      "category": "Unit",
+      "aspect": "Functionality",
+      "typesafe_category": null,
+      "provenance": "Unproven",
+      "evidence": {},
+      "proof_ladder": [],
+      "result": {
+        "outcome": "skipped",
+        "message": "not applicable here"
+      },
+      "fixture_obligation": "Fixtures",
+      "fixtures": {
+        "silence": {
+          "source": "RuntimeConstructed",
+          "description": "clean input, no defect member"
+        },
+        "firing": {
+          "source": "RuntimeConstructed",
+          "defect_class": "the declared defect class"
+        }
+      },
+      "duration_ms": 1
+    }
+  ]
+}

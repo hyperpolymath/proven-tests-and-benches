@@ -1,0 +1,111 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+//
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+//
+= Minimal downstream fixture — Proven-Tests evidence submission
+:toc: left
+:toclevels: 2
+
+A self-contained example of the *producer* half of the Proven-Tests integration
+contract: a downstream repository runs its tests, turns the results into a
+schema_version-2 run report, and validates that report against the contract.
+The authoritative contract is `docs/INTEGRATION-CONTRACT.adoc`; this directory
+is the runnable floor.
+
+== Run it
+
+[source,bash]
+----
+bash integrations/contract/proven-tests/downstream/run.sh
+# writes integrations/contract/proven-tests/downstream/build/proven-run-report.json
+----
+
+Exit `0` means the emitted report conforms. Exit `1` means it does not; exit `2`
+means a tool was missing or the input unreadable — never a pass.
+
+== The two halves
+
+[cols="1,3"]
+|===
+| `emit_report.py`
+| The producer. Reads a flat list of executed test results
+  (`example-tests.json`) and writes the report. Coverage is **derived** from
+  entries that passed; it is never taken from the input.
+
+| `check_contract.py validate-file … proven-tests`
+| The validator. Recomputes coverage independently and checks every tier
+  against its evidence. This is the gate a downstream CI runs.
+|===
+
+`run.sh` chains them: emit, then validate. A report that claims a covered cell
+it did not run, or a tier it cannot justify, fails at the second step.
+
+== What a runner produces
+
+`example-tests.json` stands in for whatever the repository's own test runner
+produces: a flat list of executed tests. The mapping is mechanical:
+
+[cols="1,3"]
+|===
+| Your runner produces | Contract input field
+
+| one executed test | one object in `tests`
+| its module + name | `module`, `name`, `line`
+| its pass/fail/error/skip | `outcome` ∈ `passed\|failed\|error\|skipped`
+| its taxonomy coordinate | `category`, `aspect`
+| its evidence tier | `tier` ∈ `Unproven\|ProvisionallyProven`
+| its fixture position | `fixture_obligation` ∈ `Fixtures\|CannotFailByDesign\|FixtureDebt`
+| its fixture pair (when `Fixtures`) | `silence`, `firing` (required, including for skipped tests)
+| its duration | `duration_ms`
+|===
+
+`emit_report.py` turns that list into the report the contract actually speaks:
+a `schema_version-2` document whose `entries` carry the full evidence.
+
+== The report
+
+[cols="1,3"]
+|===
+| `schema_version` | must be `2`
+| `entries[]` | one per executed test
+| `entries[].test_id` | `module_path`, `test_name`, `line_number`
+| `entries[].provenance` | `ActuallyProven\|ProvisionallyProven\|Unproven`
+| `entries[].result.outcome` | `passed\|failed\|error\|skipped`
+| `entries[].proof_ladder` | for `ActuallyProven`: rungs with a `theorem` + `statement`
+| `entries[].evidence` | for `ProvisionallyProven`: `framework_safety` + `test_safety`
+| `entries[].fixture_obligation` | `Fixtures\|CannotFailByDesign\|FixtureDebt`
+| `summary` | the derived counts — validated, never trusted
+|===
+
+== The honesty rules, enforced at emit time
+
+. A downstream repository **cannot claim `ActuallyProven`**. That tier requires
+  an Idris2 proof ladder checked by the type checker; only the Idris2 toolchain
+  can produce it. `emit` refuses the tier rather than silently downgrading it.
+. `ProvisionallyProven` requires `framework_safety` and `test_safety`
+  certificates. A property test with no certified framework is `Unproven`.
+. Every test states its fixture position (`fixture_obligation`). Debt-marked
+  entries are not counted in any ledger.
+. Coverage is a function of the entries that passed — a report cannot claim a
+  cell it did not run.
+
+== The Rust-native twin
+
+`rust/proven-evidence/` reads and validates the schema_version-2 *report* — the
+same document `check_contract.py` validates and `emit_report.py` writes — so the
+contract holds in two independent implementations. Its unit tests
+(`tests/contract.rs`) pin the same cases the Python checker runs, so the two
+cannot drift.
+
+[source,bash]
+----
+cd integrations/contract/proven-tests/downstream/rust/proven-evidence
+cargo test
+# derive the summary from a report and write it
+cargo run -- emit ../build/proven-run-report.json /tmp/summary.json
+# refuse a summary that disagrees with the entries
+cargo run -- check ../build/proven-run-report.json /tmp/summary.json
+----
+
+Both commands exit `0` on conformance, `1` when the contract is not met, and `2`
+when no check was performed.
