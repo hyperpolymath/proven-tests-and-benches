@@ -199,6 +199,11 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
         key = TIER_SUMMARY_KEY[tier]
         if summary.get(key) != tier_counts[tier]:
             v.append(f"summary.{key}={summary.get(key)} but {tier_counts[tier]}")
+    if summary.get("lattice_covered") != derived:
+        v.append(
+            f"summary.lattice_covered={summary.get('lattice_covered')} but only {derived} "
+            f"cell(s) are backed by an entry that ran and passed"
+        )
 
     return v, derived
 
