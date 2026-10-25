@@ -93,6 +93,14 @@ jobs:
       - name: Check documented facts against computed reality
         run: bash scripts/check-doc-facts.sh source
 
+      # The downstream integration contract: the two surfaces a downstream
+      # repository consumes (Proven-Tests evidence submission, the cicd-squabbler
+      # read-only CI surface) plus the minimal downstream fixture. Cheap and
+      # toolchain-free, so a contract regression fails here in seconds rather
+      # than after the Idris2 bootstrap. Exit 2 means no check was performed.
+      - name: Check the downstream integration contract
+        run: bash scripts/check-integration-contract.sh
+
       # REUSE compliance was claimed in REUSE.toml and gated nowhere (DEBT L-4).
       # One tolerance, scoped and named: LICENSES/AGPL-3.0-or-later.txt is
       # deliberately unused pending an owner-only licensing decision (DEBT L-1,

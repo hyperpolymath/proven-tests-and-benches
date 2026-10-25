@@ -1,0 +1,11 @@
+{
+  "required_contexts": [
+    "scan / gitleaks"
+  ],
+  "checks": [
+    {
+      "required_context": "scan / gitleaks",
+      "run": "skipped"
+    }
+  ]
+}

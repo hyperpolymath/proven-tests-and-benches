@@ -1,0 +1,567 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+//
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+//
+= Downstream Integration Contract: Proven-Tests evidence and cicd-squabbler CI
+:toc: left
+:toclevels: 3
+:sectnums:
+
+This is the stable, immutable-revision contract that downstream repositories
+consume from `hyperpolymath/proven-tests-and-benches` and
+`hyperpolymath/cicd-squabbler`. It is published at a pinned commit of each
+repository (see <<pins>>) and versioned additively.
+
+== Purpose and stability
+
+The contract answers four questions a downstream repository must be able to
+answer without trusting a moving branch:
+
+. How do I submit *real* executed-test evidence, and how do I keep test,
+  property and proof evidence apart?
+. How is coverage derived, so that a cell cannot be claimed by a test that did
+  not run?
+. How do I invoke cicd-squabbler read-only from CI, with which permissions,
+  and how do I read its machine-readable output?
+. How do I know that missing, skipped, cancelled or failing required checks
+  cannot produce a *legitimate* green?
+
+Stability rules:
+
+* Every reference is pinned to a full 40-hex commit SHA or a release asset
+  digest. A branch, a tag on its own, or `@main` is never a valid reference.
+* The contract is versioned (`contract_version`). Changes are additive within a
+  major version; a breaking change to a submitted document bumps the major.
+* A downstream that pins a revision keeps working against that revision even
+  if upstream moves on. Re-pin deliberately, and read the changelog.
+* Pins live in `integrations/contract/contract-version.json`; that file is the
+  machine-readable half of this document.
+
+== The pins
+
+[cols="1,2,3"]
+|===
+| Surface | Pin | Notes
+
+| Proven-Tests contract + fixtures
+| `proven-tests-and-benches@eca682bcd419554f6779e72969902e6faef4fd9d`
+| The commit at which this contract and its fixtures are published.
+
+| Proven-Tests toolchain
+| Idris2 `0.7.0`, Chez Scheme backend
+| One version, asserted across `.mise.toml`, `scripts/install-idris2.sh`,
+  `.github/workflows/ci.yml`, `.gitlab-ci.yml`, `META.a2ml`, `STATE.a2ml` and
+  the README. `scripts/check-toolchain-pins.sh` fails on any drift.
+
+| cicd-squabbler source
+| `cicd-squabbler@14f853fde902ab2d7631070d87a9dc9122e01013`
+| The commit the pinned release was built from.
+
+| cicd-squabbler release
+| tag `v0.1.0`, asset `squabble-x86_64-linux-musl`
+| Downloaded and verified by digest; the tag is a locator, not a trust anchor.
+
+| Release asset digest
+| `6cbeb457…ba026c`
+| The sha256 `install.sh` requires before the binary is executed.
+
+| Release source digest
+| `b854d17a…f945cf03e`
+| The commit the SLSA provenance attestation ties the asset to.
+|===
+
+NOTE: The tag `v0.1.0` and both digests above are the values recorded in
+`.github/actions/squabble/install.sh`. Read them from the release itself when
+bumping — never from a tag name.
+
+== Part I — Proven-Tests: submitting executed-test evidence
+
+=== 1.1 Required Idris2 / toolchain setup
+
+[cols="1,3"]
+|===
+| Tool | Requirement
+
+| Idris2
+| `0.7.0`, built from source against the **Chez Scheme** backend. There is no
+  asdf/mise plugin; `.mise.toml` is a declarative pin, not an installer.
+
+| Chez Scheme + GMP
+| Required at *build* time, not merely to bootstrap: the Chez backend invokes
+  Chez Scheme while compiling.
+
+| Installer
+| `scripts/install-idris2.sh` (sets `IDRIS2_VERSION`, defaults to `v0.7.0`).
+  It installs `chezscheme`, `libgmp-dev`, `git`, `make`, a C compiler and
+  `ca-certificates`, then builds and installs Idris2 into `$HOME/.idris2`.
+
+| Pin gate
+| `scripts/check-toolchain-pins.sh` — exit `0` all pins agree, `1` drift, `2` a
+  pin is missing. Run it before and after provisioning.
+
+| Build/install
+| `idris2 --build proven-tests.ipkg` then `idris2 --install proven-tests.ipkg`
+  so dependents can build against it.
+|===
+
+A downstream repository that wants the strong tier must reproduce this exact
+toolchain. A repository that only wants to *submit* evidence does not need
+Idris2 at all: it needs the submission document (<<submission-document>>) and a
+validator (<<conformance>>).
+
+=== 1.2 The three tiers, and what each one must carry
+
+Provenance is evidence-carrying by construction
+(`src/ProvenTests/Types.idr`). The type system rejects a tier claim without its
+evidence — it is not a review convention.
+
+[cols="1,2,3"]
+|===
+| Tier | What it means | Evidence it must carry
+
+| `Unproven`
+| An example-based test: one input, one output. Weakest claim.
+| Nothing beyond the fixture pair. The honest default for a downstream
+  repository.
+
+| `ProvisionallyProven`
+| A property-based test: `forall` over *sampled* inputs, on a framework whose
+  safety is certified.
+| A `FrameworkSafetyProof` (framework name, type-safety certificate, test-safety
+  certificate, documentation) and a `TypeSafetyCertificate` for the test.
+
+| `ActuallyProven`
+| A machine-checked proof: `forall` over *all* inputs, by construction.
+| A non-empty `List1 Witnessed` proof ladder. Every rung is built with the
+  `rung` macro, which derives the citation from a term the type checker has
+  already accepted — so a rung citing a theorem that does not exist cannot
+  compile. `Witness s () ()` (a trivial witness) still compiles; that forgery is
+  a visible lie in code, and `tests/SpecSuite/Main.idr` keeps it as a recorded
+  positive control so nobody reads the tier as unforgeable.
+|===
+
+The mapping from evidence type to tier is the honesty rule:
+
+[source]
+----
+example   -> Unproven
+property  -> ProvisionallyProven   (only with a certified framework)
+proof     -> ActuallyProven         (only with a checked proof ladder)
+----
+
+A downstream **Rust** repository can honestly claim `Unproven` or
+`ProvisionallyProven`. It cannot claim `ActuallyProven`: that tier requires
+proof terms only the Idris2 checker can discharge. The FFI-parity harness
+(`docs/FFI-PARITY-DESIGN.adoc`) lets a Rust binding record the *oracle's*
+provenance in `oracle_provenance` — the binding agrees with a machine-checked
+oracle on those inputs — while the binding's own test stays at its honest tier.
+
+=== 1.3 The submission document (schema_version 2)
+
+A downstream repository submits one JSON document: a run report. Schema
+`schema_version 1` is the in-repo emitter's shape
+(`src/ProvenTests/Report.idr`); `schema_version 2` is the contract's submission
+shape — a superset that carries the evidence a validator can check.
+
+[source,json]
+----
+{
+  "schema_version": 2,
+  "suite": "downstream-rust-fixture",
+  "generated_at": "2026-10-25T00:00:00Z",
+  "toolchain": {"idris2": "0.7.0", "backend": "chezscheme"},
+  "summary": {
+    "passed": 3, "failed": 0, "errors": 0, "skipped": 1, "total": 4,
+    "actually_proven": 0, "provisionally_proven": 1, "unproven": 3,
+    "covered_cells": 2, "cat_aspect_cells": 238, "lattice_covered": 2
+  },
+  "entries": [
+    {
+      "test_id": {"module_path": "adder", "test_name": "adds_two", "line_number": 12},
+      "category": "Unit", "aspect": "Functionality", "typesafe_category": null,
+      "provenance": "Unproven",
+      "evidence": {},
+      "proof_ladder": [],
+      "result": {"outcome": "passed"},
+      "fixture_obligation": "Fixtures",
+      "fixtures": {
+        "silence": {"source": "RuntimeConstructed", "description": "clean input"},
+        "firing":  {"source": "RuntimeConstructed", "defect_class": "the class"}
+      },
+      "duration_ms": 1
+    }
+  ]
+}
+----
+
+[cols="1,3"]
+|===
+| Field | Rule
+
+| `schema_version`
+| Must be `2`.
+
+| `summary.covered_cells`
+| Must equal the number of distinct `(category, aspect)` cells among entries
+  whose `result.outcome` is `passed`. Computed by the validator; a mismatch is
+  a rejection. See <<coverage>>.
+
+| `summary.passed / failed / errors / skipped`
+| Must equal the counts of entries with those outcomes.
+
+| `summary.total`
+| The number of entries **minus** `FixtureDebt` entries. Debt-marked tests are
+  not counted in any ledger (`TEST-DOCTRINE.adoc` §2, standards R10 / B.4).
+
+| `summary.actually_proven / provisionally_proven / unproven`
+| Must equal the per-tier entry counts.
+
+| `entries[].provenance`
+| One of the three tiers. `ActuallyProven` requires a non-empty
+  `proof_ladder` whose rungs each name a `theorem` and a `statement`;
+  `ProvisionallyProven` requires `evidence.framework_safety` and
+  `evidence.test_safety`; `Unproven` must carry no ladder.
+
+| `entries[].result.outcome`
+| `passed`, `failed`, `error` or `skipped`. Non-`passed` outcomes carry a
+  `message`.
+
+| `entries[].fixture_obligation`
+| `Fixtures`, `CannotFailByDesign` or `FixtureDebt`. `Fixtures` requires a
+  `fixtures` object with both a `silence` and a `firing` member; `FixtureDebt`
+  requires a `fixture_debt_ref` and is excluded from the ledger.
+|===
+
+=== 1.4 Coverage is derived, never asserted
+
+Coverage is a function of executed, passing tests at typed coordinates — not a
+hand-written claim. In-repo this is machine-checked in
+`src/ProvenTests/Coverage.idr` and `src/ProvenTests/Meta.idr`:
+
+[source,idris]
+----
+coveredFrom [(co, m, Failed msg)] = []   -- coveredFromExcludesFailure
+coveredFrom [(co, m, Error msg)]  = []   -- coveredFromExcludesError
+coveredFrom [(co, m, Skipped msg)] = []  -- coveredFromExcludesSkipped
+coveredFrom [(co, m, Passed)]     = [co] -- coveredFromIncludesPass
+----
+
+The contract restates the same rule for submitted documents: a `#` in a coverage
+grid, or a non-zero `summary.covered_cells`, is legitimate **iff** some entry
+with `result.outcome = "passed"` carries that `(category, aspect)` coordinate.
+Failed, errored, skipped and absent runs contribute nothing. A report that
+claims more than it ran is rejected by the validator, not waved through.
+
+=== 1.5 The minimal downstream fixture
+
+`integrations/contract/proven-tests/downstream/` is a complete, runnable
+example. `run.sh` emits a report from a flat list of executed test results and
+validates it:
+
+[source,bash]
+----
+bash integrations/contract/proven-tests/downstream/run.sh
+# writes build/proven-run-report.json; exits 0 only if it conforms
+----
+
+The producer (`emit_report.py`) maps a repository's own runner output onto the
+submission schema and **derives** coverage. The validator (`check_contract.py`)
+recomputes it independently. A report that claims a cell it did not run fails at
+the second step. The Rust twin reads and validates the report itself:
+`proven-evidence emit` derives the summary from the entries, and
+`proven-evidence check` refuses a summary that disagrees with them.
+
+=== 1.6 Submitting from a Rust repository
+
+A Rust repository submits evidence by producing the same document. The
+mechanical mapping:
+
+[cols="1,3"]
+|===
+| Your runner produces | Contract input field
+
+| one executed test | one object in `tests` |
+| module + name + line | `module`, `name`, `line` |
+| pass / fail / error / skip | `outcome` |
+| taxonomy coordinate | `category`, `aspect` |
+| evidence tier | `tier` (`Unproven` or `ProvisionallyProven`) |
+| duration | `duration_ms` |
+|====
+
+Then call `emit_report.py` to produce the document. If the repository carries
+no Python, build
+`integrations/contract/proven-tests/downstream/rust/proven-evidence` instead —
+it reads and validates the same `schema_version`-2 report:
+
+[source,bash]
+----
+proven-evidence emit  <report.json> <summary.json>  # derive the summary
+proven-evidence check <report.json> <summary.json>  # refuse a summary that disagrees
+----
+
+Both refuse a tier the repository cannot justify, and both exit `0` on
+conformance, `1` when the contract is not met and `2` when no check was
+performed.
+
+== Part II — cicd-squabbler: a read-only downstream invocation
+
+=== 2.1 The read-only invocation
+
+cicd-squabbler is a CI/CD *fighter*: it drives a stuck gate to a legitimate
+green, or hands back a structured report. For a downstream repository's own CI,
+the contract is the **read-only** surface.
+
+[cols="1,3"]
+|===
+| Command | Read-only? | Use it for
+
+| `squabble verify-satisfied <owner/repo> <pr>`
+| Yes — reads the PR and its base gate.
+| The definition-of-done check a CI step or PR hook runs. Emits a JSON verdict
+  and exits `5` when agent work remains.
+
+| `squabble diagnose <gate.json>`
+| Yes — pure, offline, no network.
+| Reproducing a verdict from a captured gate, in a sandbox with no `gh`.
+
+| `squabble chains <path|gh:slug>...`
+| Yes — reads workflows, writes nothing.
+| Cross-repo dependency audit; exit `4` on a blocking finding.
+
+| `squabble fight …`
+| Propose-only by default. `--apply` writes the *local working tree* and
+  nothing else — it never commits, pushes or re-runs CI.
+| Not a downstream CI gate. Use it locally, or with `--gate <file>` offline.
+|===
+
+The recommended downstream CI step is `verify-satisfied`, pinned through the
+composite action (<<installation>>):
+
+[source,yaml]
+----
+- uses: hyperpolymath/cicd-squabbler/.github/actions/squabble@<40-hex sha>
+  id: squabble
+  with:
+    args: |
+      verify-satisfied
+      ${{ github.repository }}
+      ${{ github.event.pull_request.number }}
+    token: ${{ steps.app-token.outputs.token }}
+- name: gate on the verdict
+  run: test "${{ steps.squabble.outputs.exit-code }}" = "0"
+----
+
+`verify-satisfied` exits `0` when nothing is left for the agent and `5` when
+agent items remain. The step fails on any non-zero exit — including `5`, which
+is a reportable verdict, not a tool failure.
+
+=== 2.2 Required GitHub permissions
+
+Grant the least privilege. The read-only surface never writes to GitHub.
+
+[cols="1,3"]
+|===
+| Permission | Needed by
+
+| `contents: read`
+| Fetching the branch ruleset's `required_status_checks`, the PR's
+  `statusCheckRollup`, and workflow trees. The minimum for `fetch`,
+  `verify-satisfied` and `chains`.
+
+| `actions: read`
+| The Actions-policy probe (`actions/permissions`, `…/selected-actions`) that
+  attributes a `STARTUP_FAILURE`, and the workflow-tree GraphQL reads.
+
+| `administration: read`
+| Classic branch protection, which lives behind a different endpoint and is
+  invisible to the rules API. `verify-satisfied` reads it. `github.token`
+  cannot hold this permission — pass a GitHub App installation token.
+
+| `attestations: read`
+| Verifying the release's build-provenance attestation during install.
+
+| `contents: write`, `id-token: write`, `attestations: write`
+| Publishing a release. Upstream only — never grant these to a downstream
+  consumer step.
+|===
+
+A minimal downstream job:
+
+[source,yaml]
+----
+permissions:
+  contents: read
+  actions: read
+  attestations: read
+----
+
+`verify-satisfied` additionally needs `administration: read`, supplied by an App
+token rather than `github.token`.
+
+=== 2.3 Machine-readable output and exit semantics
+
+`verify-satisfied` writes a JSON verdict to stdout and a human-readable list to
+stderr. The report carries `repo`, `pr`, `head_oid`, `base_ref`, `done`, and a
+`verdict` with `agent_items`, `held_by_human`, `evidence_free` (satisfied
+checks that concluded `SKIPPED`/`NEUTRAL` and carry no evidence) and `notes`.
+
+Exit semantics, shared by the whole CLI:
+
+[cols="1,3"]
+|===
+| Code | Meaning
+
+| `0`
+| Success. For `verify-satisfied`: the PR is done — nothing left for the agent.
+
+| `2`
+| A genuine failure: bad usage, `gh` failed, unparseable input. A CI step must
+  fail on this.
+
+| `3`
+| `diagnose`/`fetch` found **no** `required_status_checks` rule on the base
+  branch. A reportable finding, not a tool failure — but never a green.
+
+| `4`
+| `chains`: a blocking finding (a dependency cycle or a dead upstream).
+
+| `5`
+| `verify-satisfied`: agent items remain on the PR. The definition-of-done
+  answer a hook needs.
+
+| `6`
+| `board` / `inbox-sweep`: incomplete — a repo was unreadable or had more open
+  PRs than one page. The gap is stated, never hidden.
+|===
+
+CI callers treat `3`, `4` and `5` as reportable findings and any other non-zero
+as a failure. Exit `0` is the only success.
+
+=== 2.4 Pinned installation / release path
+
+Do not build from a branch and do not trust a tag alone. Two pinned paths:
+
+.Composite action (recommended). Pin the action to a merged commit SHA:
+`hyperpolymath/cicd-squabbler/.github/actions/squabble@<40-hex sha>`. Its
+`install.sh` downloads the release asset, refuses it unless its sha256 equals
+the pinned digest, refuses it unless `gh attestation verify` proves it was built
+by `.github/workflows/release.yml` from the pinned tag **and** the pinned source
+commit on a GitHub-hosted runner (`--deny-self-hosted-runners`), and only then
+makes it executable and smoke-tests its version.
+.Direct download. `gh release download v0.1.0 --repo
+  hyperpolymath/cicd-squabbler --pattern squabble-x86_64-linux-musl`, then
+  `sha256sum -c SHA256SUMS` and `gh attestation verify`.
+
+The tag is a locator; the digest is the anchor; the attestation ties the digest
+to the source commit. Bumping means changing `SQUABBLE_TAG`,
+`SQUABBLE_SHA256` and `SQUABBLE_SOURCE_DIGEST` together, each read from the new
+release.
+
+=== 2.5 The legitimate-green predicate
+
+The engine's `Gate::evaluate` computes `Green` from the realised runs, and the
+SPARK package in `spark/` proves `Green <=> (non-empty and all satisfied)`.
+That is necessary but not sufficient for a downstream claim, because GitHub's
+rollup counts `SKIPPED`/`NEUTRAL` as satisfying a requirement while carrying no
+evidence, and because a requirement set can be reduced.
+
+The contract therefore defines a strictly stronger predicate,
+`legitimate_green(required_contexts, checks)`:
+
+. `evaluate(checks) == Green`;
+. the requirement set is non-empty and **every** required context appears in
+  `checks` (a dropped or renamed-away context is a bypass, not a win);
+. no check is `Missing`, `Pending` or `Failed`;
+. at least one check is `Passed` — the green is evidence-bearing.
+
+A gate whose satisfied checks are all `Skipped` is `Green` by the rollup rule but
+is *green by vacuity*: `evidence_free()` lists it, and it is **not** a
+legitimate green. A gate that dropped a required context is `Green` over a
+reduced set and is **not** a legitimate green.
+
+=== 2.6 Negative fixtures
+
+`integrations/contract/cicd-squabbler/fixtures/` holds the gate pairs;
+`cases.json` states the expected verdicts. The checker recomputes each verdict
+and fails on any disagreement.
+
+[cols="1,2,2,2"]
+|===
+| Fixture | Engine verdict | Legitimate green?
+
+| `green-passed.json` — every required check `passed`
+| Green | yes
+
+| `skipped-only.json` — the only required check `skipped`
+| Green | **no** — green by vacuity, `evidence_free = 1`
+
+| `missing-required.json` — a required check `missing`
+| Blocked | no
+
+| `cancelled-required.json` — a required check `cancelled`
+| Red | no
+
+| `failing-required.json` — a required check `failed`
+| Red | no
+
+| `pending-required.json` — a required check `pending`
+| Blocked | no
+
+| `empty-gate.json` — no required checks at all
+| Blocked | no — unprotected, not won
+
+| `dropped-requirement.json` — a required context simply absent from `checks`
+| Green (over the reduced set) | **no** — a bypass
+
+| `renamed-requirement.json` — the required name matches no job
+| Blocked | no
+
+| `green-mixed-evidence.json` — one `passed`, one `skipped`
+| Green | yes — the green is evidence-bearing; the skip is disclosed
+|===
+
+These fixtures are the contract's proof that missing, skipped, cancelled and
+failing required checks cannot produce a legitimate-green result. Run them with
+`python3 integrations/contract/check_contract.py cicd-squabbler`.
+
+== Part III — Conformance
+
+The normative, executable statement of both surfaces is
+`integrations/contract/check_contract.py` (stdlib Python 3 only, so it runs
+before any toolchain exists). It is the portable floor: the Idris2 types and the
+SPARK proof are the authoritative semantics, but a downstream repository cannot
+compile either without adopting the whole toolchain.
+
+[source,bash]
+----
+python3 integrations/contract/check_contract.py proven-tests
+python3 integrations/contract/check_contract.py cicd-squabbler
+bash scripts/check-integration-contract.sh     # both, and the downstream fixture
+----
+
+Exit codes: `0` every case ran and held; `1` a case produced the wrong verdict;
+`2` a fixture or case file was missing or unparseable — `NO CHECK WAS
+PERFORMED` is never a pass.
+
+A downstream can validate a single submitted document:
+
+[source,bash]
+----
+python3 <pinned>/check_contract.py validate-file proven-run-report.json proven-tests
+python3 <pinned>/check_contract.py validate-file gate.json cicd-squabbler
+----
+
+== Part IV — What this contract does not allow
+
+. No reference to a moving branch, a bare tag, or `@main`. Pin a commit SHA or
+  an asset digest.
+. No claim of `ActuallyProven` without a checked proof ladder — and no
+  downstream repository may claim that tier at all.
+. No coverage claim backed by a test that did not run and pass.
+. No legitimate green from a missing, skipped-only, cancelled or failing
+  required check, and no green obtained by dropping or renaming a required
+  context.
+. No write to GitHub from the downstream read-only surface. `--apply` edits the
+  local working tree only and never commits, pushes or re-runs CI.
+. No permission broader than the surface needs. A consumer step never receives
+  `contents: write`, `id-token: write` or `attestations: write`.

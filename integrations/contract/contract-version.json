@@ -1,0 +1,48 @@
+{
+  "contract": "Proven-Tests / cicd-squabbler downstream integration contract",
+  "contract_version": "1.0.0",
+  "published_at": "2026-10-25",
+  "immutable_revision_policy": "Pin every downstream reference to a full 40-hex commit SHA or a release asset digest. Never a branch, a tag alone, or any moving ref.",
+  "pins": {
+    "proven-tests-and-benches": {
+      "repository": "hyperpolymath/proven-tests-and-benches",
+      "commit": "eca682bcd419554f6779e72969902e6faef4fd9d",
+      "idris2": "0.7.0",
+      "backend": "chezscheme",
+      "toolchain_installer": "scripts/install-idris2.sh"
+    },
+    "cicd-squabbler": {
+      "repository": "hyperpolymath/cicd-squabbler",
+      "commit": "14f853fde902ab2d7631070d87a9dc9122e01013",
+      "release": {
+        "tag": "v0.1.0",
+        "asset": "squabble-x86_64-linux-musl",
+        "asset_sha256": "6cbeb4577d83ccf2dea3405a3afb0d34b7fee422af73f2113d413ea7edba026c",
+        "source_digest": "b854d17abc0dce296719a349ebe856ff945cf03e",
+        "signer_workflow": "hyperpolymath/cicd-squabbler/.github/workflows/release.yml",
+        "predicate_type": "https://slsa.dev/provenance/v1"
+      },
+      "action_ref_template": "hyperpolymath/cicd-squabbler/.github/actions/squabble@<40-hex sha>"
+    },
+    "proven": {
+      "repository": "hyperpolymath/proven",
+      "commit": "53600326ca31f6f99767c5371cc77af2dade996c",
+      "role": "external subject graded by integrations/proven; pinned so the grade is reproducible"
+    }
+  },
+  "exit_codes": {
+    "proven-tests": {
+      "0": "report conforms",
+      "1": "report does not conform",
+      "2": "no check was performed (missing or unparseable input)"
+    },
+    "cicd-squabbler": {
+      "0": "ok",
+      "2": "failure (bad usage, gh failed, unparseable input)",
+      "3": "no required_status_checks rule on the base branch",
+      "4": "chains: blocking finding",
+      "5": "verify-satisfied: agent items remain",
+      "6": "board or inbox-sweep: incomplete"
+    }
+  }
+}

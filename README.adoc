@@ -208,6 +208,14 @@ See `LICENSE` and `LICENSES/`.
   must never trigger, the payload must always trigger for its declared class —
   with the silence/firing fixtures, three-outcome checks, certified-absence
   residue rule and scanner excludability.
+
+| `docs/INTEGRATION-CONTRACT.adoc`
+| The stable, immutable-revision contract for downstream repositories: how a
+  repository submits executed-test evidence and keeps test/property/proof
+  evidence apart, how coverage is derived so a cell cannot be claimed by a test
+  that did not run, and how cicd-squabbler is invoked read-only from CI — with
+  negative fixtures and a runnable conformance gate
+  (`integrations/contract/`).
 |===
 
 TIP: the project wiki carries the conceptual introductions — provenance tiers,

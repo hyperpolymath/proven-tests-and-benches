@@ -1,0 +1,59 @@
+{
+  "surface": "proven-tests",
+  "cases": [
+    {
+      "id": "passed-test-contributes-coverage",
+      "fixture": "fixtures/report-passed.json",
+      "expect": {"valid": true, "derived_covered_cells": 1}
+    },
+    {
+      "id": "failed-test-contributes-nothing",
+      "fixture": "fixtures/report-failed.json",
+      "expect": {"valid": true, "derived_covered_cells": 0}
+    },
+    {
+      "id": "errored-test-contributes-nothing",
+      "fixture": "fixtures/report-error.json",
+      "expect": {"valid": true, "derived_covered_cells": 0}
+    },
+    {
+      "id": "skipped-test-contributes-nothing",
+      "fixture": "fixtures/report-skipped.json",
+      "expect": {"valid": true, "derived_covered_cells": 0}
+    },
+    {
+      "id": "absent-run-contributes-nothing",
+      "fixture": "fixtures/report-absent.json",
+      "expect": {"valid": true, "derived_covered_cells": 0}
+    },
+    {
+      "id": "overclaimed-coverage-is-rejected",
+      "fixture": "fixtures/report-overclaim.json",
+      "expect": {"valid": false},
+      "expect_invalid_reason": "covered_cells"
+    },
+    {
+      "id": "proof-free-actually-proven-is-rejected",
+      "fixture": "fixtures/report-tier-lie.json",
+      "expect": {"valid": false},
+      "expect_invalid_reason": "proof ladder"
+    },
+    {
+      "id": "provisional-without-certificate-is-rejected",
+      "fixture": "fixtures/report-provisional-no-cert.json",
+      "expect": {"valid": false},
+      "expect_invalid_reason": "framework_safety"
+    },
+    {
+      "id": "debt-marked-entry-is-not-counted",
+      "fixture": "fixtures/report-debt-counted.json",
+      "expect": {"valid": false},
+      "expect_invalid_reason": "total"
+    },
+    {
+      "id": "mixed-honestly-graded-report-validates",
+      "fixture": "fixtures/report-valid-mixed.json",
+      "expect": {"valid": true, "derived_covered_cells": 2}
+    }
+  ]
+}
