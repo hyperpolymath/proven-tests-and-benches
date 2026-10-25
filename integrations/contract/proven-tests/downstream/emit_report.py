@@ -101,9 +101,11 @@ def emit(input_doc: Any) -> dict:
         if t.get("oracle_provenance"):
             entry["oracle_provenance"] = t["oracle_provenance"]
         if ob == "Fixtures":
+            if not t.get("silence") or not t.get("firing"):
+                fail(f"{where} is Fixtures without a silence/firing pair", 1)
             entry["fixtures"] = {
-                "silence": t.get("silence", {"source": "RuntimeConstructed", "description": ""}),
-                "firing": t.get("firing", {"source": "RuntimeConstructed", "defect_class": ""}),
+                "silence": t["silence"],
+                "firing": t["firing"],
             }
         if t.get("duration_ms") is not None:
             entry["duration_ms"] = int(t["duration_ms"])
