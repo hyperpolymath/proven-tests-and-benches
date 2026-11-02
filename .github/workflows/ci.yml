@@ -205,6 +205,8 @@ jobs:
           echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
           "$HOME/.idris2/bin/idris2" --version
 
+          bash scripts/check-toolchain-pins.sh
+
       - name: Check Cabal fixtures against the pinned suite decision
         shell: bash
         run: |
@@ -223,8 +225,6 @@ jobs:
           } > "$dir/Cases.idr"
           cd "$dir"
           "$HOME/.idris2/bin/idris2" --check Cases.idr
-
-          bash scripts/check-toolchain-pins.sh
 
       # --- The actual gate ---
 
