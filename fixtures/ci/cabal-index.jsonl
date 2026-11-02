@@ -1,0 +1,3 @@
+{"case":"clean-runner","index":"missing","expected_plan":"refresh_then_resolve","source_run":"41404909112"}
+{"case":"cache-restored-index-unchecked","index":"unknown","expected_plan":"refresh_then_resolve"}
+{"case":"verified-index","index":"available","expected_plan":"resolve"}
