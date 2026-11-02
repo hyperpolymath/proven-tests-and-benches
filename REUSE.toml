@@ -169,3 +169,9 @@ path = "integrations/contract/**/*.json"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 SPDX-License-Identifier = "MPL-2.0"
+
+[[annotations]]
+path = "fixtures/ci/cabal-index.jsonl"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
