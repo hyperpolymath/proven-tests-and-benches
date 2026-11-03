@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
+= CI Evidence and Repair Admissibility — Candidate Test Regimen
+:revdate: 2026-11-01
+:toc:
+
+Status: *PROPOSED*. This is a requirements and adversarial-fixture catalogue, not an implemented test suite and not a proof certificate.
+
+== Contract and boundaries
+
+Test definitions belong in this repository; execution gates belong to `cicd-suite`; gate-phase diagnosis belongs to `cicd-squabbler`; outcome learning belongs to Hypatia; authorised orchestration belongs to gitbot-fleet. `metadatastician/standards` remains the policy authority. No dependency on any particular orchestration product is required.
+
+A check's success claim must include an identified subject and commit, a source/version for its checker, an actual executed step, a passing verdict, an attributable receipt and its specific claimed property. A successful setup phase is not a successful policy step. A skipped, missing, unstarted or unidentified check does not prove success.
+
+A proposed repair is admissible for review only if it has the required authority; preserves required checks and the effective security posture; maintains lock/dependency closure and intended revision identity; relies on fresh, non-retracted evidence; and discloses relevant conflicts and effects. Admissibility is not a prediction that rerunning the tests will pass.
+
+== Candidate test families
+
+[cols="1,2,2",options="header"]
+|===
+| Class | Silence fixture (must not fire) | Firing fixture (must fire)
+
+| Execution truth
+| Required nonempty check set; every check executed, passed and receipt-bound
+| Empty requirements; skipped scan; preflight succeeds but policy is not executed
+
+| Stage separation
+| Setup failure classified as setup/preflight without claiming a code defect
+| Setup-only failure classified as a substantive proof or security finding
+
+| Repository identity
+| Canonical owner transfer of the same repository with revision intent preserved
+| Repoint that silently changes repository identity or source revision
+
+| Dependency closure
+| Complete transitive Actions lock with matching identity and pinned references
+| One transitive entry missing, wrong source identity, or stale dependency metadata
+
+| Historical identity
+| Historical/external UUID retained with its provenance while new IDs follow current policy
+| Gate rewrites a historical ID or exempts an incorrectly minted new ID
+
+| Format migration
+| Canonical DEED representation retains declared critical claims and provenance
+| Syntax-valid translation discards required fields yet claims equivalence
+
+| Replay and freshness
+| One outcome delivery counted once and withdrawn/superseded evidence excluded
+| Replayed notification promotes confidence; stale proof receipt attributed to HEAD
+
+| Concurrency and composition
+| Two independent repairs shown not to interfere, or explicitly ordered
+| Individually admissible repairs jointly weaken a gate or violate a dependency
+|===
+
+Each family must implement the existing `docs/TEST-DOCTRINE.adoc`: a committed silence fixture, a committed firing fixture and an explicit `not_run` state (including absent tools and crashes). A missing proof checker cannot be reported as successful proof checking. The declared defect class and excluded residual classes must be recorded. Independent checks require composition evidence before their conjunction is promoted to a suite-wide guarantee.
+
+== Relevant research bridges (not implemented)
+
+* Epistemic Types: observed facts versus suspected causes versus soundly warranted conclusions.
+* Residual Evidence Types: multiple candidate explanations compatible with incomplete CI observations.
+* Echo Types and Invariant Path: information loss and changed meaning between policy text, workflow, receipt and display.
+* Choreographic Types: ordering, local knowledge, and safe independent repairs; K-CUT is not assumed for arbitrary CI graphs.
+* Tropical Types: cost and bound calculations *after* capability and admissibility constraints are met.
+* VCL-UT / TypeLL: typed transition admissibility; no claim that the current kernels implement the proposed CI-specific predicates.
+* miniKanren: search for candidates and counterexamples, not an authority to grant access or manufacture passing checks.
+
+== Canary evidence and promotion bar
+
+The `secret-types` PR #15 canary exercised a canonical standards owner transfer and a transitive lock repin. It demonstrated previously blocked reusable jobs actually starting, but other policy failures remained. Its evidence must be referenced by exact commit and job receipt before any fixture or benchmark is declared verified.
+
+Promotion requires: implemented runner, planted mutants, clean/firing results, no false green, full tool execution, current proof-policy compliance, and live consumer evidence. Until then this document changes neither the suite's coverage numbers nor its readiness grade.
+
+== Follow-up
+
+Implement one vertical slice first: an execution-truth property and its silent/firing/void controls, integrated with the established Idris2 harness; export a narrow neutral evidence contract for a real `cicd-suite` consumer. Add further classes only after the first is reproducible and its failures demonstrably discriminate.
