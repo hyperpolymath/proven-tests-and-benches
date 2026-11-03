@@ -82,11 +82,11 @@ Eq Denial where
   x == y = show x == show y
 
 public export
-data Decision = Admitted | Denied Denial | Void String
+data Decision = Candidate | Denied Denial | Void String
 
 export
 Show Decision where
-  show Admitted = "ADMITTED"
+  show Candidate = "CANDIDATE"
   show (Denied d) = "DENIED: " ++ show d
   show (Void reason) = "VOID: " ++ reason
 
@@ -150,13 +150,13 @@ checkRequired c req =
         if null good then Void "no completed, attributable substantive receipt"
         else if length (nub (map (\o => o.attempt) good)) < c.minIndependent
           then Denied DuplicateDelivery
-          else Admitted
+          else Candidate
 
 checkAll : ExecutionClaim -> List String -> Decision
-checkAll c [] = Admitted
+checkAll c [] = Candidate
 checkAll c (req :: rest) =
   case checkRequired c req of
-    Admitted => checkAll c rest
+    Candidate => checkAll c rest
     other => other
 
 -- The only admission path traverses every nonempty mandatory obligation.
@@ -169,3 +169,50 @@ adjudicate c =
   else if c.minIndependent == 0 then Denied ZeroConfirmationThreshold
   else if any isHarnessFailure c.observations then Denied HarnessFailure
   else checkAll c c.required
+
+
+-- =============================================================================
+-- ACTUALLY CHECKED, NARROW MATHEMATICAL OBLIGATIONS
+-- =============================================================================
+-- These are total proofs about the structural adjudicator. They do NOT prove
+-- receipt authenticity, checker trust, completeness of CI observations or
+-- the generic implication that Candidate guarantees execution in the world.
+-- The presence of any arbitrary claim details cannot make an empty required
+-- set or a zero-job execution admissible.
+
+public export
+emptyRequiredDenied :
+  (subject, revision : String) ->
+  (scheduled : List String) ->
+  (jobs, confirmations : Nat) ->
+  (observed : List Observation) ->
+  (green : Bool) ->
+  adjudicate (MkExecutionClaim subject revision [] scheduled
+                jobs confirmations observed green) = Denied EmptyRequiredSet
+emptyRequiredDenied subject revision scheduled jobs confirmations observed green = Refl
+
+public export
+zeroJobDenied :
+  (subject, revision, obligation : String) ->
+  (scheduled : List String) ->
+  (confirmations : Nat) ->
+  (observed : List Observation) ->
+  (green : Bool) ->
+  adjudicate (MkExecutionClaim subject revision [obligation] scheduled
+                0 confirmations observed green) = Denied ZeroJobs
+zeroJobDenied subject revision obligation scheduled confirmations observed green = Refl
+
+-- A failing HARNESS observation takes precedence over purported success or
+-- failure of the subject; neither its textual checker ID nor the existence of
+-- other observations can reclassify that failure as a subject failure.
+public export
+harnessFaultDenied :
+  (subject, revision, obligation, checker, receipt, attempt : String) ->
+  (scheduled : List String) ->
+  (rest : List Observation) ->
+  (green, withdrawn : Bool) ->
+  adjudicate (MkExecutionClaim subject revision [obligation] scheduled 1 1
+    (MkObservation obligation subject revision checker Harness FailedCheck
+       receipt attempt withdrawn :: rest) green) = Denied HarnessFailure
+harnessFaultDenied subject revision obligation checker receipt attempt
+                   scheduled rest green withdrawn = Refl

@@ -23,7 +23,7 @@ cases =
 testCase : Denial -> IO TestResult
 testCase expected =
   case (adjudicate silence, adjudicate (plant expected), adjudicate voidControl) of
-    (Admitted, Denied actual, Void _) =>
+    (Candidate, Denied actual, Void _) =>
       if actual == expected then pure Passed
       else pure (Failed ("wrong defect class: expected " ++ show expected
                           ++ ", received " ++ show actual))
