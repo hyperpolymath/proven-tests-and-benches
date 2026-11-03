@@ -110,7 +110,7 @@ proven-tests-and-benches/
 ├── PROOFS.adoc               # the proof catalogue, per suite
 ├── ARCHITECTURE.md           # structure + a standing list of known defects
 ├── AGENTS.md                 # read this before changing anything with an agent
-├── src/ProvenTests/          # 32 modules: the framework
+├── src/ProvenTests/          # 33 modules: the framework
 │   ├── Types.idr             # evidence-carrying provenance (the core idea)
 │   ├── Classification.idr    # tier constructors and honest promotion
 │   ├── Taxonomy.idr          # 17 categories × 14 aspects × 12 kategoria levels

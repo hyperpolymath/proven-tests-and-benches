@@ -31,7 +31,7 @@ looking better than it is.
 
 ....
 .
-├── src/ProvenTests/            # The framework library (32 modules)
+├── src/ProvenTests/            # The framework library (33 modules)
 │   ├── Types.idr               # Provenance, TestCategory, TestAspect, evidence records
 │   ├── Tropical.idr            # Min-plus semiring + max-plus, laws proved total
 │   ├── Coverage.idr            # Derives the coverage grid from executed tests
@@ -70,7 +70,7 @@ separate because the dependency direction matters:
 |`+proven-tests-suite.ipkg+` |`+proven-tests-suite+` (52 assertions)
 |the installed library
 
-|`+proven-spec-suite.ipkg+` |`+proven-spec-suite+` (92 tests, 29
+|`+proven-spec-suite.ipkg+` |`+proven-spec-suite+` (110 tests, 29
 Actually-Proven) |the installed library
 
 |`+benchmarks/benchmark.ipkg+` |`+proven-bench+` |the installed library

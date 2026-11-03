@@ -1,0 +1,34 @@
+{
+  "contract_version": "1.0.0",
+  "subject_id": "fixture-subject",
+  "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "claim_property": "required validator completed successfully",
+  "declared_scope": "synthetic offline fixture only",
+  "required": [
+    "validator"
+  ],
+  "scheduled": [
+    "validator"
+  ],
+  "jobs_started": 1,
+  "min_independent": 1,
+  "claimed_green": true,
+  "observations": [
+    {
+      "obligation": "validator",
+      "subject_id": "fixture-subject",
+      "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "checker_id": "fixture-checker",
+      "checker_version": "1.0.0",
+      "checker_config_digest": "fixture:digest",
+      "checker_trusted_base": "fixture:trust",
+      "stage": "substantive",
+      "outcome": "passed",
+      "attempt_id": "run-1",
+      "delivery_id": "delivery-1",
+      "receipt_ref": "fixture:receipt-1",
+      "freshness": "current",
+      "retracted": false
+    }
+  ]
+}

@@ -158,7 +158,7 @@ injected failure, **51/52, exit 1**.
 | `Bridge` | cross-representation bridging
 |===
 
-=== `proven-spec-suite` — Proven + AffineScript + HigherOrder + SetTheory (92 tests)
+=== `proven-spec-suite` — Proven + AffineScript + HigherOrder + SetTheory (110 tests)
 
 ==== Actually-Proven laws (12 theorems)
 
@@ -393,3 +393,21 @@ Use `idris2 --typecheck <ipkg>`. Do **not** use per-file `idris2 --check` as a
 gate: it prints `Error:` and still exits `0`, so a CI step built on it passes
 while the code is broken. Confirmed again on Idris2 0.7.0 while writing these
 modules.
+
+== Execution-truth structural proofs and runtime controls (candidate evidence only)
+
+The `ProvenTests.ExecutionTruth` module adds three **narrow, total Idris2
+equational obligations**, subject to a successful Idris2 0.7.0 compiler run:
+`emptyRequiredDenied`, `zeroJobDenied`, and
+`singleHarnessFaultDenied`. The third covers a singleton failed harness
+observation, not arbitrary composition with other observations. None certifies
+external receipt authenticity or the general converse that a Candidate must
+represent a real-world execution.
+
+The specification suite additionally runs 18 *Unproven* execution-truth
+meta-checks (15 denial classes and 3 void/replay controls) using committed
+clean, firing and no-observation cases. These raise the spec-suite count
+from 92 to 110 but **do not** change its 29 Actually-Proven historical
+properties, the taxonomy's 40/238 cells, or the CRG readiness grade.
+Source-of-truth: `tests/ExecutionTruthTests/Checks.idr`,
+`src/ProvenTests/ExecutionTruth.idr` and current-head CI receipts.

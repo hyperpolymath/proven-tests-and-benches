@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
+= Neutral execution observations — contract 1.0.0
+:toc:
+
+Status: *experimental; offline fixtures only*. This is additive and does not
+change the established schema-version-2 Proven-Tests reporting contract.
+
+== Semantics
+
+The envelope describes a subject and exact source revision, a claimed
+property and declared scope, mandatory obligations, scheduled checks, number
+of jobs that actually started, and separate observations attributed to
+identified checker, version, configuration, trusted base, obligation,
+attempt, delivery and receipt.
+
+A producer's `claimed_green` boolean is untrusted. An external consumer
+must authenticate the receipt and checker, check the revision and the actual
+tested property, and establish freshness and non-retraction. A hash-shaped
+string or a declared green summary is never itself evidence of execution.
+A missing check, unavailable tool or unverified receipt is *not-run*, not pass.
+A duplicated delivery is one attempt, never independent confirmation.
+Harness failure must not be labelled a defect of the subject under test.
+
+== Format and consumer
+
+The schema is `v1/schema.json`. A self-contained I-JSON envelope can be
+canonicalised via RFC 8785 JSON Canonicalization Scheme and emitted as one
+JSONL line per observation envelope; keep original receipt bytes alongside
+canonicalised data. KYAML may describe local checker allowlists; DEED may
+describe repository declarations; no new A2ML dependency is introduced.
+
+The existing independent Rust downstream consumer will gain a fixture-tested
+adjudicator with a mandatory `ReceiptVerifier` interface. This is an
+authentication seam, not an implementation of external attestation.
+The strongest admissible decision is *Candidate*, NEVER `ActuallyProven`.
+An untrusted JSON field must not be promoted to an Idris2 proof term.
+A genuine Actually-Proven certificate requires a separately checked
+proposition and witness, checker identity and trusted verification receipt.
+
+The clean/firing/void fixtures in `v1/fixtures/` are synthetic. They do
+not qualify as real external CI evidence or proof of general soundness.
+They establish a portable example shape. Consumers should pin any adapter
+to a reviewed full 40-hex commit, not a mutable branch.
+
+== Existing downstream compatibility
+
+The established `integrations/contract/contract-version.json` and
+`docs/INTEGRATION-CONTRACT.adoc` remain unchanged. This new contract is
+not a replacement for their `schema_version = 2` test-run reports.
