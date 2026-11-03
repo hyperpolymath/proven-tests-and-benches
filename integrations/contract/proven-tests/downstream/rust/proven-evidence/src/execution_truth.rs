@@ -142,12 +142,20 @@ pub fn classify(c: &Envelope, verifier: &impl ReceiptVerifier) -> Decision {
         if valid.is_empty() {
             return Decision::NotRun("no_verified_substantive_receipt");
         }
-        let attempts: BTreeSet<&str> = valid.iter().map(|o| o.attempt_id.as_str()).collect();
-        let deliveries: BTreeSet<&str> = valid.iter().map(|o| o.delivery_id.as_str()).collect();
-        let receipts: BTreeSet<&str> = valid.iter().map(|o| o.receipt_ref.as_str()).collect();
-        if attempts.len() < c.min_independent
-            || deliveries.len() < c.min_independent
-            || receipts.len() < c.min_independent {
+        let mut attempts: BTreeSet<&str> = BTreeSet::new();
+        let mut deliveries: BTreeSet<&str> = BTreeSet::new();
+        let mut receipts: BTreeSet<&str> = BTreeSet::new();
+        let independent = valid.iter().filter(|o| {
+            let (a, d, r) = (o.attempt_id.as_str(), o.delivery_id.as_str(), o.receipt_ref.as_str());
+            let fresh = !attempts.contains(a) && !deliveries.contains(d) && !receipts.contains(r);
+            if fresh {
+                attempts.insert(a);
+                deliveries.insert(d);
+                receipts.insert(r);
+            }
+            fresh
+        }).count();
+        if independent < c.min_independent {
             return Decision::Denied("duplicate_delivery_not_independent");
         }
     }
