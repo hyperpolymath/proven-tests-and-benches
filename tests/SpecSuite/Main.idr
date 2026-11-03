@@ -20,6 +20,7 @@ import HigherOrderTests.TraversalTests
 import HigherOrderTests.TransferTests
 import SetTheoryTests.BasicsTests
 import SetTheoryTests.AdvancedTests
+import ExecutionTruthTests.Checks
 import System
 
 %default total
@@ -174,7 +175,8 @@ allSuiteTests =
 suite : TestSuite
 suite = MkTestSuite "Spec suites (Proven + AffineScript + HigherOrder + SetTheory)"
           (map toRunnable allProvenLawsTests ++ map toRunnable allTropicalLawsTests
-           ++ map toRunnable allSuiteTests)
+           ++ map toRunnable allSuiteTests
+           ++ map toRunnable allExecutionTruthTests)
 
 isPass : TestResult -> Bool
 isPass Passed = True

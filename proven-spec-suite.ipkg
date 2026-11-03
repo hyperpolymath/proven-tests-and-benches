@@ -18,4 +18,6 @@ modules = ProvenLawsTests.LawsTests,
          HigherOrderTests.TransferTests,
          SetTheoryTests.BasicsTests,
          SetTheoryTests.AdvancedTests,
+         ExecutionTruthTests.Fixtures,
+         ExecutionTruthTests.Checks,
          SpecSuite.Main

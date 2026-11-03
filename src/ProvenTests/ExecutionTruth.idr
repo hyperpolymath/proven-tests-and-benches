@@ -1,0 +1,171 @@
+-- SPDX-License-Identifier: MPL-2.0
+-- SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
+--
+-- Execution evidence is not a proof certificate. This is a fail-closed,
+-- implementation-neutral model of a *reported* CI observation. The trust
+-- of a receipt and checker is supplied by an external verifier.
+module ProvenTests.ExecutionTruth
+
+import Data.List
+
+%default total
+
+public export
+data Stage = Setup | Substantive | Harness
+
+public export
+data Outcome = Succeeded | FailedCheck | WasSkipped | WasUnavailable
+
+public export
+record Observation where
+  constructor MkObservation
+  obligation : String
+  subject : String
+  revision : String
+  checker : String
+  stage : Stage
+  outcome : Outcome
+  receipt : String
+  attempt : String
+  retracted : Bool
+
+public export
+record ExecutionClaim where
+  constructor MkExecutionClaim
+  subject : String
+  revision : String
+  required : List String
+  scheduled : List String
+  jobCount : Nat
+  minIndependent : Nat
+  observations : List Observation
+  summaryGreen : Bool
+
+-- The denied classes are deliberately distinct: setup and harness defects
+-- must never masquerade as failures of the subject under test.
+public export
+data Denial
+  = NotScheduled
+  | ZeroJobs
+  | SetupOnly
+  | RequiredSkipped
+  | StaleSubject
+  | FailedValidatorWrappedGreen
+  | UnknownChecker
+  | WrongObligation
+  | DuplicateDelivery
+  | RetractedEvidence
+  | EmptyRequiredSet
+  | HarnessFailure
+  | ZeroConfirmationThreshold
+  | ValidatorFailure
+
+export
+Show Denial where
+  show NotScheduled = "not-scheduled"
+  show ZeroJobs = "zero-jobs"
+  show SetupOnly = "setup-only"
+  show RequiredSkipped = "required-skipped"
+  show StaleSubject = "stale-subject"
+  show FailedValidatorWrappedGreen = "failed-validator-wrapped-green"
+  show UnknownChecker = "unknown-checker"
+  show WrongObligation = "wrong-obligation"
+  show DuplicateDelivery = "duplicate-delivery"
+  show RetractedEvidence = "retracted-evidence"
+  show EmptyRequiredSet = "empty-required-set"
+  show HarnessFailure = "harness-failure"
+  show ZeroConfirmationThreshold = "zero-confirmation-threshold"
+  show ValidatorFailure = "validator-failure"
+
+export
+Eq Denial where
+  x == y = show x == show y
+
+public export
+data Decision = Admitted | Denied Denial | Void String
+
+export
+Show Decision where
+  show Admitted = "ADMITTED"
+  show (Denied d) = "DENIED: " ++ show d
+  show (Void reason) = "VOID: " ++ reason
+
+isHarnessFailure : Observation -> Bool
+isHarnessFailure o = case (o.stage, o.outcome) of
+  (Harness, FailedCheck) => True
+  _ => False
+
+isUnavailable : Observation -> Bool
+isUnavailable o = case o.outcome of
+  WasUnavailable => True
+  _ => o.checker == ""
+
+isSkipped : Observation -> Bool
+isSkipped o = case o.outcome of
+  WasSkipped => True
+  _ => False
+
+isFailed : Observation -> Bool
+isFailed o = case (o.stage, o.outcome) of
+  (Substantive, FailedCheck) => True
+  _ => False
+
+isSetup : Observation -> Bool
+isSetup o = case o.stage of
+  Setup => True
+  _ => False
+
+-- Qualification is calculated from the observation, not from summaryGreen.
+-- A nonempty receipt ID is a *reference*, not cryptographic validation.
+qualified : ExecutionClaim -> String -> Observation -> Bool
+qualified c req o =
+  o.obligation == req
+  && o.subject == c.subject
+  && o.revision == c.revision
+  && o.checker /= ""
+  && o.receipt /= ""
+  && o.attempt /= ""
+  && not o.retracted
+  && (case (o.stage, o.outcome) of
+        (Substantive, Succeeded) => True
+        _ => False)
+
+checkRequired : ExecutionClaim -> String -> Decision
+checkRequired c req =
+  if not (elem req c.scheduled) then Denied NotScheduled
+  else case filter (\o => o.obligation == req) c.observations of
+    [] => if null c.observations then Void "no observation for required test"
+          else Denied WrongObligation
+    found =>
+      if any isUnavailable found then Denied UnknownChecker
+      else if any (\o => o.retracted) found then Denied RetractedEvidence
+      else if any (\o => o.subject /= c.subject || o.revision /= c.revision) found
+        then Denied StaleSubject
+      else if any isSkipped found then Denied RequiredSkipped
+      else if any isFailed found then
+        if c.summaryGreen then Denied FailedValidatorWrappedGreen
+        else Denied ValidatorFailure
+      else if all isSetup found then Denied SetupOnly
+      else let good = filter (qualified c req) found in
+        if null good then Void "no completed, attributable substantive receipt"
+        else if length (nub (map (\o => o.attempt) good)) < c.minIndependent
+          then Denied DuplicateDelivery
+          else Admitted
+
+checkAll : ExecutionClaim -> List String -> Decision
+checkAll c [] = Admitted
+checkAll c (req :: rest) =
+  case checkRequired c req of
+    Admitted => checkAll c rest
+    other => other
+
+-- The only admission path traverses every nonempty mandatory obligation.
+-- A harness failure is a harness finding, not a subject-validation failure.
+public export
+adjudicate : ExecutionClaim -> Decision
+adjudicate c =
+  if null c.required then Denied EmptyRequiredSet
+  else if c.jobCount == 0 then Denied ZeroJobs
+  else if c.minIndependent == 0 then Denied ZeroConfirmationThreshold
+  else if any isHarnessFailure c.observations then Denied HarnessFailure
+  else checkAll c c.required
