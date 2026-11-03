@@ -179,6 +179,11 @@ checkAll c (req :: rest) =
 
 -- The only admission path traverses every nonempty mandatory obligation.
 -- A harness failure is a harness finding, not a subject-validation failure.
+||| Classify a reported execution claim. After claim-wide checks, return the
+||| first denial or void result in required-obligation order. Candidate requires
+||| each obligation to be scheduled and the counts of distinct attempt, delivery
+||| and receipt IDs in qualifying observations each to meet the confirmation
+||| threshold. These IDs are not authenticated.
 public export
 adjudicate : ExecutionClaim -> Decision
 adjudicate c =
@@ -198,6 +203,7 @@ adjudicate c =
 -- The presence of any arbitrary claim details cannot make an empty required
 -- set or a zero-job execution admissible.
 
+||| An empty required set is denied regardless of the other claim fields.
 public export
 emptyRequiredDenied :
   (subject, revision : String) ->
@@ -209,6 +215,7 @@ emptyRequiredDenied :
                 jobs confirmations observed green) = Denied EmptyRequiredSet
 emptyRequiredDenied subject revision scheduled jobs confirmations observed green = Refl
 
+||| A claim with one required obligation and zero jobs is denied.
 public export
 zeroJobDenied :
   (subject, revision, obligation : String) ->
@@ -223,6 +230,9 @@ zeroJobDenied subject revision obligation scheduled confirmations observed green
 -- This narrower theorem says a single failed harness observation is
 -- classified as a harness failure, regardless of the green summary bit.
 -- Composition with arbitrary other observations needs an additional lemma.
+||| A claim with one required obligation, one job, a threshold of one and a
+||| single failed harness observation is denied as a harness failure, regardless
+||| of the summary or retraction flags.
 public export
 singleHarnessFaultDenied :
   (subject, revision, obligation, checker, receipt, attempt, delivery : String) ->

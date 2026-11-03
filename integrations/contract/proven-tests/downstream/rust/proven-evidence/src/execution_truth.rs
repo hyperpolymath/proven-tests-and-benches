@@ -60,9 +60,16 @@ pub enum Decision {
 /// Every production consumer supplies independent authentication of the
 /// source, run, obligation and checker identity. No default verifier exists.
 pub trait ReceiptVerifier {
+    /// Return whether this observation's receipt and checker are accepted for
+    /// the claim. Rejected observations do not count towards confirmation.
     fn verifies(&self, observation: &Observation, claim: &Envelope) -> bool;
 }
 
+/// Deserialise an execution envelope and classify it using `verifier`.
+///
+/// # Errors
+/// Returns the JSON deserialisation error if the input is invalid or does not
+/// match the envelope's expected fields and types.
 pub fn classify_json(
     input: &str, verifier: &impl ReceiptVerifier
 ) -> Result<Decision, serde_json::Error> {
@@ -70,6 +77,16 @@ pub fn classify_json(
     Ok(classify(&envelope, verifier))
 }
 
+/// Classify an execution claim using verified substantive receipts.
+///
+/// `Candidate` requires every required obligation to pass the checks; it is
+/// not a proof certificate. `Denied` identifies a disqualifying condition,
+/// while `NotRun` identifies missing or unusable evidence. The claimed green
+/// summary is ignored. Obligations are checked in sorted order and the first
+/// non-candidate decision is returned.
+///
+/// For each obligation, confirmations are counted in observation order, only
+/// when the attempt, delivery and receipt IDs are all new to the count.
 pub fn classify(c: &Envelope, verifier: &impl ReceiptVerifier) -> Decision {
     if c.contract_version != "1.0.0" {
         return Decision::Denied("unsupported_contract_version");
