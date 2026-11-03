@@ -1,0 +1,17 @@
+{
+  "contract_version": "1.0.0",
+  "subject_id": "fixture-subject",
+  "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "claim_property": "required validator completed successfully",
+  "declared_scope": "synthetic offline fixture only",
+  "required": [
+    "validator"
+  ],
+  "scheduled": [
+    "validator"
+  ],
+  "jobs_started": 1,
+  "min_independent": 1,
+  "claimed_green": true,
+  "observations": []
+}

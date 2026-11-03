@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Execution observation envelope, not a formal proof certificate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "subject_id",
+    "source_revision",
+    "claim_property",
+    "declared_scope",
+    "required",
+    "scheduled",
+    "jobs_started",
+    "min_independent",
+    "claimed_green",
+    "observations"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "subject_id": {
+      "type": "string"
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "claim_property": {
+      "type": "string"
+    },
+    "declared_scope": {
+      "type": "string"
+    },
+    "required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scheduled": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "jobs_started": {
+      "type": "integer"
+    },
+    "min_independent": {
+      "type": "integer"
+    },
+    "claimed_green": {
+      "type": "boolean"
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "obligation",
+          "subject_id",
+          "source_revision",
+          "checker_id",
+          "checker_version",
+          "checker_config_digest",
+          "checker_trusted_base",
+          "stage",
+          "outcome",
+          "attempt_id",
+          "delivery_id",
+          "receipt_ref",
+          "freshness",
+          "retracted"
+        ],
+        "properties": {
+          "obligation": {
+            "type": "string"
+          },
+          "subject_id": {
+            "type": "string"
+          },
+          "source_revision": {
+            "type": "string"
+          },
+          "checker_id": {
+            "type": "string"
+          },
+          "checker_version": {
+            "type": "string"
+          },
+          "checker_config_digest": {
+            "type": "string"
+          },
+          "checker_trusted_base": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "setup",
+              "substantive",
+              "harness"
+            ]
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "skipped",
+              "unavailable"
+            ]
+          },
+          "attempt_id": {
+            "type": "string"
+          },
+          "delivery_id": {
+            "type": "string"
+          },
+          "receipt_ref": {
+            "type": "string"
+          },
+          "freshness": {
+            "type": "string",
+            "enum": [
+              "current",
+              "expired",
+              "retracted"
+            ]
+          },
+          "retracted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
