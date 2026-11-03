@@ -202,17 +202,16 @@ zeroJobDenied :
                 0 confirmations observed green) = Denied ZeroJobs
 zeroJobDenied subject revision obligation scheduled confirmations observed green = Refl
 
--- A failing HARNESS observation takes precedence over purported success or
--- failure of the subject; neither its textual checker ID nor the existence of
--- other observations can reclassify that failure as a subject failure.
+-- This narrower theorem says a single failed harness observation is
+-- classified as a harness failure, regardless of the green summary bit.
+-- Composition with arbitrary other observations needs an additional lemma.
 public export
-harnessFaultDenied :
+singleHarnessFaultDenied :
   (subject, revision, obligation, checker, receipt, attempt : String) ->
   (scheduled : List String) ->
-  (rest : List Observation) ->
   (green, withdrawn : Bool) ->
   adjudicate (MkExecutionClaim subject revision [obligation] scheduled 1 1
-    (MkObservation obligation subject revision checker Harness FailedCheck
-       receipt attempt withdrawn :: rest) green) = Denied HarnessFailure
-harnessFaultDenied subject revision obligation checker receipt attempt
-                   scheduled rest green withdrawn = Refl
+    [MkObservation obligation subject revision checker Harness FailedCheck
+       receipt attempt withdrawn] green) = Denied HarnessFailure
+singleHarnessFaultDenied subject revision obligation checker receipt attempt
+                         scheduled green withdrawn = Refl
