@@ -169,3 +169,14 @@ path = "integrations/contract/**/*.json"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 SPDX-License-Identifier = "MPL-2.0"
+
+# --- Generated lockfile for the Rust downstream evidence contract ------------
+# The integration CI step runs cargo and may generate this lockfile in the
+# worktree. It is an owned, machine-generated dependency pin and cannot be
+# reliably annotated in-file: Cargo may rewrite it on regeneration. Precisely
+# scope the metadata to the one generated test consumer, not all lockfiles.
+[[annotations]]
+path = "integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.lock"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
