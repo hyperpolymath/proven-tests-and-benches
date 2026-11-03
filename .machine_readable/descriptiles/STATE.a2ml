@@ -15,7 +15,7 @@ readiness-grade-blocker = "benchmarks not baselined (DEBT.adoc I-1) — the last
 [build]
 toolchain = "idris2-0.7.0"   # corrected 2026-08-03; gated by scripts/check-toolchain-pins.sh
 gate = "scripts/ci-build.sh"
-library-modules = 32
+library-modules = 33
 framework-suite = "41/41 passing"
 type-safe-suite = "56/56 passing"
 # Gated for the FIRST time on 2026-08-07 (PR #27). Until then proven-spec-suite

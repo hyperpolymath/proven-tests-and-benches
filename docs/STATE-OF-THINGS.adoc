@@ -29,7 +29,7 @@ breadth and the FFI-parity runtime (blocked on proven's `libproven`).
 What changed in this pass (all verified against Idris2 0.7.0 locally):
 
 * The library *compiles end to end*: `idris2 --build proven-tests.ipkg` builds all
-  32 modules cleanly.
+  33 modules as a CI acceptance requirement (the previously verified baseline was 32).
 * *Provenance is now load-bearing* (see section 2): you cannot construct an
   Actually-/Provisionally-Proven classification without supplying the evidence.
 * The *benchmark harness is now honest* (see section 3): real monotonic-clock

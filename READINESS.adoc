@@ -7,7 +7,7 @@
 
 == Evidence
 
-The framework library (32 modules) builds and its current framework, type-safe,
+The framework library (33 modules) is subject to a mandatory build; its established framework, type-safe,
 and specification suites run as blocking checks. Coverage is derived from tests
 that ran and passed; it is not a hand-maintained claim.
 
