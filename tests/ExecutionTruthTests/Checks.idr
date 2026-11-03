@@ -43,8 +43,6 @@ makeTest defect =
       metaWithCoord = { category := Just ReflexiveTest, aspect := Just Dependability } meta
   in MkUnprovenTest metaWithCoord (testCase defect)
 
-public export
-allExecutionTruthTests : List UnprovenTest
 -- Each of these explicitly checks the silence/firing/void triad.
 expectVoid : ExecutionClaim -> IO TestResult
 expectVoid specimen =
