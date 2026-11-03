@@ -70,7 +70,7 @@ separate because the dependency direction matters:
 |`+proven-tests-suite.ipkg+` |`+proven-tests-suite+` (52 assertions)
 |the installed library
 
-|`+proven-spec-suite.ipkg+` |`+proven-spec-suite+` (92 tests, 29
+|`+proven-spec-suite.ipkg+` |`+proven-spec-suite+` (110 tests, 29
 Actually-Proven) |the installed library
 
 |`+benchmarks/benchmark.ipkg+` |`+proven-bench+` |the installed library

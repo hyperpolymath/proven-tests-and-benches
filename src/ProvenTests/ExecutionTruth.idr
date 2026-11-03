@@ -27,6 +27,7 @@ record Observation where
   outcome : Outcome
   receipt : String
   attempt : String
+  delivery : String
   retracted : Bool
 
 public export
@@ -48,6 +49,7 @@ data Denial
   = NotScheduled
   | ZeroJobs
   | SetupOnly
+  | SetupFailure
   | RequiredSkipped
   | StaleSubject
   | FailedValidatorWrappedGreen
@@ -65,6 +67,7 @@ Show Denial where
   show NotScheduled = "not-scheduled"
   show ZeroJobs = "zero-jobs"
   show SetupOnly = "setup-only"
+  show SetupFailure = "setup-failure"
   show RequiredSkipped = "required-skipped"
   show StaleSubject = "stale-subject"
   show FailedValidatorWrappedGreen = "failed-validator-wrapped-green"
@@ -98,7 +101,10 @@ isHarnessFailure o = case (o.stage, o.outcome) of
 isUnavailable : Observation -> Bool
 isUnavailable o = case o.outcome of
   WasUnavailable => True
-  _ => o.checker == ""
+  _ => False
+
+isUnknownChecker : Observation -> Bool
+isUnknownChecker o = o.checker == ""
 
 isSkipped : Observation -> Bool
 isSkipped o = case o.outcome of
@@ -108,6 +114,11 @@ isSkipped o = case o.outcome of
 isFailed : Observation -> Bool
 isFailed o = case (o.stage, o.outcome) of
   (Substantive, FailedCheck) => True
+  _ => False
+
+isSetupFailure : Observation -> Bool
+isSetupFailure o = case (o.stage, o.outcome) of
+  (Setup, FailedCheck) => True
   _ => False
 
 isSetup : Observation -> Bool
@@ -125,6 +136,7 @@ qualified c req o =
   && o.checker /= ""
   && o.receipt /= ""
   && o.attempt /= ""
+  && o.delivery /= ""
   && not o.retracted
   && (case (o.stage, o.outcome) of
         (Substantive, Succeeded) => True
@@ -134,21 +146,27 @@ checkRequired : ExecutionClaim -> String -> Decision
 checkRequired c req =
   if not (elem req c.scheduled) then Denied NotScheduled
   else case filter (\o => o.obligation == req) c.observations of
-    [] => if null c.observations then Void "no observation for required test"
-          else Denied WrongObligation
+    [] => if null c.observations
+             || any (\o => elem o.obligation c.required) c.observations
+             then Void "no observation for required test"
+             else Denied WrongObligation
     found =>
-      if any isUnavailable found then Denied UnknownChecker
+      if any isUnknownChecker found then Denied UnknownChecker
+      else if any isUnavailable found then Void "required checker unavailable"
       else if any (\o => o.retracted) found then Denied RetractedEvidence
       else if any (\o => o.subject /= c.subject || o.revision /= c.revision) found
         then Denied StaleSubject
       else if any isSkipped found then Denied RequiredSkipped
+      else if any isSetupFailure found then Denied SetupFailure
       else if any isFailed found then
         if c.summaryGreen then Denied FailedValidatorWrappedGreen
         else Denied ValidatorFailure
       else if all isSetup found then Denied SetupOnly
       else let good = filter (qualified c req) found in
         if null good then Void "no completed, attributable substantive receipt"
-        else if length (nub (map (\o => o.attempt) good)) < c.minIndependent
+        else if (length (nub (map (\o => o.attempt) good)) < c.minIndependent)
+             || (length (nub (map (\o => o.delivery) good)) < c.minIndependent)
+             || (length (nub (map (\o => o.receipt) good)) < c.minIndependent)
           then Denied DuplicateDelivery
           else Candidate
 
@@ -207,11 +225,11 @@ zeroJobDenied subject revision obligation scheduled confirmations observed green
 -- Composition with arbitrary other observations needs an additional lemma.
 public export
 singleHarnessFaultDenied :
-  (subject, revision, obligation, checker, receipt, attempt : String) ->
+  (subject, revision, obligation, checker, receipt, attempt, delivery : String) ->
   (scheduled : List String) ->
   (green, withdrawn : Bool) ->
   adjudicate (MkExecutionClaim subject revision [obligation] scheduled 1 1
     [MkObservation obligation subject revision checker Harness FailedCheck
-       receipt attempt withdrawn] green) = Denied HarnessFailure
-singleHarnessFaultDenied subject revision obligation checker receipt attempt
+       receipt attempt delivery withdrawn] green) = Denied HarnessFailure
+singleHarnessFaultDenied subject revision obligation checker receipt attempt delivery
                          scheduled green withdrawn = Refl

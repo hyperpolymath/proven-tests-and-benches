@@ -128,16 +128,23 @@ pub fn classify(c: &Envelope, verifier: &impl ReceiptVerifier) -> Decision {
         if seen.iter().all(|o| o.stage == Stage::Setup) {
             return Decision::Denied("setup_only");
         }
-        let attempts: BTreeSet<&str> = seen.iter()
+        let valid: Vec<&Observation> = seen.iter()
+            .copied()
             .filter(|o| o.stage == Stage::Substantive && o.outcome == Outcome::Passed
                 && !o.receipt_ref.is_empty()
                 && !o.attempt_id.is_empty()
+                && !o.delivery_id.is_empty()
                 && verifier.verifies(o, c))
-            .map(|o| o.attempt_id.as_str()).collect();
-        if attempts.is_empty() {
+            .collect();
+        if valid.is_empty() {
             return Decision::NotRun("no_verified_substantive_receipt");
         }
-        if attempts.len() < c.min_independent {
+        let attempts: BTreeSet<&str> = valid.iter().map(|o| o.attempt_id.as_str()).collect();
+        let deliveries: BTreeSet<&str> = valid.iter().map(|o| o.delivery_id.as_str()).collect();
+        let receipts: BTreeSet<&str> = valid.iter().map(|o| o.receipt_ref.as_str()).collect();
+        if attempts.len() < c.min_independent
+            || deliveries.len() < c.min_independent
+            || receipts.len() < c.min_independent {
             return Decision::Denied("duplicate_delivery_not_independent");
         }
     }

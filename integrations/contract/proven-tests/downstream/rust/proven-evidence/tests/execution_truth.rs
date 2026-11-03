@@ -45,3 +45,14 @@ fn json_proof_claim_cannot_mint_a_typed_certificate() {
     value["proof_tier"] = serde_json::json!("ActuallyProven");
     assert!(classify_json(&value.to_string(), &SyntheticOnly).is_err());
 }
+
+#[test]
+fn delivery_replay_cannot_be_relabelled_as_two_attempts() {
+    let mut doc: serde_json::Value = serde_json::from_str(CLEAN).unwrap();
+    doc["min_independent"] = serde_json::json!(2);
+    let mut second = doc["observations"][0].clone();
+    second["attempt_id"] = serde_json::json!("run-2");
+    doc["observations"].as_array_mut().unwrap().push(second);
+    assert_eq!(classify_json(&doc.to_string(), &SyntheticOnly).unwrap(),
+               Decision::Denied("duplicate_delivery_not_independent"));
+}

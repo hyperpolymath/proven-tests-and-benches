@@ -14,7 +14,7 @@ public export
 goodObservation : Observation
 goodObservation =
   MkObservation "required-validator" "subject-A" "revision-A"
-    "validator-v1" Substantive Succeeded "receipt-A" "attempt-A" False
+    "validator-v1" Substantive Succeeded "receipt-A" "attempt-A" "delivery-A" False
 
 public export
 silence : ExecutionClaim
@@ -33,6 +33,8 @@ plant NotScheduled = { scheduled := [] } silence
 plant ZeroJobs = { jobCount := 0 } silence
 plant SetupOnly =
   { observations := [{ stage := Setup } goodObservation] } silence
+plant SetupFailure =
+  { observations := [goodObservation, { stage := Setup, outcome := FailedCheck } goodObservation] } silence
 plant RequiredSkipped =
   { observations := [{ outcome := WasSkipped } goodObservation] } silence
 plant StaleSubject =
@@ -44,7 +46,9 @@ plant UnknownChecker =
 plant WrongObligation =
   { observations := [{ obligation := "unrelated-validator" } goodObservation] } silence
 plant DuplicateDelivery =
-  { minIndependent := 2, observations := [goodObservation, goodObservation] } silence
+  { minIndependent := 2
+  , observations := [goodObservation, { attempt := "attempt-B" } goodObservation]
+  } silence
 plant RetractedEvidence =
   { observations := [{ retracted := True } goodObservation] } silence
 plant EmptyRequiredSet = { required := [] } silence
@@ -57,4 +61,25 @@ plant ZeroConfirmationThreshold = { minIndependent := 0 } silence
 plant ValidatorFailure =
   { summaryGreen := False
   , observations := [{ outcome := FailedCheck } goodObservation]
+  } silence
+
+-- Extra committed adversarial cases for partial execution and unavailable
+-- checkers. Every one is exercised beside the clean/void controls.
+public export
+partialRequired : ExecutionClaim
+partialRequired =
+  { required := ["required-validator", "second-validator"]
+  , scheduled := ["required-validator", "second-validator"]
+  } silence
+
+public export
+knownUnavailable : ExecutionClaim
+knownUnavailable =
+  { observations := [{ outcome := WasUnavailable } goodObservation] } silence
+
+public export
+deliveryReplayedWithNewAttempt : ExecutionClaim
+deliveryReplayedWithNewAttempt =
+  { minIndependent := 2
+  , observations := [goodObservation, { attempt := "attempt-B" } goodObservation]
   } silence

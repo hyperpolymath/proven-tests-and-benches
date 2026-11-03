@@ -14,7 +14,7 @@ import ExecutionTruthTests.Fixtures
 -- examples is NOT a universal soundness theorem or an external CI receipt.
 cases : List Denial
 cases =
-  [ NotScheduled, ZeroJobs, SetupOnly, RequiredSkipped, StaleSubject
+  [ NotScheduled, ZeroJobs, SetupOnly, SetupFailure, RequiredSkipped, StaleSubject
   , FailedValidatorWrappedGreen, UnknownChecker, WrongObligation
   , DuplicateDelivery, RetractedEvidence, EmptyRequiredSet, HarnessFailure
   , ZeroConfirmationThreshold, ValidatorFailure
@@ -45,4 +45,40 @@ makeTest defect =
 
 public export
 allExecutionTruthTests : List UnprovenTest
-allExecutionTruthTests = map makeTest cases
+-- Each of these explicitly checks the silence/firing/void triad.
+expectVoid : ExecutionClaim -> IO TestResult
+expectVoid specimen =
+  case (adjudicate silence, adjudicate specimen, adjudicate voidControl) of
+    (Candidate, Void _, Void _) => pure Passed
+    (clean, firing, missing) =>
+      pure (Failed ("void-control violation: " ++ show clean ++ " / "
+                    ++ show firing ++ " / " ++ show missing))
+
+expectReplayDenied : IO TestResult
+expectReplayDenied =
+  case (adjudicate silence, adjudicate deliveryReplayedWithNewAttempt,
+        adjudicate voidControl) of
+    (Candidate, Denied DuplicateDelivery, Void _) => pure Passed
+    (clean, firing, missing) =>
+      pure (Failed ("replay-control violation: " ++ show clean ++ " / "
+                    ++ show firing ++ " / " ++ show missing))
+
+makeControl : String -> IO TestResult -> UnprovenTest
+makeControl name action =
+  let source = OnDisk "tests/ExecutionTruthTests/Fixtures.idr"
+      pair = MkFixturePair
+               (MkSilenceFixture source "clean candidate for the identical required obligation")
+               (MkFiringFixture source name)
+      meta = classifyUnproven (MkTestId "ExecutionTruthTests.Checks" name 0)
+               ("Execution truth additional control: " ++ name) (Fixtures pair)
+      located = { category := Just ReflexiveTest, aspect := Just Dependability } meta
+  in MkUnprovenTest located action
+
+public export
+allExecutionTruthTests : List UnprovenTest
+allExecutionTruthTests =
+  map makeTest cases ++
+    [ makeControl "partial-required-is-void" (expectVoid partialRequired)
+    , makeControl "unavailable-checker-is-void" (expectVoid knownUnavailable)
+    , makeControl "new-attempt-same-delivery-replay" expectReplayDenied
+    ]

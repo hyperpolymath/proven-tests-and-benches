@@ -47,10 +47,12 @@
       }
     },
     "jobs_started": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "min_independent": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "claimed_green": {
       "type": "boolean"
