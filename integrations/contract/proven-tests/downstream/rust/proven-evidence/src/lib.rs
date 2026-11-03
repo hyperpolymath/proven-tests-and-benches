@@ -24,6 +24,8 @@
 // contribute to the tier tally, because the report states what the test's
 // intended tier IS even while it is not counted as a test.
 
+pub mod execution_truth;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeSet;
