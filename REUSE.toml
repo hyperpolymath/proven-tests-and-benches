@@ -169,3 +169,11 @@ path = "integrations/contract/**/*.json"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 SPDX-License-Identifier = "MPL-2.0"
+
+# Generated lockfile for the Rust downstream evidence contract. This is an
+# exact-path annotation; it does not exempt other lockfiles from REUSE.
+[[annotations]]
+path = "integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.lock"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
