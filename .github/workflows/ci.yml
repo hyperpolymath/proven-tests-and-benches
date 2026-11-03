@@ -204,7 +204,27 @@ jobs:
         run: |
           echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
           "$HOME/.idris2/bin/idris2" --version
+
           bash scripts/check-toolchain-pins.sh
+
+      - name: Check Cabal fixtures against the pinned suite decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir=$(mktemp -d)
+          mkdir -p "$dir/Assurance"
+          curl -fsSL https://raw.githubusercontent.com/hyperpolymath/cicd-suite/de35c57b3f21659d7fc1d42757e20e9e7345d268/src/Assurance/Cabal.idr -o "$dir/Assurance/Cabal.idr"
+          { printf 'module Cases\nimport Assurance.Cabal\n%%default total\n'
+            jq -ers '
+              if (map(.index) | sort) != ["available","missing","unknown"] then error("invalid fixture coverage") else . end
+              | to_entries[] | .key as $i | .value
+              | ({"available":"Available","missing":"Missing","unknown":"Unknown"}[.index]) as $s
+              | ({"refresh_then_resolve":"RefreshThenResolve","resolve":"Resolve"}[.expected_plan] // error("unknown plan")) as $p
+              | "case\($i) : planOnlineBuild \($s) = \($p)\ncase\($i) = Refl"
+            ' fixtures/ci/cabal-index.jsonl
+          } > "$dir/Cases.idr"
+          cd "$dir"
+          "$HOME/.idris2/bin/idris2" --check Cases.idr
 
       # --- The actual gate ---
 
