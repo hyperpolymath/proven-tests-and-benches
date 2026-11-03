@@ -122,6 +122,9 @@ pub fn classify(c: &Envelope, verifier: &impl ReceiptVerifier) -> Decision {
         if seen.iter().any(|o| o.outcome == Outcome::Skipped) {
             return Decision::Denied("required_skipped");
         }
+        if seen.iter().any(|o| o.stage == Stage::Setup && o.outcome == Outcome::Failed) {
+            return Decision::Denied("setup_failure");
+        }
         if seen.iter().any(|o| o.outcome == Outcome::Failed && o.stage == Stage::Substantive) {
             return Decision::Denied("failed_substantive_validator");
         }
