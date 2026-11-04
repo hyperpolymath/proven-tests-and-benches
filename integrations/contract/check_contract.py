@@ -144,9 +144,13 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
             if not ladder:
                 v.append(f"{where} claims ActuallyProven with an empty proof ladder")
             for j, rung in enumerate(ladder):
-                if not isinstance(rung, dict) or not rung.get("theorem"):
+                if (not isinstance(rung, dict)
+                        or not isinstance(rung.get("theorem"), str)
+                        or not rung["theorem"].strip()):
                     v.append(f"{where}.proof_ladder[{j}] has no cited theorem")
-                if not isinstance(rung, dict) or not str(rung.get("statement", "")).strip():
+                if (not isinstance(rung, dict)
+                        or not isinstance(rung.get("statement"), str)
+                        or not rung["statement"].strip()):
                     v.append(f"{where}.proof_ladder[{j}] has no stated proposition")
         elif tier == "ProvisionallyProven":
             if not evidence.get("framework_safety"):
@@ -190,7 +194,7 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
         return v, len(passed_cells)
 
     for key in ("covered_cells", "passed", "failed", "errors", "skipped",
-                "total", "lattice_covered", *TIER_SUMMARY_KEY.values()):
+                "total", "lattice_covered", "cat_aspect_cells", *TIER_SUMMARY_KEY.values()):
         value = summary.get(key)
         # bool is an int subclass in Python; it is not a JSON integer count.
         if type(value) is not int or value < 0:

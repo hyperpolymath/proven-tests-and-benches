@@ -64,7 +64,11 @@ if [ ! -x "$HOME/.idris2/bin/idris2" ]; then
   # and the gate below use); nothing reads the scratch tree afterwards.
   SCRATCH="$(mktemp -d)"
   trap 'rm -rf "$SCRATCH"' EXIT
-  git clone --depth 1 --branch "$IDRIS2_TAG" https://github.com/idris-lang/Idris2 "$SCRATCH/Idris2"
+  git init --quiet "$SCRATCH/Idris2"
+  git -C "$SCRATCH/Idris2" remote add origin https://github.com/idris-lang/Idris2
+  # Fully qualify the tag: a same-named branch must not win resolution.
+  git -C "$SCRATCH/Idris2" fetch --depth 1 origin "refs/tags/$IDRIS2_TAG"
+  git -C "$SCRATCH/Idris2" checkout --detach FETCH_HEAD
   make -C "$SCRATCH/Idris2" bootstrap SCHEME=chezscheme
   make -C "$SCRATCH/Idris2" install
 fi

@@ -157,8 +157,8 @@ pub fn parse(doc: &Value) -> Result<Report, String> {
 /// Returns detected violations, including malformed entries and an absent
 /// summary. Like `validate_proven_report` in check_contract.py, coverage counts
 /// distinct cells from passed, non-debt entries. This checks `covered_cells`,
-/// outcome counts, `total` and tier tallies; it does not check `lattice_covered`
-/// or `cat_aspect_cells`.
+/// outcome counts, `total` and tier tallies. All summary counters must be
+/// non-negative integers; lattice totals are not independently recomputed.
 ///
 /// # Errors
 /// Returns Err if the report is not an object or has no `entries` array.
@@ -215,7 +215,7 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
                     v.push(format!("{where_} claims ActuallyProven with an empty proof ladder"));
                 }
                 for (j, rung) in entry.proof_ladder.iter().enumerate() {
-                    if !is_truthy(&e["proof_ladder"][j]["theorem"]) {
+                    if rung.theorem.as_deref().unwrap_or("").trim().is_empty() {
                         v.push(format!("{where_}.proof_ladder[{j}] has no cited theorem"));
                     }
                     if rung.statement.trim().is_empty() {
@@ -289,6 +289,14 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
         }
     };
     let get = |key: &str| summary.get(key).and_then(Value::as_i64);
+
+    for key in ["covered_cells", "passed", "failed", "errors", "skipped",
+                "total", "lattice_covered", "cat_aspect_cells", "actually_proven",
+                "provisionally_proven", "unproven"] {
+        if !get(key).is_some_and(|value| value >= 0) {
+            v.push(format!("summary.{key} must be a non-negative integer"));
+        }
+    }
 
     let derived = passed_cells.len() as i64;
     if get("covered_cells") != Some(derived) {
