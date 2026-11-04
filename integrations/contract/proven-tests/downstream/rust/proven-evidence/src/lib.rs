@@ -155,10 +155,12 @@ pub fn parse(doc: &Value) -> Result<Report, String> {
 /// Validate tier evidence, fixture obligations and derived summary counts.
 ///
 /// Returns detected violations, including malformed entries and an absent
-/// summary. Like `validate_proven_report` in check_contract.py, coverage counts
-/// distinct cells from passed, non-debt entries. This checks `covered_cells`,
-/// outcome counts, `total` and tier tallies; it does not check `lattice_covered`
-/// or `cat_aspect_cells`.
+/// summary. Coverage counts distinct cells from passed, non-debt entries,
+/// including cells with empty coordinates. This checks `covered_cells`, outcome
+/// counts, `total` and tier tallies. The eleven recognised summary counters
+/// must be non-negative integers representable as `i64`; `lattice_covered` and
+/// `cat_aspect_cells` are not independently recomputed. Passing these checks
+/// does not authenticate proof citations or execution.
 ///
 /// # Errors
 /// Returns Err if the report is not an object or has no `entries` array.
@@ -193,6 +195,13 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
             }
         };
 
+        // Evidence has the same object-or-null shape in every provenance tier.
+        // Do not let malformed evidence count towards a derived summary.
+        if !entry.evidence.is_null() && !entry.evidence.is_object() {
+            v.push(format!("{where_}.evidence must be an object or null"));
+            continue;
+        }
+
         let tier = entry.provenance.as_str();
         if let Some(pos) = TIERS.iter().position(|t| *t == tier) {
             tier_counts[pos] += 1;
@@ -215,7 +224,7 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
                     v.push(format!("{where_} claims ActuallyProven with an empty proof ladder"));
                 }
                 for (j, rung) in entry.proof_ladder.iter().enumerate() {
-                    if !is_truthy(&e["proof_ladder"][j]["theorem"]) {
+                    if rung.theorem.as_deref().unwrap_or("").trim().is_empty() {
                         v.push(format!("{where_}.proof_ladder[{j}] has no cited theorem"));
                     }
                     if rung.statement.trim().is_empty() {
@@ -289,6 +298,14 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
         }
     };
     let get = |key: &str| summary.get(key).and_then(Value::as_i64);
+
+    for key in ["covered_cells", "passed", "failed", "errors", "skipped",
+                "total", "lattice_covered", "cat_aspect_cells", "actually_proven",
+                "provisionally_proven", "unproven"] {
+        if !get(key).is_some_and(|value| value >= 0) {
+            v.push(format!("summary.{key} must be a non-negative integer"));
+        }
+    }
 
     let derived = passed_cells.len() as i64;
     if get("covered_cells") != Some(derived) {

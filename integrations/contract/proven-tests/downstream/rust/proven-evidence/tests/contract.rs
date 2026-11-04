@@ -105,6 +105,37 @@ fn actually_proven_without_a_ladder_is_refused() {
 }
 
 #[test]
+fn evidence_shape_is_checked_even_when_the_tier_does_not_use_it() {
+    for tier in ["Unproven", "ActuallyProven"] {
+        let mut e = entry(tier, "passed", "Contract", "Interoperability");
+        if tier == "ActuallyProven" {
+            e["proof_ladder"] = json!([{"statement": "law", "theorem": "proof"}]);
+        }
+        let baseline = conforming(vec![e]);
+        for evidence in [json!({}), json!({"extra": "metadata"}), Value::Null] {
+            let mut doc = baseline.clone();
+            doc["entries"][0]["evidence"] = evidence;
+            assert!(proven_evidence::validate(&doc).unwrap().is_empty());
+        }
+        let mut absent = baseline.clone();
+        absent["entries"][0].as_object_mut().unwrap().remove("evidence");
+        assert!(proven_evidence::validate(&absent).unwrap().is_empty());
+        for evidence in [
+            json!(true), json!(false), json!(0), json!(1.5),
+            json!("certificate"), json!([]), json!([{}]),
+        ] {
+            let mut doc = baseline.clone();
+            doc["entries"][0]["evidence"] = evidence.clone();
+            let violations = proven_evidence::validate(&doc).unwrap();
+            assert!(
+                violations.iter().any(|v| v.contains("evidence must be an object or null")),
+                "{tier} evidence={evidence:?}: {violations:?}"
+            );
+        }
+    }
+}
+
+#[test]
 fn rung_without_a_theorem_is_refused() {
     let mut e = entry("ActuallyProven", "passed", "wiring", "boundary");
     e["proof_ladder"] = json!([{"statement": "boom", "theorem": null}]);
@@ -279,13 +310,33 @@ fn theorem_and_debt_references_must_be_nonempty() {
                 "{field}={value:?}: {violations:?}"
             );
         }
-        // Whitespace is truthy in Python; do not trim evidence references.
+        // Theorem citations must name a term; debt truthiness is unchanged.
         let mut doc = baseline;
         if field == "theorem" {
             doc["entries"][0]["proof_ladder"][0][field] = json!(" ");
         } else {
             doc["entries"][0][field] = json!(" ");
         }
-        assert!(proven_evidence::validate(&doc).unwrap().is_empty());
+        let violations = proven_evidence::validate(&doc).unwrap();
+        if field == "theorem" {
+            assert!(violations.iter().any(|v| v.contains("no cited theorem")));
+        } else {
+            assert!(violations.is_empty());
+        }
+    }
+}
+
+#[test]
+fn every_summary_counter_rejects_boolean_negative_and_noninteger_values() {
+    let baseline = conforming(vec![entry("Unproven", "passed", "Unit", "Functionality")]);
+    assert!(proven_evidence::validate(&baseline).unwrap().is_empty());
+    for key in baseline["summary"].as_object().unwrap().keys() {
+        for value in [json!(true), json!(-1), json!(null), json!("1"), json!(1.5)] {
+            let mut mutant = baseline.clone();
+            mutant["summary"][key] = value;
+            let violations = proven_evidence::validate(&mutant).unwrap();
+            assert!(violations.iter().any(|v| v.contains(&format!("summary.{key} must"))),
+                    "{key}: {violations:?}");
+        }
     }
 }

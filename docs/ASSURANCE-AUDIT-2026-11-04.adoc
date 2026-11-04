@@ -1,0 +1,89 @@
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Assurance audit repair — 2026-11-04
+
+Main `9b00b3c` failed hosted run 41694405362 at REUSE because the JSONL
+fixture `fixtures/ci/cabal-index.jsonl` lacked metadata. An exact-path
+REUSE annotation repairs the metadata without editing the specimen or changing
+licences elsewhere. A fresh local REUSE scan reports no non-compliance.
+
+The installer now normalises numeric release versions to upstream's `v` tag,
+rejects non-release refs before installation, and exposes read-only
+`--source-ref` diagnostics. Seven controls cover accepted numeric/prefixed
+forms, invalid references and unknown options. The estate caller in panic-attack
+uses an older pinned installer and receives a separate caller correction.
+
+Adversarial contract checks reproduced boolean-as-integer acceptance, malformed
+nested evidence crashes, invalid context values and unknown-surface dispatch.
+These now fail visibly, while the 20 existing fixtures and downstream emitter
+still pass. Seven Python unittest methods cover CLI and malformed-evidence
+behaviour. JSON conformance still does not authenticate proof terms or runtime
+execution; callers must not promote it to a theorem certificate.
+
+The existing 18 benchmark-regression controls pass. Source-derived documentation
+and toolchain declaration checks pass, but those are distinct from compiling
+Idris or executing all benchmarks. See the cross-repository checkpoint in
+cicd-suite `docs/assurance/AUDIT-2026-11-04.adoc` for remaining work. No perfect
+coverage, clean security-dashboard or complete proof claim is made here.
+
+== Live Idris follow-up
+
+Idris2 0.7.0 compiled the framework and both dependent suites. Runtime results:
+41/41 framework checks, 56/56 type-safe checks, 110/110 specification checks.
+Eight SafeOrdering law checks compiled and ran against proven at
+`53600326ca31f6f99767c5371cc77af2dade996c`. This establishes the declared laws
+at that pin, not all of proven or its foreign-language implementations.
+
+All four benchmark workloads passed their checksums and the existing regression
+gate. Local provisioning required regenerating one missing upstream `.ttm`
+file and restoring execute permission on three generated Chez programs. The
+untouched local ci-build command therefore stopped with exit 126; its remaining
+components were run explicitly. Hosted CI run 41815922308 passed at earlier
+repair revision `cfafb89e67534d34110fbb46976d1397bb4c8043` without that local
+repair. Run 41817624616 passed at reviewed repair revision
+`cc291e5e05d1648830cbaa1b57e6dcd644586b55`. These receipts do not establish
+execution at later commits. The 40/238 category/aspect cells are a taxonomy
+measure, not a source-line or branch-coverage percentage.
+
+The initial local REUSE run omitted this then-untracked audit document. Hosted
+CI correctly caught its missing copyright metadata; the corrected file was
+added to the local index before repeating REUSE, which passed.
+
+A coordinated migration is still required. Experiment commit `6c1c567` changed
+three callers to the transferred Standards owner and deonboarded their lock
+entries. Hosted runs 41816608637, 41816607227 and 41816605793 still reported
+startup_failure, while 41816604331 failed the consumer's mandatory full-lock
+check. The experiment was reverted rather than weakening that check. The
+caller namespace, callee lock policy and actual repository Actions allowlist
+need an integrated migration; administration access is unavailable here.
+
+Review follow-up tightened theorem/proposition strings and the cat_aspect_cells
+counter, with matching Rust-validator changes. The expanded Python controls
+first reproduced 11 failures, then passed after repair. Nine unittest methods
+now include 2,000 seed-1371 JSON-shape mutations: the standalone experiment
+returned 795 violation outcomes, 195 explicit malformed outcomes and 1,010
+accepted mutations, with no unexpected exceptions. Accepted mutations can
+affect optional metadata; this is a robustness experiment, not a claim of
+complete schema rejection or precision. The release installer now fetches
+`refs/tags/v<version>` explicitly to avoid same-named branch ambiguity.
+
+Community documentation: SECURITY.md now delegates to SECURITY.adoc instead
+of maintaining a conflicting remediation timeline; the GitHub Code of Conduct
+entry point links the existing canonical policy. Hosted community-profile and
+private-reporting settings were not accessible for verification.
+
+Rust evidence-shape follow-up at base
+`a9afa1e19beff8110bfd709021ae8f9c28384dbb`: the typed Entry stores evidence
+as an unrestricted JSON Value. The validator now rejects non-null, non-object
+values before they can contribute to coverage or summary counts, regardless
+of provenance tier. Added controls cover seven malformed values and four
+accepted shapes for both Unproven and ActuallyProven entries. This validates
+the report structure; a syntactically valid theorem citation remains
+unauthenticated. Python returns ContractError for this structural problem;
+Rust returns a nonempty violation list, preserving its existing validator API.
+Both must refuse a green verdict, but their error classifications differ.
+
+Local follow-up checks: nine Python unittest methods and all 20 normative
+contract cases pass, as does downstream Python emit/validate. Rust compilation
+and execution await hosted CI because this runtime has no Rust compiler.
+No Rust test pass is claimed from the Python results.

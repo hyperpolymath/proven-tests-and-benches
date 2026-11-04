@@ -218,7 +218,8 @@ shape — a superset that carries the evidence a validator can check.
 
 | `entries[].provenance`
 | One of the three tiers. `ActuallyProven` requires a non-empty
-  `proof_ladder` whose rungs each name a `theorem` and a `statement`;
+  `proof_ladder` whose rungs each name a `theorem` and a `statement`
+  as non-empty, non-whitespace strings (booleans and null are not citations);
   `ProvisionallyProven` requires `evidence.framework_safety` and
   `evidence.test_safety`; `Unproven` must carry no ladder.
 

@@ -195,6 +195,12 @@ jobs:
           path: ~/.idris2
           key: idris2-v${{ env.IDRIS2_VERSION }}-${{ runner.os }}-chez${{ steps.chez.outputs.version }}
 
+      - name: Adversarial evidence contract controls
+        run: python3 -m unittest discover -s integrations/contract -p "test*.py"
+
+      - name: Check installer release references
+        run: bash scripts/test/install-idris2.test.sh
+
       - name: Install Idris2
         run: bash scripts/install-idris2.sh
         env:
