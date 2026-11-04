@@ -92,8 +92,8 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
     tier totals, but not outcome totals or coverage.
 
     Raise ContractError if doc is not an object or has no entries array.
-    Other detected violations are returned; malformed nested evidence or
-    coordinates may instead propagate AttributeError or TypeError.
+    Other detected violations are returned. Malformed nested evidence or
+    coordinates raise ContractError before they can affect coverage.
     """
     v: list[str] = []
     if not isinstance(doc, dict):
@@ -114,6 +114,12 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
         if not isinstance(e, dict):
             v.append(f"{where} is not an object")
             continue
+
+        for field, expected in (("evidence", dict), ("proof_ladder", list),
+                                ("category", str), ("aspect", str)):
+            value = e.get(field)
+            if value is not None and not isinstance(value, expected):
+                raise ContractError(f"{where}.{field} must be {expected.__name__} or null")
 
         tid = e.get("test_id")
         if not isinstance(tid, dict) or not tid.get("module_path") or not tid.get("test_name"):
@@ -182,6 +188,13 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
     if not isinstance(summary, dict):
         v.append("report has no summary object")
         return v, len(passed_cells)
+
+    for key in ("covered_cells", "passed", "failed", "errors", "skipped",
+                "total", "lattice_covered", *TIER_SUMMARY_KEY.values()):
+        value = summary.get(key)
+        # bool is an int subclass in Python; it is not a JSON integer count.
+        if type(value) is not int or value < 0:
+            v.append(f"summary.{key} must be a non-negative integer")
 
     derived = len(passed_cells)
     if summary.get("covered_cells") != derived:
@@ -288,8 +301,7 @@ def validate_squabbler_gate(doc: Any) -> tuple[str, bool, int]:
     """Return (gate_state, is_legitimate_green, evidence_free_count).
 
     Raise ContractError for a non-object, missing context/check arrays,
-    a check without a context or an unrecognised run. Unhashable contexts
-    propagate TypeError. A structurally valid Red or
+    a check without a non-empty string context or an unrecognised run. A structurally valid Red or
     Blocked gate is returned normally; skipped and neutral runs count as
     evidence-free.
     """
@@ -301,8 +313,12 @@ def validate_squabbler_gate(doc: Any) -> tuple[str, bool, int]:
         raise ContractError("gate has no 'required_contexts' array")
     if not isinstance(checks, list):
         raise ContractError("gate has no 'checks' array")
+    if any(not isinstance(context, str) or not context.strip() for context in required):
+        raise ContractError("required contexts must be non-empty strings")
     for c in checks:
-        if not isinstance(c, dict) or not c.get("required_context"):
+        if (not isinstance(c, dict) or
+                not isinstance(c.get("required_context"), str) or
+                not c["required_context"].strip()):
             raise ContractError("a check is missing required_context")
         _kind(c.get("run"))  # structural check; raises ContractError
     return evaluate_gate(checks), legitimate_green(required, checks), evidence_free(checks)
@@ -416,18 +432,18 @@ def main(argv: list[str]) -> int:
     """Dispatch CLI arguments, including the program name, and return a status.
 
     Surface commands run cases; validate-file checks one file. ContractError
-    becomes status 2; other errors propagate. Unsupported arguments raise
-    AttributeError.
+    becomes status 2; other errors propagate. Unsupported arguments return 2.
     """
     try:
-        if len(argv) >= 2 and argv[1] in ("proven-tests", "cicd-squabbler"):
+        if len(argv) == 2 and argv[1] in ("proven-tests", "cicd-squabbler"):
             return run_surface(argv[1])
-        if len(argv) == 4 and argv[1] == "validate-file":
+        if (len(argv) == 4 and argv[1] == "validate-file"
+                and argv[3] in ("proven-tests", "cicd-squabbler")):
             return validate_file(argv[2], argv[3])
     except ContractError as exc:
         print(f"NO CHECK PERFORMED: {exc}")
         return 2
-    print(__doc__.strip())
+    print("Downstream evidence contract checker")
     print("\nusage: check_contract.py <proven-tests|cicd-squabbler>")
     print("       check_contract.py validate-file <path> <proven-tests|cicd-squabbler>")
     return 2
