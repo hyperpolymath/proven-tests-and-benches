@@ -85,15 +85,16 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
     """Validate a schema_version-2 run report.
 
     Returns (violations, derived_covered_cells). An empty violations list means
-    the report is contract-conformant. derived_covered_cells is computed from
+    the report passed these checks; it does not authenticate proof citations
+    or execution. derived_covered_cells is computed from
     the entries alone, so a caller can compare it against the report's own
     summary. Only distinct cells with truthy category and aspect values on
     passed, non-debt entries count. FixtureDebt entries still count towards
     tier totals, but not outcome totals or coverage.
 
-    Raise ContractError if doc is not an object or has no entries array.
-    Other detected violations are returned. Malformed nested evidence or
-    coordinates raise ContractError before they can affect coverage.
+    Raise ContractError if doc is not an object, has no entries array, or an
+    entry's evidence, proof_ladder, category or aspect has the wrong non-null
+    type. Other detected violations are returned.
     """
     v: list[str] = []
     if not isinstance(doc, dict):
@@ -305,9 +306,9 @@ def validate_squabbler_gate(doc: Any) -> tuple[str, bool, int]:
     """Return (gate_state, is_legitimate_green, evidence_free_count).
 
     Raise ContractError for a non-object, missing context/check arrays,
-    a check without a non-empty string context or an unrecognised run. A structurally valid Red or
-    Blocked gate is returned normally; skipped and neutral runs count as
-    evidence-free.
+    a required or check context that is not a non-blank string, or an
+    unrecognised run. A structurally valid Red or Blocked gate is returned
+    normally; skipped and neutral runs count as evidence-free.
     """
     if not isinstance(doc, dict):
         raise ContractError("gate is not a JSON object")

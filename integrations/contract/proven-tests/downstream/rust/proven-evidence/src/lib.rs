@@ -155,10 +155,12 @@ pub fn parse(doc: &Value) -> Result<Report, String> {
 /// Validate tier evidence, fixture obligations and derived summary counts.
 ///
 /// Returns detected violations, including malformed entries and an absent
-/// summary. Like `validate_proven_report` in check_contract.py, coverage counts
-/// distinct cells from passed, non-debt entries. This checks `covered_cells`,
-/// outcome counts, `total` and tier tallies. All summary counters must be
-/// non-negative integers; lattice totals are not independently recomputed.
+/// summary. Coverage counts distinct cells from passed, non-debt entries,
+/// including cells with empty coordinates. This checks `covered_cells`, outcome
+/// counts, `total` and tier tallies. The eleven recognised summary counters
+/// must be non-negative integers representable as `i64`; `lattice_covered` and
+/// `cat_aspect_cells` are not independently recomputed. Passing these checks
+/// does not authenticate proof citations or execution.
 ///
 /// # Errors
 /// Returns Err if the report is not an object or has no `entries` array.
