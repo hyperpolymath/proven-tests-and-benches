@@ -105,6 +105,37 @@ fn actually_proven_without_a_ladder_is_refused() {
 }
 
 #[test]
+fn evidence_shape_is_checked_even_when_the_tier_does_not_use_it() {
+    for tier in ["Unproven", "ActuallyProven"] {
+        let mut e = entry(tier, "passed", "Contract", "Interoperability");
+        if tier == "ActuallyProven" {
+            e["proof_ladder"] = json!([{"statement": "law", "theorem": "proof"}]);
+        }
+        let baseline = conforming(vec![e]);
+        for evidence in [json!({}), json!({"extra": "metadata"}), Value::Null] {
+            let mut doc = baseline.clone();
+            doc["entries"][0]["evidence"] = evidence;
+            assert!(proven_evidence::validate(&doc).unwrap().is_empty());
+        }
+        let mut absent = baseline.clone();
+        absent["entries"][0].as_object_mut().unwrap().remove("evidence");
+        assert!(proven_evidence::validate(&absent).unwrap().is_empty());
+        for evidence in [
+            json!(true), json!(false), json!(0), json!(1.5),
+            json!("certificate"), json!([]), json!([{}]),
+        ] {
+            let mut doc = baseline.clone();
+            doc["entries"][0]["evidence"] = evidence.clone();
+            let violations = proven_evidence::validate(&doc).unwrap();
+            assert!(
+                violations.iter().any(|v| v.contains("evidence must be an object or null")),
+                "{tier} evidence={evidence:?}: {violations:?}"
+            );
+        }
+    }
+}
+
+#[test]
 fn rung_without_a_theorem_is_refused() {
     let mut e = entry("ActuallyProven", "passed", "wiring", "boundary");
     e["proof_ladder"] = json!([{"statement": "boom", "theorem": null}]);

@@ -195,6 +195,13 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
             }
         };
 
+        // Evidence has the same object-or-null shape in every provenance tier.
+        // Do not let malformed evidence count towards a derived summary.
+        if !entry.evidence.is_null() && !entry.evidence.is_object() {
+            v.push(format!("{where_}.evidence must be an object or null"));
+            continue;
+        }
+
         let tier = entry.provenance.as_str();
         if let Some(pos) = TIERS.iter().position(|t| *t == tier) {
             tier_counts[pos] += 1;

@@ -38,8 +38,11 @@ All four benchmark workloads passed their checksums and the existing regression
 gate. Local provisioning required regenerating one missing upstream `.ttm`
 file and restoring execute permission on three generated Chez programs. The
 untouched local ci-build command therefore stopped with exit 126; its remaining
-components were run explicitly. Hosted CI run 41815922308 subsequently passed
-without that local repair. The 40/238 category/aspect cells are a taxonomy
+components were run explicitly. Hosted CI run 41815922308 passed at earlier
+repair revision `cfafb89e67534d34110fbb46976d1397bb4c8043` without that local
+repair. Run 41817624616 passed at reviewed repair revision
+`cc291e5e05d1648830cbaa1b57e6dcd644586b55`. These receipts do not establish
+execution at later commits. The 40/238 category/aspect cells are a taxonomy
 measure, not a source-line or branch-coverage percentage.
 
 The initial local REUSE run omitted this then-untracked audit document. Hosted
@@ -68,3 +71,19 @@ Community documentation: SECURITY.md now delegates to SECURITY.adoc instead
 of maintaining a conflicting remediation timeline; the GitHub Code of Conduct
 entry point links the existing canonical policy. Hosted community-profile and
 private-reporting settings were not accessible for verification.
+
+Rust evidence-shape follow-up at base
+`a9afa1e19beff8110bfd709021ae8f9c28384dbb`: the typed Entry stores evidence
+as an unrestricted JSON Value. The validator now rejects non-null, non-object
+values before they can contribute to coverage or summary counts, regardless
+of provenance tier. Added controls cover seven malformed values and four
+accepted shapes for both Unproven and ActuallyProven entries. This validates
+the report structure; a syntactically valid theorem citation remains
+unauthenticated. Python returns ContractError for this structural problem;
+Rust returns a nonempty violation list, preserving its existing validator API.
+Both must refuse a green verdict, but their error classifications differ.
+
+Local follow-up checks: nine Python unittest methods and all 20 normative
+contract cases pass, as does downstream Python emit/validate. Rust compilation
+and execution await hosted CI because this runtime has no Rust compiler.
+No Rust test pass is claimed from the Python results.
