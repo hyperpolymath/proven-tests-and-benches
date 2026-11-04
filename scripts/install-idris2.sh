@@ -11,6 +11,23 @@
 set -euxo pipefail
 
 IDRIS2_VERSION="${IDRIS2_VERSION:-v0.7.0}"
+# Callers use the numeric version; upstream release tags have a v prefix.
+# Reject arbitrary refs rather than silently building an unreviewed branch.
+if [[ ! "$IDRIS2_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "install-idris2: expected a release version such as 0.7.0 or v0.7.0" >&2
+  exit 2
+fi
+IDRIS2_TAG="v${IDRIS2_VERSION#v}"
+# Read-only diagnostic used by callers and regression controls before bootstrap.
+if [ "${1:-}" = "--source-ref" ] && [ "$#" -eq 1 ]; then
+  printf '%s\n' "$IDRIS2_TAG"
+  exit 0
+fi
+if [ "$#" -ne 0 ]; then
+  echo "install-idris2: usage: install-idris2.sh [--source-ref]" >&2
+  exit 2
+fi
+
 
 SUDO=""
 if [ "$(id -u)" -ne 0 ]; then SUDO="sudo"; fi
@@ -47,7 +64,7 @@ if [ ! -x "$HOME/.idris2/bin/idris2" ]; then
   # and the gate below use); nothing reads the scratch tree afterwards.
   SCRATCH="$(mktemp -d)"
   trap 'rm -rf "$SCRATCH"' EXIT
-  git clone --depth 1 --branch "$IDRIS2_VERSION" https://github.com/idris-lang/Idris2 "$SCRATCH/Idris2"
+  git clone --depth 1 --branch "$IDRIS2_TAG" https://github.com/idris-lang/Idris2 "$SCRATCH/Idris2"
   make -C "$SCRATCH/Idris2" bootstrap SCHEME=chezscheme
   make -C "$SCRATCH/Idris2" install
 fi
