@@ -180,3 +180,10 @@ path = "integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 SPDX-License-Identifier = "MPL-2.0"
+
+# JSONL fixture data cannot contain SPDX comments without changing the specimen.
+[[annotations]]
+path = "fixtures/ci/cabal-index.jsonl"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"
