@@ -25,3 +25,30 @@ and toolchain declaration checks pass, but those are distinct from compiling
 Idris or executing all benchmarks. See the cross-repository checkpoint in
 cicd-suite `docs/assurance/AUDIT-2026-11-04.adoc` for remaining work. No perfect
 coverage, clean security-dashboard or complete proof claim is made here.
+
+== Live Idris follow-up
+
+Idris2 0.7.0 compiled the framework and both dependent suites. Runtime results:
+41/41 framework checks, 56/56 type-safe checks, 110/110 specification checks.
+Eight SafeOrdering law checks compiled and ran against proven at
+`53600326ca31f6f99767c5371cc77af2dade996c`. This establishes the declared laws
+at that pin, not all of proven or its foreign-language implementations.
+
+All four benchmark workloads passed their checksums and the existing regression
+gate. Local provisioning required regenerating one missing upstream `.ttm`
+file and restoring execute permission on three generated Chez programs. The
+untouched local ci-build command therefore stopped with exit 126; its remaining
+components were run explicitly. Hosted CI run 41815922308 subsequently passed
+without that local repair. The 40/238 category/aspect cells are a taxonomy
+measure, not a source-line or branch-coverage percentage.
+
+The initial local REUSE run omitted this then-untracked audit document. Hosted
+CI correctly caught its missing copyright metadata; the corrected file was
+added to the local index before repeating REUSE, which passed.
+
+Three zero-job wrappers still used the transferred Standards repository's old
+owner. Their `uses:` paths now name `metadatastician/standards` at exactly the
+same verified commits. Job identifiers, permissions and secrets are unchanged.
+The suite's tested deonboarding script removes their caller lock registrations;
+it does not remove any checks. Hosted startup and callee policy remain separate
+acceptance obligations.

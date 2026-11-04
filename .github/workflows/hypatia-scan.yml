@@ -1,3 +1,4 @@
+# Reusable owner migrated; full commit and required job identifiers retained.
 # This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
@@ -33,7 +34,7 @@ permissions:
 
 jobs:
   hypatia:
-    uses: hyperpolymath/standards/.github/workflows/hypatia-scan-reusable.yml@75bd5994470661a099df562d6d5ad2fe744dbd66
+    uses: metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@75bd5994470661a099df562d6d5ad2fe744dbd66
     # Only the one secret the callee declares (standards#1108 §6b); WH008
     # flags `secrets: inherit`.
     secrets:
