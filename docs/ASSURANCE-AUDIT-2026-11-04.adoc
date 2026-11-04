@@ -63,3 +63,8 @@ accepted mutations, with no unexpected exceptions. Accepted mutations can
 affect optional metadata; this is a robustness experiment, not a claim of
 complete schema rejection or precision. The release installer now fetches
 `refs/tags/v<version>` explicitly to avoid same-named branch ambiguity.
+
+Community documentation: SECURITY.md now delegates to SECURITY.adoc instead
+of maintaining a conflicting remediation timeline; the GitHub Code of Conduct
+entry point links the existing canonical policy. Hosted community-profile and
+private-reporting settings were not accessible for verification.
