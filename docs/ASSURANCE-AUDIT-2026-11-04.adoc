@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Assurance audit repair — 2026-11-04
+
+Main `9b00b3c` failed hosted run 41694405362 at REUSE because the JSONL
+fixture `fixtures/ci/cabal-index.jsonl` lacked metadata. An exact-path
+REUSE annotation repairs the metadata without editing the specimen or changing
+licences elsewhere. A fresh local REUSE scan reports no non-compliance.
+
+The installer now normalises numeric release versions to upstream's `v` tag,
+rejects non-release refs before installation, and exposes read-only
+`--source-ref` diagnostics. Seven controls cover accepted numeric/prefixed
+forms, invalid references and unknown options. The estate caller in panic-attack
+uses an older pinned installer and receives a separate caller correction.
+
+Adversarial contract checks reproduced boolean-as-integer acceptance, malformed
+nested evidence crashes, invalid context values and unknown-surface dispatch.
+These now fail visibly, while the 20 existing fixtures and downstream emitter
+still pass. Seven Python unittest methods cover CLI and malformed-evidence
+behaviour. JSON conformance still does not authenticate proof terms or runtime
+execution; callers must not promote it to a theorem certificate.
+
+The existing 18 benchmark-regression controls pass. Source-derived documentation
+and toolchain declaration checks pass, but those are distinct from compiling
+Idris or executing all benchmarks. See the cross-repository checkpoint in
+cicd-suite `docs/assurance/AUDIT-2026-11-04.adoc` for remaining work. No perfect
+coverage, clean security-dashboard or complete proof claim is made here.
