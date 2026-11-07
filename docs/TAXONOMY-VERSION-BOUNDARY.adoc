@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Test taxonomy version boundary
+
+The current standards source is
+https://github.com/metadatastician/standards/blob/b8f60511e76c9015d86990317162dce653c92fe1/3-practice/testing-and-benchmarking/TESTING-TAXONOMY.adoc[TESTING-TAXONOMY].
+It has 18 categories and 14 aspects. Type-Safe Tests and Coupling /
+Drift-freedom were ratified at positions 17 and 18 without renumbering older
+categories. The old README statement that category 17 was unratified is obsolete.
+
+The existing schema-v2 evidence contract remains 17 x 14 = 238 cells.
+Do not reinterpret a v2 receipt as 18 x 14 = 252 cells, or silently change the
+coverage denominator. A versioned successor must update the Idris category
+enumeration, Rust twin, schemas, corpus, renderers, completeness checks and
+consumer adapters together. Its migration controls must reject a v2 receipt
+masquerading as v3 and reject missing category-18 cells.
+
+Until that migration is executed and checked, downstream TEST-NEEDS records
+must account for all 18 categories separately and record coupling evidence
+outside the v2 denominator. Ordinary Rust test results and the parser-contract
+helper remain Unproven evidence in this framework; using the helper does not
+supply a proof ladder or certify full taxonomy coverage.
