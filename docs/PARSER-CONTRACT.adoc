@@ -1,0 +1,30 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Reusable parser conformance and benchmark contract
+
+The Rust downstream library exposes `parser_contract`. Consumers supply a
+parser adapter returning canonical bytes or a diagnostic and an independent
+fixture corpus. A qualifying corpus has unique nonempty identifiers, positive
+canonical-byte fixtures, and negative fixtures. All cases execute even after a
+mismatch; missing execution cannot pass. Reflexive controls reject always-accept,
+always-reject and identity implementations.
+
+This is *Unproven* executable evidence in the framework's terminology. It does
+not establish a theorem, supply a proof ladder, validate every grammar production,
+or discharge the estate's entire testing taxonomy.
+
+The benchmark helper black-boxes both input and output, records iterations and
+input bytes, and refuses zero iterations and parser errors. Consumers must record
+host, compiler, source revision and build profile alongside samples. Measurements
+from a debug build or different hosts are not interchangeable performance gates.
+
+Run the harness controls:
+
+[source,sh]
+----
+cargo test --locked --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml parser_contract
+----
+
+Initial consumer: the Rust migration of `metadatastician/kyq`, including
+I-JSON/JCS and Dhall conversion. The existing Idris2 taxonomy and evidence
+contract remain authoritative; this addition supplies a reusable execution
+mechanism for native Rust subjects.
