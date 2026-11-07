@@ -106,7 +106,7 @@ fn lattice_cells(doc: &Value) -> i64 {
 ///
 /// Overwrite `output` with pretty JSON using the lattice size from `doc`.
 /// Exit 0 on success or 1 on serialisation or write failure.
-fn emit_summary(input: &str, output: &str, doc: &Value, report: &proven_evidence::Report) -> ! {
+fn emit_summary(_input: &str, output: &str, doc: &Value, report: &proven_evidence::Report) -> ! {
     let summary = proven_evidence::summarise(&report.entries, lattice_cells(doc));
     let text = match serde_json::to_string_pretty(&summary) {
         Ok(text) => text,

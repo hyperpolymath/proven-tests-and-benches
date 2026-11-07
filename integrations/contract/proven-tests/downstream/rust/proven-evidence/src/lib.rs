@@ -25,6 +25,7 @@
 // intended tier IS even while it is not counted as a test.
 
 pub mod execution_truth;
+pub mod parser_contract;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -246,13 +247,12 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
                     ));
                 }
             }
-            "Unproven" => {
-                if !entry.proof_ladder.is_empty() {
+            "Unproven"
+                if !entry.proof_ladder.is_empty() => {
                     v.push(format!(
                         "{where_} is Unproven but carries a non-empty proof ladder"
                     ));
                 }
-            }
             _ => {}
         }
 
