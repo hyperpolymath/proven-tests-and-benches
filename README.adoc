@@ -32,10 +32,12 @@ so a claimed-covered cell cannot be faked.
   (see `docs/CHARACTERISTICS.adoc` for the evidence-spectrum philosophy:
   example → property → proof)
 * A 17-category × 14-aspect test taxonomy, traversed as a co-creation lattice
-  (`docs/ZIGZAG-REGIMEN.adoc`). NOTE: the estate standard defines *16*
-  categories; the 17th, `TypeSafeTest`, is a *local extension* to this
-  repository and exists in no standard. The drift is intentional but unratified
-  — see `DEBT.md` S-4.
+  (`docs/ZIGZAG-REGIMEN.adoc`). This is the existing schema-v2 boundary.
+  The estate standard at revision `b8f60511e76c9015d86990317162dce653c92fe1`
+  ratifies Type-Safe Tests as category 17 and Coupling / Drift-freedom as 18.
+  Schema v2 does not represent category 18: its 238 cells must not be described
+  as complete coverage of the current 252-cell taxonomy. See
+  `docs/TAXONOMY-VERSION-BOUNDARY.adoc` for the required migration.
 * A machine-checked tropical (min-plus) semiring for cost-aware test routing —
   every commutative-semiring axiom, including distributivity and `PosInf`
   annihilation — plus a max-plus structure for worst-case bench bounds
