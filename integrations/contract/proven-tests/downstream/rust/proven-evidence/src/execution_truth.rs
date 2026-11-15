@@ -114,10 +114,51 @@ fn independent_subset(candidates: &[&Observation], need: usize) -> Option<bool> 
         else if include.is_none() || exclude.is_none() { None }
         else { Some(false) }
     }
+    if need == 0 { return Some(true); }
     if candidates.len() < need { return Some(false); }
-    if candidates.len() > MAX_RECURSION_DEPTH { return None; }
+
+    // Canonicalize by the three identity dimensions. Duplicate triples
+    // cannot contribute additional independent confirmations.
+    let mut ordered: Vec<&Observation> = candidates.to_vec();
+    ordered.sort_unstable_by(|a, b| {
+        (a.attempt_id.as_str(), a.delivery_id.as_str(), a.receipt_ref.as_str())
+            .cmp(&(b.attempt_id.as_str(), b.delivery_id.as_str(), b.receipt_ref.as_str()))
+    });
+    ordered.dedup_by(|a, b| {
+        a.attempt_id == b.attempt_id
+            && a.delivery_id == b.delivery_id
+            && a.receipt_ref == b.receipt_ref
+    });
+    if ordered.len() < need { return Some(false); }
+
+    // Marginal distinct-ID counts are necessary, not sufficient. It is
+    // sound to reject when any one dimension has too few distinct IDs.
+    let attempts: BTreeSet<&str> = ordered.iter().map(|o| o.attempt_id.as_str()).collect();
+    let deliveries: BTreeSet<&str> = ordered.iter().map(|o| o.delivery_id.as_str()).collect();
+    let receipts: BTreeSet<&str> = ordered.iter().map(|o| o.receipt_ref.as_str()).collect();
+    if attempts.len() < need || deliveries.len() < need || receipts.len() < need {
+        return Some(false);
+    }
+
+    // A greedy *success* is a constructive witness. Its failure does not
+    // imply nonexistence, and therefore is never a Denied result.
+    let mut chosen: Vec<&Observation> = Vec::new();
+    for candidate in &ordered {
+        if chosen.iter().all(|previous| {
+            candidate.attempt_id != previous.attempt_id
+                && candidate.delivery_id != previous.delivery_id
+                && candidate.receipt_ref != previous.receipt_ref
+        }) {
+            chosen.push(*candidate);
+            if chosen.len() >= need { return Some(true); }
+        }
+    }
+
+    // Only unresolved inputs need exact search. Fixed sorting ensures
+    // equivalent input permutations consume the same search budget.
+    if ordered.len() > MAX_RECURSION_DEPTH { return None; }
     let mut budget = SEARCH_BUDGET;
-    search(candidates, need, &mut Vec::new(), &mut budget)
+    search(&ordered, need, &mut Vec::new(), &mut budget)
 }
 
 /// Classify an execution claim using verified substantive receipts.
