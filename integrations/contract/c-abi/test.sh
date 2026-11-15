@@ -69,6 +69,44 @@ sed -i 's/CONTRACT_MAGIC 7/CONTRACT_MAGIC 8/' "$temp/public/fixture.h"
 expect 1 'firing: supplied header beats stale adjacent header' \
   bash "$runner" "$temp/public/fixture.h" "$temp/adjacent/consumer.c" "$temp/fixture.a"
 
+# A source-local macro can configure the public header before inclusion.
+# Forced -include broke valid clients, but dependency tracking preserves order.
+cat > "$temp/configurable.h" <<'EOF'
+#ifndef CONFIGURABLE_H
+#define CONFIGURABLE_H
+#ifdef WIDE_API
+typedef unsigned long contract_width;
+#else
+typedef unsigned char contract_width;
+#endif
+int contract_magic(void);
+#endif
+EOF
+cat > "$temp/configured-consumer.c" <<'EOF'
+#define WIDE_API 1
+#include "configurable.h"
+_Static_assert(sizeof(contract_width) == sizeof(unsigned long), "macro configuration was lost");
+int main(void) { return contract_magic() == 7 ? 0 : 1; }
+EOF
+expect 0 'silence: consumer macro configures public header before include' \
+  bash "$runner" "$temp/configurable.h" "$temp/configured-consumer.c" "$temp/fixture.a"
+# A deprecated-but-still-supported C declaration can warn without violating
+# its advertised runtime ABI. Warning promotion remains consumer opt-in.
+cat > "$temp/deprecated.h" <<'EOF'
+#ifndef DEPRECATED_H
+#define DEPRECATED_H
+int contract_magic(void) __attribute__((deprecated));
+#endif
+EOF
+cat > "$temp/deprecated-consumer.c" <<'EOF'
+#include "deprecated.h"
+int main(void) { return contract_magic() == 7 ? 0 : 1; }
+EOF
+expect 0 'silence: deprecated valid C ABI is usable by default' \
+  bash "$runner" "$temp/deprecated.h" "$temp/deprecated-consumer.c" "$temp/fixture.a"
+expect 1 'firing: optional strict-warnings policy rejects deprecated C ABI' \
+  env C_ABI_STRICT_WARNINGS=yes bash "$runner" "$temp/deprecated.h" "$temp/deprecated-consumer.c" "$temp/fixture.a"
+
 # A native archive may need another archive. One-pass linkers require
 # dependencies to follow the subject, never precede it.
 cat > "$temp/helper.c" <<'EOF'
