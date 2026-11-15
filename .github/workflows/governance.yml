@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   governance:
-    uses: metadatastician/standards/.github/workflows/governance-reusable.yml@75bd5994470661a099df562d6d5ad2fe744dbd66
+    uses: metadatastician/standards/.github/workflows/governance-reusable.yml@80aefd398147d80eaae52e953b9686c10ec635a5
     permissions:
       actions: read
       contents: read
