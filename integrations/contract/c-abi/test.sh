@@ -42,6 +42,18 @@ expect() {
   }
   echo "ok: $label (exit $want)"
 }
+# The supplied API may live in a compiler system include directory.
+mkdir "$temp/system"
+cp "$temp/fixture.h" "$temp/system/system.h"
+sed 's/"fixture.h"/<system.h>/' "$temp/consumer.c" > "$temp/system-consumer.c"
+expect 0 'silence: supplied system header is traced' \
+  env CC="cc -isystem $temp/system" bash "$runner" "$temp/system/system.h" "$temp/system-consumer.c" "$temp/fixture.a"
+# A dependency token must survive even when its glob pattern matches a decoy.
+cp "$temp/fixture.h" "$temp/literal[1].h"
+cp "$temp/fixture.h" "$temp/literal1.h"
+sed 's/"fixture.h"/"literal[1].h"/' "$temp/consumer.c" > "$temp/glob-consumer.c"
+expect 0 'silence: glob characters in header path remain literal' \
+  bash "$runner" "$temp/literal[1].h" "$temp/glob-consumer.c" "$temp/fixture.a"
 # A source-level mutation must be detected at compile time, not merely grep.
 sed -i 's/CONTRACT_MAGIC 7/CONTRACT_MAGIC 8/' "$temp/fixture.h"
 expect 1 'firing: header constant mutation' bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
@@ -137,6 +149,37 @@ int main(void) {
 EOF
 expect 1 'firing: bounded non-terminating ABI client' \
   env C_ABI_TIMEOUT=1s bash "$runner" "$temp/fixture.h" "$temp/hanging.c" "$temp/fixture.a"
+# Record the actual consumer PID so an early launcher exit cannot masquerade
+# as a bounded failure while leaving a TERM-ignoring consumer running.
+cat > "$temp/stubborn.c" <<'EOF'
+#include "fixture.h"
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+int main(void) {
+  if (signal(SIGTERM, SIG_IGN) == SIG_ERR) return 1;
+  FILE *receipt = fopen(getenv("C_ABI_PID_FILE"), "w");
+  if (!receipt) return 1;
+  fprintf(receipt, "%ld\n", (long)getpid());
+  if (fclose(receipt) != 0) return 1;
+  for (;;) pause();
+}
+EOF
+expect 1 'firing: TERM-ignoring consumer reaches kill deadline' \
+  env C_ABI_PID_FILE="$temp/consumer.pid" C_ABI_TIMEOUT=1s \
+  timeout --kill-after=2s 8s bash "$runner" "$temp/fixture.h" "$temp/stubborn.c" "$temp/fixture.a"
+[[ -s "$temp/consumer.pid" ]] || { echo 'FAIL: stubborn consumer never started' >&2; exit 1; }
+read -r consumer_pid < "$temp/consumer.pid"
+# An orphan may remain a zombie until the host init reaps it; it cannot run.
+consumer_state=$(ps -o stat= -p "$consumer_pid") || consumer_state=
+if [[ -n $consumer_state && $consumer_state != Z* ]]; then
+  kill -KILL "$consumer_pid"
+  echo 'FAIL: consumer still running after runner reported failure' >&2
+  exit 1
+fi
+grep -Fq 'failed to terminate within 1s' "$temp/out"
+echo 'ok: TERM-ignoring consumer stopped before runner returned'
 expect 2 'void: invalid runner timeout' \
   env C_ABI_TIMEOUT=invalid bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
 # A discoverable compiler command may still fail at exec() due to a

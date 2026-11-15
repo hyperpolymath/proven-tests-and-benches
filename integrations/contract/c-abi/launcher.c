@@ -11,12 +11,27 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+static volatile sig_atomic_t deadline_received = 0;
+static volatile sig_atomic_t consumer_pid = 0;
+
+/* Keep timeout's supervised process alive until the consumer is reaped.
+ * A caught handler (rather than SIG_IGN) also resets on successful exec. */
+static void deadline_signal(int signal_number) {
+    (void)signal_number;
+    deadline_received = 1;
+    if (consumer_pid > 0) (void)kill((pid_t)consumer_pid, SIGKILL);
+}
+
 static int await_child(pid_t pid, int *status) {
     for (;;) {
+        /* Stop the consumer before returning a deadline result, even when
+         * timeout implementations deliver escalation only to the launcher. */
+        if (deadline_received) (void)kill(pid, SIGKILL);
         if (waitpid(pid, status, 0) >= 0) return 0;
         if (errno != EINTR) return -1;
     }
@@ -28,6 +43,7 @@ int main(int argc, char **argv) {
     ssize_t received;
     pid_t pid;
     int status = 0;
+    struct sigaction action = {0};
 
     if (argc < 2) {
         fputs("NOT RUN: executable path absent\n", stderr);
@@ -35,6 +51,14 @@ int main(int argc, char **argv) {
     }
     if (pipe(wire) != 0 || fcntl(wire[1], F_SETFD, FD_CLOEXEC) == -1) {
         fputs("NOT RUN: cannot establish execution handshake\n", stderr);
+        return 2;
+    }
+    action.sa_handler = deadline_signal;
+    sigemptyset(&action.sa_mask);
+    if (sigaction(SIGTERM, &action, NULL) == -1) {
+        close(wire[0]);
+        close(wire[1]);
+        fputs("NOT RUN: cannot establish deadline supervision\n", stderr);
         return 2;
     }
     pid = fork();
@@ -53,6 +77,7 @@ int main(int argc, char **argv) {
         (void)write(wire[1], &saved, sizeof(saved));
         _exit(127);
     }
+    consumer_pid = pid;
     close(wire[1]);
     do {
         received = read(wire[0], &exec_error, sizeof(exec_error));

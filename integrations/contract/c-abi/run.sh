@@ -35,7 +35,7 @@ trap 'rm -rf "$temp"' EXIT
 # included, without changing the consumer's original preprocessing order.
 # Forced -include is not correct for macro-configurable C public headers.
 compile_args=(-std=c11 -Wall -Wextra "-I$(dirname "$header")"
-              -MMD -MF "$temp/dependencies.d" -MT abi-consumer
+              -MD -MF "$temp/dependencies.d" -MT abi-consumer
               "$client" "$library")
 case ${C_ABI_STRICT_WARNINGS:-no} in
   yes) compile_args+=(-Werror) ;;
@@ -59,7 +59,7 @@ else
   esac
 fi
 [[ -s "$temp/dependencies.d" ]] || void 'compiler produced no C include dependency evidence'
-# GCC and Clang -MMD emit a make dependency file. We canonicalise its tokens
+# GCC and Clang -MD emit a make dependency file. We canonicalise its tokens
 # before comparing; unsupported whitespace-containing paths fail closed.
 header_canonical=$(realpath -e -- "$header") || void 'cannot canonicalise public header'
 case "$header_canonical" in
@@ -69,11 +69,15 @@ esac
 deps=$(sed ':a;N;$!ba;s/\\\n/ /g' "$temp/dependencies.d")
 deps=${deps#*:}
 header_seen=0
+# Preserve splitting of make tokens, but never expand their glob characters.
+case $- in *f*) restore_globbing=no ;; *) restore_globbing=yes ;; esac
+set -f
 for dependency in $deps; do
   [[ -f "$dependency" ]] || continue
   candidate=$(realpath -e -- "$dependency") || continue
   if [[ $candidate == "$header_canonical" ]]; then header_seen=1; break; fi
 done
+if [[ $restore_globbing == yes ]]; then set +f; fi
 [[ $header_seen == 1 ]] || fail 'client did not include the supplied public header; stale/shadow header or missing include'
 [[ -x "$temp/consumer" ]] || void 'compiler claimed success but emitted no executable'
 # A separate POSIX launcher observes exec() through a close-on-exec pipe.
@@ -87,6 +91,8 @@ if ! "${cc_argv[@]}" -std=c11 -Wall -Wextra -Werror \
   void 'could not compile execution-handshake launcher'
 fi
 [[ -x "$temp/launcher" ]] || void 'execution-handshake launcher unavailable'
+# The launcher stays alive on SIGTERM until it reaps the consumer, so timeout
+# can still escalate if needed; the launcher kills and reaps its child first.
 # Timeout's 124/137 mean a non-terminating executable. 125/126/127 now
 # mean coreutils could not invoke the launcher, not the subject's status.
 if timeout --kill-after=2s "$duration" "$temp/launcher" "$temp/consumer"; then
