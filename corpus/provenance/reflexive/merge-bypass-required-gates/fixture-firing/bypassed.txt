@@ -1,0 +1,4 @@
+ruleset bypass
+rule pull_request required yes result fail
+rule required_status_checks required yes result fail
+decision merged
