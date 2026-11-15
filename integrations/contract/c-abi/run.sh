@@ -57,6 +57,7 @@ fi
 header_canonical=$(realpath -e -- "$header") || void 'cannot canonicalise public header'
 case "$header_canonical" in
   *[[:space:]]*) void 'ABI header path with whitespace is not yet supported by dependency reader' ;;
+  *) : ;; # Known valid path requires no further transformation.
 esac
 deps=$(sed ':a;N;$!ba;s/\\\n/ /g' "$temp/dependencies.d")
 deps=${deps#*:}
