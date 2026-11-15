@@ -59,4 +59,46 @@ expect 2 'void: missing library' bash "$runner" "$temp/fixture.h" "$temp/consume
 expect 2 'void: missing compiler' env CC=nonexistent_c_compiler bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
 expect 2 'void: missing consumer' bash "$runner" "$temp/fixture.h" "$temp/absent.c" "$temp/fixture.a"
 expect 2 'void: missing arguments' bash "$runner"
-echo 'ok: one silence, three firing and four void controls'
+# The C preprocessor normally looks beside the consumer before -I paths:
+# a local stale header must not cause the supplied public header to be ignored.
+mkdir -p "$temp/public" "$temp/adjacent"
+cp "$temp/fixture.h" "$temp/public/fixture.h"
+cp "$temp/fixture.h" "$temp/adjacent/fixture.h"
+cp "$temp/consumer.c" "$temp/adjacent/consumer.c"
+sed -i 's/CONTRACT_MAGIC 7/CONTRACT_MAGIC 8/' "$temp/public/fixture.h"
+expect 1 'firing: supplied header beats stale adjacent header' \
+  bash "$runner" "$temp/public/fixture.h" "$temp/adjacent/consumer.c" "$temp/fixture.a"
+
+# A native archive may need another archive. One-pass linkers require
+# dependencies to follow the subject, never precede it.
+cat > "$temp/helper.c" <<'EOF'
+int helper_magic(void) { return 7; }
+EOF
+cat > "$temp/needs_helper.c" <<'EOF'
+#include "fixture.h"
+extern int helper_magic(void);
+int contract_magic(void) { return helper_magic(); }
+EOF
+cc -std=c11 -Wall -Wextra -Werror -c "$temp/helper.c" -o "$temp/helper.o"
+cc -std=c11 -Wall -Wextra -Werror -I"$temp" -c "$temp/needs_helper.c" -o "$temp/needs_helper.o"
+ar rcs "$temp/helper.a" "$temp/helper.o"
+ar rcs "$temp/needs-helper.a" "$temp/needs_helper.o"
+expect 1 'firing: omitted required static dependency' \
+  bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/needs-helper.a"
+expect 0 'silence: dependency after native subject archive' \
+  env C_ABI_LDLIBS="$temp/helper.a" bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/needs-helper.a"
+
+# A contract consumer that hangs must terminate promptly with a failure,
+# not leave a required CI job waiting indefinitely.
+cat > "$temp/hanging.c" <<'EOF'
+#include "fixture.h"
+int main(void) {
+  volatile unsigned long counter = 0;
+  for (;;) { counter++; }
+}
+EOF
+expect 1 'firing: bounded non-terminating ABI client' \
+  env C_ABI_TIMEOUT=1s bash "$runner" "$temp/fixture.h" "$temp/hanging.c" "$temp/fixture.a"
+expect 2 'void: invalid runner timeout' \
+  env C_ABI_TIMEOUT=invalid bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
+echo 'ok: genuine compile/link/run plus header-precedence, dependency, deadline, failure and unavailable controls'
