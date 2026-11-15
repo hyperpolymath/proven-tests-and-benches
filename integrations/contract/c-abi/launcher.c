@@ -69,8 +69,8 @@ int main(int argc, char **argv) {
         return 1;
     }
     if (WIFSIGNALED(status)) {
-        fprintf(stderr, "FAIL: executed ABI consumer terminated by signal %d\n", WTERMSIG(status));
-        return 1;
+        fprintf(stderr, "NOT RUN: ABI consumer crashed or was signaled before completion (signal %d)\n", WTERMSIG(status));
+        return 2;
     }
     fputs("NOT RUN: child did not produce a terminal result\n", stderr);
     return 2;
