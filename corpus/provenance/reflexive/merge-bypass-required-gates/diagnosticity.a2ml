@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[detects]
+defect_class = "merge-bypass-required-gates"
+condition = "decision merged AND ruleset result bypass AND at least one rule explicitly marked required has result fail"
+ground_truth = "2026-11-15 GitHub rule suite 5132339218 for stuff-of-awe/.github PR #15: the rule evaluations record failed mandatory approval/checks and overall bypass; the PR merge completed"
+
+[sensitivity]
+variant_1 = "any number and position of failed required rules via universal firesOnBypassedRequired lemma"
+variant_2 = "both failed approval rule and failed status-check rule in one bypassed merge"
+firing_fixture = "fixture-firing/bypassed.txt"
+
+[confusables]
+optional_failed = "an advisory/non-required failed rule is not a mandatory-gate bypass incident"
+blocked_bypass = "a refused merge with failed required rules is not a completed merge incident"
+regular_pass = "required rules passed and a compliant merge occurred"
+
+[distinguishing_evidence]
+optional_failed = "grammar carries required yes|no; optionalFailureIsNotRequired in Test.idr discharges confusable"
+blocked_bypass = "grammar carries decision blocked; blockedBypassIsNotMerged in Test.idr discharges confusable"
+regular_pass = "check matches only RulesBypass and Merged; other constructors are Silent"
+emitted = "0 SILENT; 1 FIRED named defect; 2 NO CHECK PERFORMED"
+
+[does_not_distinguish]
+actor_identity = "the principal/session that initiated bypass, whether the bypass actor was added automatically, and whether administrator intended an emergency; GitHub audit records are required"
+policy_legitimacy = "whether an external, separately authorised break-glass event was permitted; this unit only detects the technical completion over a failed required rule"
+collector_safety = "authenticity, replay, freshness, aliasing and policy-source completeness must be qualified by a separate exact-revision GitHub execution bridge"
