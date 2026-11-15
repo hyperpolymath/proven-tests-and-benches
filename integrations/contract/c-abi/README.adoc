@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
 = Executed C ABI consumer contract: reusable harness
 :status: Unproven harness; native execution required
 
