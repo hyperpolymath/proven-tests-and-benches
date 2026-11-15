@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Adversarial execution-truth controls — offline candidate
+:revdate: 2026-11-15
+
+== Purpose and warrant
+
+These checks extend the actual Rust `execution_truth::classify`
+contract. They belong in Proven-Tests because the defect classes are
+reusable across CI products, including OPSM and Proven CI/CD.
+
+The committed `clean.json`, `firing.json` and `void.json` remain the
+base silence/firing/no-check corpus. The additional controls construct
+minimal, explicitly named mutations of `clean.json` in
+`integrations/contract/proven-tests/downstream/rust/proven-evidence/tests/execution_truth.rs`. Every mutation is passed to the
+*real* classifier, not to a hand-rolled success predicate.
+
+[cols="2,3",options="header"]
+|===
+| Test | Required discriminator
+| Empty/unscheduled obligations | An absent required check cannot produce Candidate
+| Zero-started/zero-confirmation claim | An empty execution set does not pass
+| Setup-only pass | Passing setup is not substantive execution
+| Setup failure | Cannot attribute infrastructure/setup to tested subject
+| Harness failure | Cannot attribute harness defect to subject
+| Required skipped check | Explicit `Denied(required_skipped)` even with `claimed_green=true`
+| Unavailable checker or missing identity | `NotRun`, never Candidate
+| Stale or retracted evidence | `Denied`, no temporal laundering
+| Missing receipt | `NotRun`, no mere-count promotion
+| Wrong contract version | Explicit rejection
+| Producer falsely claiming red | A valid *synthetic* candidate stays Candidate; claim itself is ignored
+|===
+
+== Enforcement boundary
+
+Run `cargo test --manifest-path
+integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml`
+from the repository root. The existing CI (Idris2) workflow already has
+this test command; the PR must demonstrate the new test binary actually
+runs and passes. A missing Rust toolchain or omitted test is **not_run**,
+not a passed verification.
+
+`SyntheticOnly` deliberately authenticates only a hard-coded fixture
+receipt. These are executable **adversarial regression tests**, not
+Actually-Proven theorems, live GitHub attestations, or a certificate
+of perfect discriminating power. A consumer must provide a real
+`ReceiptVerifier` and independent source/run-identity receipts.
+
+These controls are a scoped addition to the test regimen. They do not
+claim all 17×14 cells or replace the independent Proven-Tests
+schema-version-2 report validator.
