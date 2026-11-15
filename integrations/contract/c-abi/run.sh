@@ -34,8 +34,15 @@ trap 'rm -rf "$temp"' EXIT
 # -include forces the EXACT supplied header to be consumed BEFORE client-local
 # quoted includes. A stale adjacent header cannot silently override the
 # public contract. The independent client must still assert meaningful facts.
-if ! "${cc_argv[@]}" -std=c11 -Wall -Wextra -Werror -I"$(dirname "$header")" \
-     -include "$header" "$client" "$library" "${link_args[@]}" -o "$temp/consumer"; then
+compile_args=(-std=c11 -Wall -Wextra -Werror "-I$(dirname "$header")"
+              -include "$header" "$client" "$library")
+# Bash 4.3 with nounset may reject expansion of an empty array; only append
+# dependent libraries when there are actually arguments to append.
+if [[ -n ${C_ABI_LDLIBS:-} ]]; then
+  compile_args+=("${link_args[@]}")
+fi
+compile_args+=(-o "$temp/consumer")
+if ! "${cc_argv[@]}" "${compile_args[@]}"; then
   fail 'C ABI consumer failed to compile/link'
 fi
 [[ -x "$temp/consumer" ]] || void 'compiler claimed success but emitted no executable'
