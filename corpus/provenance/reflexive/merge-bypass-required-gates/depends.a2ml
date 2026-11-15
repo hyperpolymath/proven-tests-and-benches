@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[upstream_units]
+value = "none — standalone Idris2 checker; related to skipped-mandatory-reported-as-pass but no runtime dependency"
+
+[preconditions]
+fixture_readable = "missing/unreadable report returns VOID 2"
+fixture_in_grammar = "invalid/incomplete report returns VOID 2"
+rule_authority = "a live adapter must independently establish required-rule identity and exact merge subject; this unit judges the report grammar as written only"
+ruleset_identity = "a live adapter must bind repository/ruleset/version and immutable subject, not accept self-declared authority"
+
+[void_behaviour]
+convention = "exit 2 means no check; must not be counted as PASS or evidence of no bypass"
