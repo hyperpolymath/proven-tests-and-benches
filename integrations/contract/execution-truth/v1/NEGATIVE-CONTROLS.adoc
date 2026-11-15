@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText: 2026 Hyperpolymath contributors
 // SPDX-License-Identifier: CC-BY-SA-4.0
 = Adversarial execution-truth controls — offline candidate
 :revdate: 2026-11-15
