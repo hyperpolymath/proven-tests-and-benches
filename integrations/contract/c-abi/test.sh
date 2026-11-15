@@ -101,4 +101,25 @@ expect 1 'firing: bounded non-terminating ABI client' \
   env C_ABI_TIMEOUT=1s bash "$runner" "$temp/fixture.h" "$temp/hanging.c" "$temp/fixture.a"
 expect 2 'void: invalid runner timeout' \
   env C_ABI_TIMEOUT=invalid bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
-echo 'ok: genuine compile/link/run plus header-precedence, dependency, deadline, failure and unavailable controls'
+# Exit 125, 126 and 127 are legal *executed* client failures. They must
+# never be reclassified as NOT RUN just because GNU timeout reserves them.
+for code in 125 126 127; do
+  cat > "$temp/reserved-exit.c" <<EOF
+#include "fixture.h"
+int main(void) { return $code; }
+EOF
+  expect 1 "firing: executed subject returned reserved exit $code" \
+    bash "$runner" "$temp/fixture.h" "$temp/reserved-exit.c" "$temp/fixture.a"
+  grep -Fq "FAIL: executed ABI consumer exited $code" "$temp/out" || {
+    echo "FAIL: execution handshake lost subject exit $code" >&2; exit 1;
+  }
+done
+# Conversely, a missing executable must be reported as no-run by the same
+# launcher, not confused with an executed client's deliberate exit 127.
+cc -std=c11 -Wall -Wextra -Werror "$root/launcher.c" -o "$temp/launcher"
+expect 2 'void: launcher could not exec missing consumer binary' \
+  "$temp/launcher" "$temp/nonexistent-executable"
+grep -Fq 'NOT RUN: child exec failed' "$temp/out" || {
+  echo 'FAIL: missing executable not classified as NOT RUN' >&2; exit 1;
+}
+echo 'ok: genuine compile/link/run, reserved exits 125-127, no-exec, header, dependency, deadline and unavailable controls'
