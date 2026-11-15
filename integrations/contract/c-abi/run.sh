@@ -48,8 +48,15 @@ if [[ -n ${C_ABI_LDLIBS:-} ]]; then
   compile_args+=("${link_args[@]}")
 fi
 compile_args+=(-o "$temp/consumer")
-if ! "${cc_argv[@]}" "${compile_args[@]}"; then
-  fail 'C ABI consumer failed to compile/link'
+if "${cc_argv[@]}" "${compile_args[@]}"; then
+  :
+else
+  compile_rc=$?
+  case $compile_rc in
+    126|127) void "C compiler could not launch (exit $compile_rc)" ;;
+    12[89]|1[3-9][0-9]|2[0-5][0-5]) void "C compiler aborted or signaled (exit $compile_rc)" ;;
+    *) fail "C ABI consumer failed to compile/link (compiler exit $compile_rc)" ;;
+  esac
 fi
 [[ -s "$temp/dependencies.d" ]] || void 'compiler produced no C include dependency evidence'
 # GCC and Clang -MMD emit a make dependency file. We canonicalise its tokens
