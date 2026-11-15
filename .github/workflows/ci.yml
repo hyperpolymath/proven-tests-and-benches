@@ -101,6 +101,15 @@ jobs:
       - name: Check the downstream integration contract
         run: bash scripts/check-integration-contract.sh
 
+      - name: Exercise ExUnit manifest source-binding contract
+        run: |
+          set -euo pipefail
+          if ! command -v elixir >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends elixir
+          fi
+          elixir integrations/contract/proven-tests/downstream/elixir/test/manifest_binding_test.exs
+
       - name: Test the Rust downstream twin
         run: cargo test --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml
 
