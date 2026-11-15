@@ -139,6 +139,25 @@ expect 1 'firing: bounded non-terminating ABI client' \
   env C_ABI_TIMEOUT=1s bash "$runner" "$temp/fixture.h" "$temp/hanging.c" "$temp/fixture.a"
 expect 2 'void: invalid runner timeout' \
   env C_ABI_TIMEOUT=invalid bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
+# A discoverable compiler command may still fail at exec() due to a
+# missing shebang interpreter. That is a void check, not compiler diagnostics.
+cat > "$temp/broken-compiler" <<'EOF'
+#!/nonexistent/c-compiler-interpreter
+exit 0
+EOF
+chmod +x "$temp/broken-compiler"
+expect 2 'void: discoverable compiler wrapper cannot launch' \
+  env CC="$temp/broken-compiler" bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
+
+# A consumer terminated by signal produces no finished assertion receipt.
+cat > "$temp/signaled.c" <<'EOF'
+#include "fixture.h"
+#include <signal.h>
+int main(void) { raise(SIGTERM); return 0; }
+EOF
+expect 2 'void: signaled consumer did not complete assertions' \
+  bash "$runner" "$temp/fixture.h" "$temp/signaled.c" "$temp/fixture.a"
+
 # Exit 125, 126 and 127 are legal *executed* client failures. They must
 # never be reclassified as NOT RUN just because GNU timeout reserves them.
 for code in 125 126 127; do
