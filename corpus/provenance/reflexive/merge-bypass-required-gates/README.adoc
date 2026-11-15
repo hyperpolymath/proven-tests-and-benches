@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Corpus unit: merge-bypass-required-gates
+:revdate: 2026-11-15
+
+*Battery*: provenance; *category*: ReflexiveTest; *aspect*: Security /
+Dependability; *tier*: proven-exact within its explicit report grammar.
+
+== Defect
+
+A GitHub ruleset reports one or more *required* rules failing, the overall
+ruleset evaluation is `bypass`, and a merge nevertheless completes. This
+unit identifies that condition. It does *not* establish the identity,
+intention or emergency authority of the actor who invoked the bypass.
+
+A dated estate incident exists: Stuff of Awe `.github` PR #15 was merged
+despite failed approval and required-status-check rules.
+GitHub ruleset suite `5132339218` records overall result `bypass` and
+the required-rule failures. This specimen is a sanitised transcription
+of that behaviour, not a live GitHub API client.
+
+== Canonical grammar
+
+Exactly one `ruleset pass|bypass|fail` line; at least one
+`rule NAME required yes|no result pass|fail` line; exactly one final
+`decision merged|blocked` line. Blank lines are ignored.
+Malformed/missing input is *VOID*, not an asserted safe merge.
+
+== Doctrine controls
+
+[source,shell]
+----
+idris2 Test.idr -o merge-bypass-required-gates
+./build/exec/merge-bypass-required-gates fixture-silent/pass.txt     # 0
+./build/exec/merge-bypass-required-gates fixture-silent/blocked.txt  # 0
+./build/exec/merge-bypass-required-gates fixture-firing/bypassed.txt # 1
+./build/exec/merge-bypass-required-gates calibration/empty-report.txt # 2
+----
+
+The total lemmas `firesOnBypassedRequired`,
+`silentOnNoFailedRequired`, `optionalFailureIsNotRequired` and
+`blockedBypassIsNotMerged` establish the stated property and important
+confusables inside the grammar. The entry point is `covering` for file I/O.
+
+Three clean compiles and all 0/0/1/2 cases were measured on the same
+Debian WSL2 machine with Idris2 0.8.0 on 2026-11-15.
+**The repository CI pin is Idris2 0.7.0; that run is still owed.**
+Second-machine reproduction, independent replication, online event
+authenticity, and GitHub access to the audit log are also owed.
+The host is not claimed to be a physically independent machine.
+
+== Boundaries and follow-up
+
+The grammar assumes the upstream collector has identified true *required*
+rules and the correct merge event. A consumer-supplied string
+`required yes` does not prove that requirement's authority. Before
+using this corpus unit as a live merge gate, qualify the exact-revision
+GitHub collector and its mandatory-context closure separately in
+`proven-cicd-and-workflows`. Honest emergency bypass policy must be
+recorded outside this detection unit, never silently treated as a pass.
+
+This corpus's temporary `.a2ml` metadata names are inherited from the
+current `corpus_check_spine` contract; migration to canonical `.deed`
+representation requires a separate verified contract release, not a
+one-off renamed file.
