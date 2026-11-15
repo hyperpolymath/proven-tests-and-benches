@@ -114,17 +114,76 @@ fn genuinely_independent_pair_is_order_invariant() {
 }
 
 #[test]
-fn oversized_untrusted_confirmation_population_is_not_run() {
-    // Silence/void controls remain the committed fixture inputs.
+fn oversized_duplicate_population_is_conclusively_denied() {
     assert_eq!(classify_json(CLEAN, &SyntheticOnly).unwrap(), Decision::Candidate);
     assert_eq!(classify_json(VOID, &SyntheticOnly).unwrap(),
                Decision::NotRun("no_observations"));
     let mut doc: serde_json::Value = serde_json::from_str(CLEAN).unwrap();
     let entry = doc["observations"][0].clone();
-    // Previously a large exclusion chain could exhaust the call stack even
-    // though the node-count budget was not exhausted.
     doc["observations"] = serde_json::Value::Array(vec![entry; 129]);
     doc["min_independent"] = serde_json::json!(2);
+    // Identical receipt/delivery/attempt triples cannot witness a second
+    // independent execution even when repeated more than 128 times.
     assert_eq!(classify_json(&doc.to_string(), &SyntheticOnly).unwrap(),
+               Decision::Denied("duplicate_delivery_not_independent"));
+}
+
+#[test]
+fn oversized_obvious_independent_witness_is_accepted_in_either_order() {
+    struct OfflineFixture;
+    impl ReceiptVerifier for OfflineFixture {
+        fn verifies(&self, o: &Observation, c: &Envelope) -> bool {
+            o.receipt_ref.starts_with("fixture:receipt-")
+                && o.subject_id == c.subject_id && o.source_revision == c.source_revision
+        }
+    }
+    let mut doc: serde_json::Value = serde_json::from_str(CLEAN).unwrap();
+    let first = doc["observations"][0].clone();
+    let mut second = first.clone();
+    second["attempt_id"] = serde_json::json!("attempt-B");
+    second["delivery_id"] = serde_json::json!("delivery-B");
+    second["receipt_ref"] = serde_json::json!("fixture:receipt-2");
+    let mut population = vec![first; 129];
+    population.push(second);
+    doc["observations"] = serde_json::json!(population);
+    doc["min_independent"] = serde_json::json!(2);
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(), Decision::Candidate);
+    doc["observations"].as_array_mut().unwrap().reverse();
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(), Decision::Candidate);
+}
+
+#[test]
+fn oversized_intersecting_population_is_order_invariant_not_run() {
+    struct OfflineFixture;
+    impl ReceiptVerifier for OfflineFixture {
+        fn verifies(&self, o: &Observation, c: &Envelope) -> bool {
+            o.receipt_ref.starts_with("fixture:receipt-")
+                && o.subject_id == c.subject_id && o.source_revision == c.source_revision
+        }
+    }
+    let mut doc: serde_json::Value = serde_json::from_str(CLEAN).unwrap();
+    let base = doc["observations"][0].clone();
+    // Three families of 43 unique triples each, all pairwise intersecting.
+    // A and B share attempt; A and C share delivery; B and C share receipt.
+    // Each identity column has multiple distinct values; marginal counts
+    // cannot prove the absence of a jointly independent pair.
+    let mut population = Vec::new();
+    for n in 0..43 {
+        let mut a = base.clone();
+        a["receipt_ref"] = serde_json::json!(format!("fixture:receipt-a-{n}"));
+        population.push(a);
+        let mut b = base.clone();
+        b["delivery_id"] = serde_json::json!(format!("delivery-b-{n}"));
+        population.push(b);
+        let mut c = base.clone();
+        c["attempt_id"] = serde_json::json!(format!("attempt-c-{n}"));
+        population.push(c);
+    }
+    doc["observations"] = serde_json::json!(population);
+    doc["min_independent"] = serde_json::json!(2);
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(),
+               Decision::NotRun("independence_search_incomplete"));
+    doc["observations"].as_array_mut().unwrap().reverse();
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(),
                Decision::NotRun("independence_search_incomplete"));
 }
