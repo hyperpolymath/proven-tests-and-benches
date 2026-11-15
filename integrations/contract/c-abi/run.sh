@@ -31,11 +31,17 @@ duration=${C_ABI_TIMEOUT:-20s}
 [[ $duration =~ ^([1-9][0-9]*)(s|m)$ ]] || void 'C_ABI_TIMEOUT must be positive seconds/minutes'
 temp=$(mktemp -d) || void 'cannot allocate isolated compile workspace'
 trap 'rm -rf "$temp"' EXIT
-# -include forces the EXACT supplied header to be consumed BEFORE client-local
-# quoted includes. A stale adjacent header cannot silently override the
-# public contract. The independent client must still assert meaningful facts.
-compile_args=(-std=c11 -Wall -Wextra -Werror "-I$(dirname "$header")"
-              -include "$header" "$client" "$library")
+# Dependency tracing checks that the EXACT supplied public header was
+# included, without changing the consumer's original preprocessing order.
+# Forced -include is not correct for macro-configurable C public headers.
+compile_args=(-std=c11 -Wall -Wextra "-I$(dirname "$header")"
+              -MMD -MF "$temp/dependencies.d" -MT abi-consumer
+              "$client" "$library")
+case ${C_ABI_STRICT_WARNINGS:-no} in
+  yes) compile_args+=(-Werror) ;;
+  no) ;;
+  *) void 'C_ABI_STRICT_WARNINGS must be yes or no' ;;
+esac
 # Bash 4.3 with nounset may reject expansion of an empty array; only append
 # dependent libraries when there are actually arguments to append.
 if [[ -n ${C_ABI_LDLIBS:-} ]]; then
@@ -45,6 +51,22 @@ compile_args+=(-o "$temp/consumer")
 if ! "${cc_argv[@]}" "${compile_args[@]}"; then
   fail 'C ABI consumer failed to compile/link'
 fi
+[[ -s "$temp/dependencies.d" ]] || void 'compiler produced no C include dependency evidence'
+# GCC and Clang -MMD emit a make dependency file. We canonicalise its tokens
+# before comparing; unsupported whitespace-containing paths fail closed.
+header_canonical=$(realpath -e -- "$header") || void 'cannot canonicalise public header'
+case "$header_canonical" in
+  *[[:space:]]*) void 'ABI header path with whitespace is not yet supported by dependency reader' ;;
+esac
+deps=$(sed ':a;N;$!ba;s/\\\n/ /g' "$temp/dependencies.d")
+deps=${deps#*:}
+header_seen=0
+for dependency in $deps; do
+  [[ -f "$dependency" ]] || continue
+  candidate=$(realpath -e -- "$dependency") || continue
+  if [[ $candidate == "$header_canonical" ]]; then header_seen=1; break; fi
+done
+[[ $header_seen == 1 ]] || fail 'client did not include the supplied public header; stale/shadow header or missing include'
 [[ -x "$temp/consumer" ]] || void 'compiler claimed success but emitted no executable'
 # A separate POSIX launcher observes exec() through a close-on-exec pipe.
 # It normalises a genuinely executed child's exit 125/126/127 to failure,
