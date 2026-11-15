@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+# Stability record: three clean compiles and all fixtures, observed 2026-11-15.
+
+[repeat]
+machine = "The-Titanic WSL2 Debian, Linux 6.18.58.1-microsoft-standard-WSL2, Idris2 0.8.0-b6cbc25d5, Chez backend"
+runs = "3"
+date = "2026-11-15T19:09:30Z"
+protocol = "three cycles of rm -rf build, compile standalone Test.idr, check exit 0 + executable present + zero Error: lines; run both silence, firing and calibration fixtures"
+outcomes = "identical across all three runs: silent=0,0 firing=1 calibration=2"
+variance = "zero for categorical outcomes; no benchmark latency claim"
+provenance = "scripted local repetitions; stdout recorded by authorized device execution; not independent second-machine reproduction"
+
+[machine_compile]
+date = "2026-11-15T19:09:30Z"
+toolchain = "Idris 2, version 0.8.0-b6cbc25d5 (Chez backend); NOT CI-pinned 0.7.0"
+source_sha256 = "700a662023dde040adcf9ead7c6dc2ff94688438146f8ba92da28b30c47f3964"
+invocation = "idris2 Test.idr -o merge-bypass-required-gates"
+build_state = "rm -rf build before each of three compiles"
+rc = "0"
+error_lines = "0"
+binary = "build/exec/merge-bypass-required-gates — present and executable"
+verdict = "compiled on this host, at this source"
+
+[compile_predicate]
+definition = "compile rc == 0 AND output executable exists AND no ^Error: compiler diagnostic lines"
+why_rc_insufficient = "Idris2 may report errors without a nonzero status in some failure classes"
+why_binary_insufficient = "stale or partially emitted binary must not be treated as successful current compile"
+enforcement = "existing corpus-check.yml on a future review; no current hosted run qualifies this addition"
+
+[triple]
+silent = "fixture-silent/pass.txt -> 0; fixture-silent/blocked.txt -> 0"
+firing = "fixture-firing/bypassed.txt -> 1 (FIRED: merge-bypass-required-gates)"
+calibration = "calibration/empty-report.txt -> 2 (NO CHECK PERFORMED)"
+result = "all three runs matched declared outcomes"
+
+[toolchain_note]
+pinned_toolchain_run = "OWED: target repository CI uses Idris2 0.7.0; three local runs used 0.8.0"
+compatibility = "no silent assumption that 0.8 proof terms are valid under 0.7; required hosted canary"
+
+[isolation]
+probe = "no independent harness mutant conducted on this unit yet; existing corpus-selftest must run against it before publication"
+
+[reproduce]
+performed = "no"
+owed = "another host, preferably independent Linux runner, with actual compiler invocation and immutable source"
+
+[replicate]
+performed = "no"
+owed = "different setup or compiler version, including the pinned Idris2 0.7.0"
+
+[firing_history]
+first_fired = "2026-11-15T19:09:17Z"
+last_fired = "2026-11-15T19:09:30Z"
+last_fired_by = "The-Titanic WSL2, scripted clean compile repetition 3"
