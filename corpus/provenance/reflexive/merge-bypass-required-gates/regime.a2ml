@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[assertion]
+form = "typed total decision function over explicitly parsed ruleset disposition"
+claim = "a merged, bypassed ruleset with at least one failed required rule fires; clean, blocked, or only optional-failed outcomes remain silent"
+
+[scope]
+grammar = "ruleset pass|bypass|fail; one or more rule NAME required yes|no result pass|fail; final decision merged|blocked; no other records; blank lines ignored"
+outside_grammar = "unreadable, malformed or incomplete reports produce exit 2; rule names are single tokens"
+
+[determinism]
+timing = "none in checked function"
+concurrency = "none; single input report per invocation"
+machine_dependence = "total pure decision; IO/toolchain reproduction still required"
+
+[response_law]
+declared = "none — correctness classification, not performance metric"
