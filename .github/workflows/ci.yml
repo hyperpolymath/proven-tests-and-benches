@@ -101,6 +101,11 @@ jobs:
       - name: Check the downstream integration contract
         run: bash scripts/check-integration-contract.sh
 
+      # Independent C ABI contract harness with planted passing, broken and
+      # unavailable cases; generic and compiled under the runner's C compiler.
+      - name: Validate executable C ABI contract harness (silence/firing/void)
+        run: bash integrations/contract/c-abi/test.sh
+
       - name: Test the Rust downstream twin
         run: cargo test --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml
 
