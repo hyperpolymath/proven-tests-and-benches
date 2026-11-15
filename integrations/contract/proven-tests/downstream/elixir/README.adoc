@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= ExUnit manifest source-binding contract (reference integration)
+
+This small Elixir adapter checks one generic part of the Proven-Tests
+consumer contract: that a manifest's claimed test module is defined in
+the precise file named in the manifest.
+
+A manifest entry that points to an existing but *unrelated* file must be
+rejected, and duplicate module definitions must be reported as ambiguous.
+The reference implementation is intentionally dependency-free and isolated
+from OPSM, so other Elixir users can consume the same rule.
+
+== Files
+
+* `lib/proven_tests/contract/manifest_binding.ex`: pure validator
+* `test/manifest_binding_test.exs`: adversarial ExUnit fixture suite
+
+Run with Elixir installed:
+
+[source,sh]
+----
+elixir integrations/contract/proven-tests/downstream/elixir/test/manifest_binding_test.exs
+----
+
+== Contract boundaries
+
+The caller **must separately** check that every manifest entry names a
+module found on disk and that every actual test module is declared.
+Likewise this adapter does not check taxonomy enums, execution receipts,
+proof ladders, fixture obligations, or tier certificates.
+
+For actual tests and their evidence use the independent schema-version-2
+Proven-Tests contract and Rust contract reader in the neighbouring
+`downstream/rust/proven-evidence/` directory. The existence of this
+adapter and a successful isolated ExUnit run is not an `ActuallyProven`
+witness.
+
+Consumers should pin the upstream source commit and avoid independently
+forking the rule. Do not declare the check complete until its negative
+fixtures really fail under the consumer's CI and a positive fixture passes.
