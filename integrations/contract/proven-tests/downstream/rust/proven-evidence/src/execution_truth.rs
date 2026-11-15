@@ -77,6 +77,43 @@ pub fn classify_json(
     Ok(classify(&envelope, verifier))
 }
 
+/// Search for an exact, pairwise independent subset. In three dimensions
+/// (attempt, delivery, receipt) checking distinct counts is unsound, while a
+/// one-pass greedy choice depends on observation order. Exhaustive backtracking
+/// is bounded: exceeding the search budget is NotRun, never a false denial or
+/// a false Candidate. The limits protect untrusted external evidence inputs.
+fn independent_subset(candidates: &[&Observation], need: usize) -> Option<bool> {
+    const SEARCH_BUDGET: usize = 200_000;
+    fn search(
+        left: &[&Observation], need: usize, selected: &mut Vec<&Observation>,
+        budget: &mut usize,
+    ) -> Option<bool> {
+        if need == 0 { return Some(true); }
+        if left.len() < need { return Some(false); }
+        if *budget == 0 { return None; }
+        *budget -= 1;
+        let (first, rest) = left.split_first().expect("checked nonempty above");
+        let compatible = selected.iter().all(|prior| {
+            first.attempt_id != prior.attempt_id
+                && first.delivery_id != prior.delivery_id
+                && first.receipt_ref != prior.receipt_ref
+        });
+        let include = if compatible {
+            selected.push(*first);
+            let answer = search(rest, need - 1, selected, budget);
+            selected.pop();
+            answer
+        } else { Some(false) };
+        if include == Some(true) { return Some(true); }
+        let exclude = search(rest, need, selected, budget);
+        if exclude == Some(true) { Some(true) }
+        else if include.is_none() || exclude.is_none() { None }
+        else { Some(false) }
+    }
+    if candidates.len() < need { return Some(false); }
+    search(candidates, need, &mut Vec::new(), &mut SEARCH_BUDGET.clone())
+}
+
 /// Classify an execution claim using verified substantive receipts.
 ///
 /// `Candidate` requires every required obligation to pass the checks; it is
@@ -85,8 +122,9 @@ pub fn classify_json(
 /// summary is ignored. Obligations are checked in sorted order and the first
 /// non-candidate decision is returned.
 ///
-/// For each obligation, confirmations are counted in observation order, only
-/// when the attempt, delivery and receipt IDs are all new to the count.
+/// For each obligation, evidence is admitted only if some subset of verified
+/// observations has mutually distinct attempt, delivery and receipt IDs.
+/// Exhausting the bounded search returns NotRun, not success or denial.
 pub fn classify(c: &Envelope, verifier: &impl ReceiptVerifier) -> Decision {
     if c.contract_version != "1.0.0" {
         return Decision::Denied("unsupported_contract_version");
@@ -159,21 +197,10 @@ pub fn classify(c: &Envelope, verifier: &impl ReceiptVerifier) -> Decision {
         if valid.is_empty() {
             return Decision::NotRun("no_verified_substantive_receipt");
         }
-        let mut attempts: BTreeSet<&str> = BTreeSet::new();
-        let mut deliveries: BTreeSet<&str> = BTreeSet::new();
-        let mut receipts: BTreeSet<&str> = BTreeSet::new();
-        let independent = valid.iter().filter(|o| {
-            let (a, d, r) = (o.attempt_id.as_str(), o.delivery_id.as_str(), o.receipt_ref.as_str());
-            let fresh = !attempts.contains(a) && !deliveries.contains(d) && !receipts.contains(r);
-            if fresh {
-                attempts.insert(a);
-                deliveries.insert(d);
-                receipts.insert(r);
-            }
-            fresh
-        }).count();
-        if independent < c.min_independent {
-            return Decision::Denied("duplicate_delivery_not_independent");
+        match independent_subset(&valid, c.min_independent) {
+            Some(true) => {}
+            Some(false) => return Decision::Denied("duplicate_delivery_not_independent"),
+            None => return Decision::NotRun("independence_search_incomplete"),
         }
     }
     Decision::Candidate

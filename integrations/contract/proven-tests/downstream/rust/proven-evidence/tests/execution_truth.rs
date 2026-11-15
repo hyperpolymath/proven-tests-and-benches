@@ -56,3 +56,59 @@ fn delivery_replay_cannot_be_relabelled_as_two_attempts() {
     assert_eq!(classify_json(&doc.to_string(), &SyntheticOnly).unwrap(),
                Decision::Denied("duplicate_delivery_not_independent"));
 }
+
+#[test]
+fn overlapping_identity_columns_are_not_independent_confirmations() {
+    struct OfflineFixture;
+    impl ReceiptVerifier for OfflineFixture {
+        fn verifies(&self, o: &Observation, c: &Envelope) -> bool {
+            o.receipt_ref.starts_with("fixture:receipt-")
+                && o.subject_id == c.subject_id
+                && o.source_revision == c.source_revision
+        }
+    }
+    // Silence and void are committed fixtures, not hand-waved results.
+    assert_eq!(classify_json(CLEAN, &OfflineFixture).unwrap(), Decision::Candidate);
+    assert_eq!(classify_json(VOID, &OfflineFixture).unwrap(),
+               Decision::NotRun("no_observations"));
+    let mut doc: serde_json::Value = serde_json::from_str(CLEAN).unwrap();
+    doc["min_independent"] = serde_json::json!(2);
+    let a = doc["observations"][0].clone();
+    let mut b = a.clone();
+    b["delivery_id"] = serde_json::json!("delivery-B");
+    b["receipt_ref"] = serde_json::json!("fixture:receipt-2");
+    let mut c = a.clone();
+    c["attempt_id"] = serde_json::json!("attempt-B");
+    c["receipt_ref"] = serde_json::json!("fixture:receipt-2");
+    doc["observations"] = serde_json::json!([a,b,c]);
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(),
+               Decision::Denied("duplicate_delivery_not_independent"));
+}
+
+#[test]
+fn genuinely_independent_pair_is_order_invariant() {
+    struct OfflineFixture;
+    impl ReceiptVerifier for OfflineFixture {
+        fn verifies(&self, o: &Observation, c: &Envelope) -> bool {
+            o.receipt_ref.starts_with("fixture:receipt-")
+                && o.subject_id == c.subject_id
+                && o.source_revision == c.source_revision
+        }
+    }
+    assert_eq!(classify_json(CLEAN, &OfflineFixture).unwrap(), Decision::Candidate);
+    assert_eq!(classify_json(VOID, &OfflineFixture).unwrap(),
+               Decision::NotRun("no_observations"));
+    let mut doc: serde_json::Value = serde_json::from_str(CLEAN).unwrap();
+    doc["min_independent"] = serde_json::json!(2);
+    let a = doc["observations"][0].clone();
+    let mut b = a.clone();
+    b["delivery_id"] = serde_json::json!("delivery-B");
+    b["receipt_ref"] = serde_json::json!("fixture:receipt-2");
+    let mut c = a.clone();
+    c["attempt_id"] = serde_json::json!("attempt-B");
+    c["delivery_id"] = serde_json::json!("delivery-C");
+    doc["observations"] = serde_json::json!([a,b,c]);
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(), Decision::Candidate);
+    doc["observations"] = serde_json::json!([c,b,a]);
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(), Decision::Candidate);
+}

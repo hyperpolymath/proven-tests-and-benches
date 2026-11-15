@@ -142,6 +142,26 @@ qualified c req o =
         (Substantive, Succeeded) => True
         _ => False)
 
+-- Exhaustive search for a subset whose attempt, delivery AND receipt
+-- identities are pairwise disjoint. Separate per-field distinct counts are
+-- insufficient: three individually distinct populations can have no pair of
+-- mutually independent observations. Structural recursion on 'remaining'
+-- ensures this search is total, though its worst-case time is exponential.
+independentWith : Observation -> Observation -> Bool
+independentWith a b =
+  a.attempt /= b.attempt
+  && a.delivery /= b.delivery
+  && a.receipt /= b.receipt
+
+selectIndependent : (remaining : List Observation) ->
+                    (need : Nat) -> (chosen : List Observation) -> Bool
+selectIndependent remaining Z chosen = True
+selectIndependent [] (S n) chosen = False
+selectIndependent (o :: rest) (S n) chosen =
+  (all (independentWith o) chosen
+    && selectIndependent rest n (o :: chosen))
+  || selectIndependent rest (S n) chosen
+
 checkRequired : ExecutionClaim -> String -> Decision
 checkRequired c req =
   if not (elem req c.scheduled) then Denied NotScheduled
@@ -164,9 +184,7 @@ checkRequired c req =
       else if all isSetup found then Denied SetupOnly
       else let good = filter (qualified c req) found in
         if null good then Void "no completed, attributable substantive receipt"
-        else if (length (nub (map (\o => o.attempt) good)) < c.minIndependent)
-             || (length (nub (map (\o => o.delivery) good)) < c.minIndependent)
-             || (length (nub (map (\o => o.receipt) good)) < c.minIndependent)
+        else if not (selectIndependent good c.minIndependent [])
           then Denied DuplicateDelivery
           else Candidate
 
@@ -182,8 +200,8 @@ checkAll c (req :: rest) =
 ||| Classify a reported execution claim. After claim-wide checks, return the
 ||| first denial or void result in required-obligation order. Candidate requires
 ||| each obligation to be scheduled and the counts of distinct attempt, delivery
-||| and receipt IDs in qualifying observations each to meet the confirmation
-||| threshold. These IDs are not authenticated.
+||| and receipt IDs to form a *mutually independent subset* of the requested
+||| size. These IDs are not authenticated by the structural adjudicator.
 public export
 adjudicate : ExecutionClaim -> Decision
 adjudicate c =
