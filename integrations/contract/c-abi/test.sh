@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
 # Silence, firing and void controls for the generic, non-proof C ABI harness.
 set -euo pipefail
 root=$(cd "$(dirname "$0")" && pwd)
