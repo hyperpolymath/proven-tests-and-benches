@@ -1,0 +1,5 @@
+ruleset pass
+rule pull_request required yes result pass
+rule required_status_checks required yes result pass
+rule advisory_report required no result fail
+decision merged
