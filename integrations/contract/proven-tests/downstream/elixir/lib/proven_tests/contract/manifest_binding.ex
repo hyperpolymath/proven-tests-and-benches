@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-#  SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
 defmodule ProvenTests.Contract.ManifestBinding do
   @moduledoc """
   Reusable adversarial check for ExUnit test-manifest source bindings.
