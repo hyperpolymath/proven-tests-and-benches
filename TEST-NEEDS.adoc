@@ -60,8 +60,7 @@ self-classification) |`+src/ProvenTests/Cells.idr+`
 |Type-safe category suite |*56 / 56 passing*
 |`+./build/exec/proven-tests-suite+`, 2026-08-07
 
-|Spec suite (Proven laws, AffineScript, HigherOrder, SetTheory, execution-truth) |*112 /
-112 passing*, of which *29 report Actually-Proven*; 20 execution-truth checks
+|Spec suite (Proven laws, AffineScript, HigherOrder, SetTheory, execution-truth) |*113 declared cases*, of which *29 report Actually-Proven*; 21 execution-truth checks
 are Unproven fixture controls
 |`+./build/exec/proven-spec-suite+`, 2026-11-15
 (https://github.com/hyperpolymath/proven-tests-and-benches/actions/runs/43763352504[CI];

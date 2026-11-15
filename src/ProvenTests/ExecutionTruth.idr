@@ -158,9 +158,12 @@ selectIndependent : (remaining : List Observation) ->
 selectIndependent remaining Z chosen = True
 selectIndependent [] (S n) chosen = False
 selectIndependent (o :: rest) (S n) chosen =
-  (all (independentWith o) chosen
-    && selectIndependent rest n (o :: chosen))
-  || selectIndependent rest (S n) chosen
+  -- Even the full remaining population cannot meet an excessive threshold.
+  -- Prune before exploring a potentially exponential search tree.
+  if length (o :: rest) < S n then False
+  else (all (independentWith o) chosen
+           && selectIndependent rest n (o :: chosen))
+       || selectIndependent rest (S n) chosen
 
 checkRequired : ExecutionClaim -> String -> Decision
 checkRequired c req =

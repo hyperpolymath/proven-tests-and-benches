@@ -111,3 +111,20 @@ independentAfterConflict =
       , { attempt := "attempt-B", delivery := "delivery-C" } goodObservation
       ]
   } silence
+
+-- Forty distinct, mutually independent confirmations with threshold 41.
+-- This planted impossible claim used to trigger enormous futile search.
+independentPopulation : Nat -> List Observation
+independentPopulation Z = []
+independentPopulation (S k) =
+  ({ attempt := "attempt-" ++ show k
+   , delivery := "delivery-" ++ show k
+   , receipt := "receipt-" ++ show k
+   } goodObservation) :: independentPopulation k
+
+public export
+unattainableFortyOne : ExecutionClaim
+unattainableFortyOne =
+  { minIndependent := 41
+  , observations := independentPopulation 40
+  } silence
