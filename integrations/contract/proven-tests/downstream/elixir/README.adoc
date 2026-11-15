@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
 = ExUnit manifest source-binding contract (reference integration)
 
 This small Elixir adapter checks one generic part of the Proven-Tests
