@@ -15,19 +15,40 @@ for source in "$header" "$client" "$library"; do
   [[ -f "$source" && -r "$source" && -s "$source" ]] || void "missing/empty/unreadable input: $source"
 done
 compiler=${CC:-cc}
-# CC may be "zig cc" or a single compiler executable. Split into argv,
-# never evaluate a shell command or interpolate compiler-supplied syntax.
+# CC may be "zig cc" or a single compiler executable. Split into argv;
+# no eval and no execution of input as shell source.
 read -r -a cc_argv <<< "$compiler"
 [[ ${#cc_argv[@]} -gt 0 ]] || void 'empty C compiler command'
 command -v "${cc_argv[0]}" >/dev/null 2>&1 || void "C compiler not available: ${cc_argv[0]}"
+command -v timeout >/dev/null 2>&1 || void 'coreutils timeout unavailable'
+# A dependent static archive must appear AFTER the subject library for
+# conventional one-pass linkers. Literal whitespace-separated argv, not eval.
+link_args=()
+if [[ -n ${C_ABI_LDLIBS:-} ]]; then
+  read -r -a link_args <<< "$C_ABI_LDLIBS"
+fi
+duration=${C_ABI_TIMEOUT:-20s}
+[[ $duration =~ ^([1-9][0-9]*)(s|m)$ ]] || void 'C_ABI_TIMEOUT must be positive seconds/minutes'
 temp=$(mktemp -d) || void 'cannot allocate isolated compile workspace'
 trap 'rm -rf "$temp"' EXIT
+# -include forces the EXACT supplied header to be consumed BEFORE client-local
+# quoted includes. A stale adjacent header cannot silently override the
+# public contract. The independent client must still assert meaningful facts.
 if ! "${cc_argv[@]}" -std=c11 -Wall -Wextra -Werror -I"$(dirname "$header")" \
-     "$client" "$library" -o "$temp/consumer"; then
+     -include "$header" "$client" "$library" "${link_args[@]}" -o "$temp/consumer"; then
   fail 'C ABI consumer failed to compile/link'
 fi
 [[ -x "$temp/consumer" ]] || void 'compiler claimed success but emitted no executable'
-if ! "$temp/consumer"; then
-  fail 'executed C ABI consumer rejected the contract'
+# Bound hangs and classify non-launch (126/127) as void rather than a subject
+# failure. A timeout (124/137) is a substantive non-termination failure.
+if timeout --kill-after=2s "$duration" "$temp/consumer"; then
+  :
+else
+  rc=$?
+  case $rc in
+    125|126|127) void "compiled ABI client could not launch (exit $rc)" ;;
+    124|137) fail "ABI client failed to terminate within $duration (exit $rc)" ;;
+    *) fail "executed C ABI consumer rejected contract (exit $rc)" ;;
+  esac
 fi
 printf 'PASS: compiled, linked and executed C ABI consumer: %s\n' "$client"
