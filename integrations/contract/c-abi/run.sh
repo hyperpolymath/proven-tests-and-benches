@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
 # Reusable executed C ABI contract test (category 2 P2P / 12 contract / 18 drift).
 # This is a harness, not a claim that arbitrary client assertions are sound.
 # Return 0: executed and passed; 1: executed and failed; 2: NOT RUN / invalid setup.
