@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[identity]
+battery = "provenance"
+category = "ReflexiveTest"
+aspect = "Security"
+defect_class = "merge-bypass-required-gates"
+
+[classification]
+proof_system = "Idris2 total functions with equality proofs"
+type_level = "dependent equality over the typed ruleset and rule outcomes"
+semiotic_level = "semantic"
+semiotic_justification = "detects an assertion of merge completion across a failed mandatory ruleset under bypass, not merely a JSON syntax pattern"
+warrant_class = "observed-estate-incident"
+warrant_note = "2026-11-15 Stuff of Awe .github PR #15: GitHub ruleset suite 5132339218 had overall bypass and failed required pull_request and required_status_checks evaluations; merge occurred. The exemplar is manually transcribed and not independently API-authenticated by this unit"
+
+[subject_shape]
+input = "strict text report of one ruleset disposition, one or more required/optional rules, and a terminal merge decision"
+build = "standalone idris2 Test.idr -o merge-bypass-required-gates (no sibling modules)"
+
+[shared_dependencies]
+toolchain = "Idris2 0.8.0 Chez measured locally; target CI pins 0.7.0 and remains unverified"
+harness_lineage = "same standalone 0/1/2 grammar approach as skipped-mandatory-reported-as-pass; implementation independently authored"
+
+[adversarial]
+last_fired = "2026-11-15"
