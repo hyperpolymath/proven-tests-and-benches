@@ -84,6 +84,10 @@ pub fn classify_json(
 /// a false Candidate. The limits protect untrusted external evidence inputs.
 fn independent_subset(candidates: &[&Observation], need: usize) -> Option<bool> {
     const SEARCH_BUDGET: usize = 200_000;
+    // A state budget alone cannot cap stack depth when excluding a long
+    // incompatible suffix. Report NotRun on oversized untrusted input rather
+    // than risking a stack overflow or pretending to have decided the claim.
+    const MAX_RECURSION_DEPTH: usize = 128;
     fn search<'a>(
         left: &[&'a Observation], need: usize, selected: &mut Vec<&'a Observation>,
         budget: &mut usize,
@@ -111,6 +115,7 @@ fn independent_subset(candidates: &[&Observation], need: usize) -> Option<bool> 
         else { Some(false) }
     }
     if candidates.len() < need { return Some(false); }
+    if candidates.len() > MAX_RECURSION_DEPTH { return None; }
     let mut budget = SEARCH_BUDGET;
     search(candidates, need, &mut Vec::new(), &mut budget)
 }

@@ -112,3 +112,19 @@ fn genuinely_independent_pair_is_order_invariant() {
     doc["observations"] = serde_json::json!([c,b,a]);
     assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(), Decision::Candidate);
 }
+
+#[test]
+fn oversized_untrusted_confirmation_population_is_not_run() {
+    // Silence/void controls remain the committed fixture inputs.
+    assert_eq!(classify_json(CLEAN, &SyntheticOnly).unwrap(), Decision::Candidate);
+    assert_eq!(classify_json(VOID, &SyntheticOnly).unwrap(),
+               Decision::NotRun("no_observations"));
+    let mut doc: serde_json::Value = serde_json::from_str(CLEAN).unwrap();
+    let entry = doc["observations"][0].clone();
+    // Previously a large exclusion chain could exhaust the call stack even
+    // though the node-count budget was not exhausted.
+    doc["observations"] = serde_json::Value::Array(vec![entry; 129]);
+    doc["min_independent"] = serde_json::json!(2);
+    assert_eq!(classify_json(&doc.to_string(), &SyntheticOnly).unwrap(),
+               Decision::NotRun("independence_search_incomplete"));
+}
