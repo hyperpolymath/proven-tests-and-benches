@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[tier]
+value = "proven-exact"
+
+[alpha]
+value = "0 by construction within the report grammar"
+warrant = "silentOnNoFailedRequired (Test.idr) — no failed required rule in any rule-list can fire on a bypassed merge; optionalFailureIsNotRequired (Test.idr) and blockedBypassIsNotMerged (Test.idr) discharge confusables"
+
+[beta]
+value = "0 by construction within the report grammar"
+warrant = "firesOnBypassedRequired (Test.idr) — every bypassed merged report with any failed required rule fires, regardless of list arity or position"
+
+[boundary]
+scope = "does not authenticate the producer's definition of required rules, the merge event, actor authority, audit source or external GitHub API"
+totality = "pure checker and warrant lemmas under %default total; only file IO entrypoint is covering"
+demotion_rule = "a surviving mutant, compiler escape, or input beyond the claimed grammar invalidates the warrant and requires demotion"
