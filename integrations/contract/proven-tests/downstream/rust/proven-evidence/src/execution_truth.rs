@@ -84,8 +84,8 @@ pub fn classify_json(
 /// a false Candidate. The limits protect untrusted external evidence inputs.
 fn independent_subset(candidates: &[&Observation], need: usize) -> Option<bool> {
     const SEARCH_BUDGET: usize = 200_000;
-    fn search(
-        left: &[&Observation], need: usize, selected: &mut Vec<&Observation>,
+    fn search<'a>(
+        left: &[&'a Observation], need: usize, selected: &mut Vec<&'a Observation>,
         budget: &mut usize,
     ) -> Option<bool> {
         if need == 0 { return Some(true); }
