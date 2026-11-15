@@ -14,10 +14,14 @@ for source in "$header" "$client" "$library"; do
   [[ -f "$source" && -r "$source" && -s "$source" ]] || void "missing/empty/unreadable input: $source"
 done
 compiler=${CC:-cc}
-command -v "$compiler" >/dev/null 2>&1 || void "C compiler not available: $compiler"
+# CC may be "zig cc" or a single compiler executable. Split into argv,
+# never evaluate a shell command or interpolate compiler-supplied syntax.
+read -r -a cc_argv <<< "$compiler"
+[[ ${#cc_argv[@]} -gt 0 ]] || void 'empty C compiler command'
+command -v "${cc_argv[0]}" >/dev/null 2>&1 || void "C compiler not available: ${cc_argv[0]}"
 temp=$(mktemp -d) || void 'cannot allocate isolated compile workspace'
 trap 'rm -rf "$temp"' EXIT
-if ! "$compiler" -std=c11 -Wall -Wextra -Werror -I"$(dirname "$header")" \
+if ! "${cc_argv[@]}" -std=c11 -Wall -Wextra -Werror -I"$(dirname "$header")" \
      "$client" "$library" -o "$temp/consumer"; then
   fail 'C ABI consumer failed to compile/link'
 fi
