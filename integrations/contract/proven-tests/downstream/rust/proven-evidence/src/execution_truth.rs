@@ -111,7 +111,8 @@ fn independent_subset(candidates: &[&Observation], need: usize) -> Option<bool> 
         else { Some(false) }
     }
     if candidates.len() < need { return Some(false); }
-    search(candidates, need, &mut Vec::new(), &mut SEARCH_BUDGET.clone())
+    let mut budget = SEARCH_BUDGET;
+    search(candidates, need, &mut Vec::new(), &mut budget)
 }
 
 /// Classify an execution claim using verified substantive receipts.
