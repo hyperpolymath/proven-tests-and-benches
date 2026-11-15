@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Executed C ABI consumer contract: reusable harness
+:status: Unproven harness; native execution required
+
+This is a general-purpose contract runner for independently authored C consumers of native static libraries. A subject contributes an honest `consumer.c` containing explicit compile-time assertions and runtime checks, a public C header, and its compiled static library. The harness compiles, links and **runs** that consumer. It is not Checky Monkey-specific and does not require Zig, Rust, Idris2 or a GitHub Actions environment.
+
+[source,console]
+----
+bash integrations/contract/c-abi/run.sh path/to/library.h path/to/consumer.c path/to/libsubject.a
+bash integrations/contract/c-abi/test.sh
+----
+
+Exit codes are intentionally three-valued: 0 = executed consumer passed, 1 = compile/link/runtime assertion failed, 2 = missing compiler, input or other prerequisite (not run). The caller **must treat both 1 and 2 as non-passing**. No proof tier is claimed: this runner verifies only the assertions supplied by the caller; a vacuous `main() { return 0; }` remains vacuous. Reviewers must inspect the client and require both passing and deliberately defective cases.
+
+Taxonomy: category 2 (P2P), category 12 (contract/invariant), category 13 (regression), category 18 (coupling/drift-freedom); aspects: interoperability, safety, dependability, reproducibility. Category 17/type-safe obligations may additionally be asserted in the client but are not formal Idris2 proofs. The test suite plants a compiling/working fixture (silence), changed declarations and runtime failure (firing) and missing prerequisites (void). These synthetic fixtures establish the harness's exit semantics, not a consumer's code coverage or test soundness.
+
+For an actual consumer, pin the exact full commit of this repository in CI and verify that the checkout equals that commit. Keep one stable required GitHub check name during migrations. A renamed or startup-failing required context defeats the purpose.
