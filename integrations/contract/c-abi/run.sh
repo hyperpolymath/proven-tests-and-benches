@@ -39,14 +39,25 @@ if ! "${cc_argv[@]}" -std=c11 -Wall -Wextra -Werror -I"$(dirname "$header")" \
   fail 'C ABI consumer failed to compile/link'
 fi
 [[ -x "$temp/consumer" ]] || void 'compiler claimed success but emitted no executable'
-# Bound hangs and classify non-launch (126/127) as void rather than a subject
-# failure. A timeout (124/137) is a substantive non-termination failure.
-if timeout --kill-after=2s "$duration" "$temp/consumer"; then
+# A separate POSIX launcher observes exec() through a close-on-exec pipe.
+# It normalises a genuinely executed child's exit 125/126/127 to failure,
+# reserving status 2 only for a child that never started. Without a handshake,
+# GNU timeout's 125/126/127 statuses are indistinguishable from user exits.
+launcher_source="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/launcher.c"
+[[ -s "$launcher_source" ]] || void 'POSIX execution-handshake source missing'
+if ! "${cc_argv[@]}" -std=c11 -Wall -Wextra -Werror \
+    "$launcher_source" -o "$temp/launcher"; then
+  void 'could not compile execution-handshake launcher'
+fi
+[[ -x "$temp/launcher" ]] || void 'execution-handshake launcher unavailable'
+# Timeout's 124/137 mean a non-terminating executable. 125/126/127 now
+# mean coreutils could not invoke the launcher, not the subject's status.
+if timeout --kill-after=2s "$duration" "$temp/launcher" "$temp/consumer"; then
   :
 else
   rc=$?
   case $rc in
-    125|126|127) void "compiled ABI client could not launch (exit $rc)" ;;
+    2|125|126|127) void "compiled ABI client could not launch or observe an execution result (exit $rc)" ;;
     124|137) fail "ABI client failed to terminate within $duration (exit $rc)" ;;
     *) fail "executed C ABI consumer rejected contract (exit $rc)" ;;
   esac
