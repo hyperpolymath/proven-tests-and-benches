@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
 = Reusable parser conformance and benchmark contract
 
 The Rust downstream library exposes `parser_contract`. Consumers supply a
