@@ -19,3 +19,18 @@ must account for all 18 categories separately and record coupling evidence
 outside the v2 denominator. Ordinary Rust test results and the parser-contract
 helper remain Unproven evidence in this framework; using the helper does not
 supply a proof ladder or certify full taxonomy coverage.
+
+== Enforcement in the schema-v2 downstream contract
+
+The immutable schema-v2 axis identifiers are pinned at
+`integrations/contract/proven-tests/taxonomy-v2.json`. The Rust reader and
+the existing legacy checker/producer consume this same file. Neither accepts
+unrecognised category or aspect labels, duplicate test identities or
+`cat_aspect_cells` other than 238. The number of occupied cells is derived
+from unique recognised category/aspect pairs with actual passed, non-debt
+entries; skipped, errored, failed and FixtureDebt entries cannot mint cells.
+
+A report carrying 252 as its v2 denominator is *invalid*, even if it happens
+to contain genuine tests. The v2 schema is a historical wire contract, not
+the current standards taxonomy. A v2 report that is structurally valid does
+not thereby establish authentic external execution or full coverage.
