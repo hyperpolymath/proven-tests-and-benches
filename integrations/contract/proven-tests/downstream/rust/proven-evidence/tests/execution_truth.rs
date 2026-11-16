@@ -153,6 +153,35 @@ fn oversized_obvious_independent_witness_is_accepted_in_either_order() {
 }
 
 #[test]
+fn large_independent_population_is_accepted_in_either_order() {
+    struct OfflineFixture;
+    impl ReceiptVerifier for OfflineFixture {
+        fn verifies(&self, o: &Observation, c: &Envelope) -> bool {
+            o.receipt_ref.starts_with("fixture:receipt-")
+                && o.subject_id == c.subject_id && o.source_revision == c.source_revision
+        }
+    }
+    let mut doc: serde_json::Value = serde_json::from_str(CLEAN).unwrap();
+    let base = doc["observations"][0].clone();
+    let population: Vec<_> = (0..4096).map(|n| {
+        let mut entry = base.clone();
+        entry["attempt_id"] = serde_json::json!(format!("attempt-{n:04}"));
+        entry["delivery_id"] = serde_json::json!(format!("delivery-{n:04}"));
+        entry["receipt_ref"] = serde_json::json!(format!("fixture:receipt-{n:04}"));
+        entry
+    }).collect();
+    doc["observations"] = serde_json::json!(population);
+    doc["min_independent"] = serde_json::json!(4096);
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(), Decision::Candidate);
+    doc["observations"].as_array_mut().unwrap().reverse();
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(), Decision::Candidate);
+    // A replay cannot supply the final independent confirmation.
+    doc["observations"][0] = doc["observations"][1].clone();
+    assert_eq!(classify_json(&doc.to_string(), &OfflineFixture).unwrap(),
+               Decision::Denied("duplicate_delivery_not_independent"));
+}
+
+#[test]
 fn oversized_intersecting_population_is_order_invariant_not_run() {
     struct OfflineFixture;
     impl ReceiptVerifier for OfflineFixture {

@@ -142,15 +142,20 @@ fn independent_subset(candidates: &[&Observation], need: usize) -> Option<bool> 
 
     // A greedy *success* is a constructive witness. Its failure does not
     // imply nonexistence, and therefore is never a Denied result.
-    let mut chosen: Vec<&Observation> = Vec::new();
+    // Separate identity sets preserve the greedy choices without scanning
+    // every previously chosen observation for each candidate.
+    let mut chosen_attempts = BTreeSet::new();
+    let mut chosen_deliveries = BTreeSet::new();
+    let mut chosen_receipts = BTreeSet::new();
     for candidate in &ordered {
-        if chosen.iter().all(|previous| {
-            candidate.attempt_id != previous.attempt_id
-                && candidate.delivery_id != previous.delivery_id
-                && candidate.receipt_ref != previous.receipt_ref
-        }) {
-            chosen.push(*candidate);
-            if chosen.len() >= need { return Some(true); }
+        if !chosen_attempts.contains(candidate.attempt_id.as_str())
+            && !chosen_deliveries.contains(candidate.delivery_id.as_str())
+            && !chosen_receipts.contains(candidate.receipt_ref.as_str())
+        {
+            chosen_attempts.insert(candidate.attempt_id.as_str());
+            chosen_deliveries.insert(candidate.delivery_id.as_str());
+            chosen_receipts.insert(candidate.receipt_ref.as_str());
+            if chosen_attempts.len() >= need { return Some(true); }
         }
     }
 
