@@ -547,9 +547,9 @@ mod test {
     #[test]
     fn passed_entries_contribute_their_cell_once() {
         let doc = conforming(vec![
-            entry("Unproven", "passed", "wiring", "boundary"),
-            entry("Unproven", "passed", "wiring", "boundary"),
-            entry("Unproven", "passed", "wiring", "typing"),
+            entry("Unproven", "passed", "Unit", "Functionality"),
+            entry("Unproven", "passed", "Unit", "Functionality"),
+            entry("Unproven", "passed", "Unit", "Security"),
         ]);
         assert!(validate(&doc).unwrap().is_empty());
         let s = summarise(&entries_of(&doc), LATTICE_CELLS);
@@ -561,7 +561,7 @@ mod test {
 
     #[test]
     fn failed_entries_contribute_nothing() {
-        let doc = conforming(vec![entry("Unproven", "failed", "wiring", "boundary")]);
+        let doc = conforming(vec![entry("Unproven", "failed", "Unit", "Functionality")]);
         assert!(validate(&doc).unwrap().is_empty());
         let s = summarise(&entries_of(&doc), LATTICE_CELLS);
         assert_eq!(s.passed, 0);
@@ -572,8 +572,8 @@ mod test {
     #[test]
     fn skipped_entries_contribute_nothing() {
         let doc = conforming(vec![
-            entry("Unproven", "passed", "wiring", "boundary"),
-            entry("Unproven", "skipped", "wiring", "typing"),
+            entry("Unproven", "passed", "Unit", "Functionality"),
+            entry("Unproven", "skipped", "Unit", "Security"),
         ]);
         assert!(validate(&doc).unwrap().is_empty());
         let s = summarise(&entries_of(&doc), LATTICE_CELLS);
@@ -583,11 +583,11 @@ mod test {
 
     #[test]
     fn actually_proven_needs_a_complete_ladder() {
-        let mut doc = conforming(vec![entry("ActuallyProven", "passed", "wiring", "boundary")]);
+        let mut doc = conforming(vec![entry("ActuallyProven", "passed", "Unit", "Functionality")]);
         let violations = validate(&doc).unwrap();
         assert!(violations.iter().any(|x| x.contains("empty proof ladder")));
         // A complete ladder makes it conformant.
-        let mut e = entry("ActuallyProven", "passed", "wiring", "boundary");
+        let mut e = entry("ActuallyProven", "passed", "Unit", "Functionality");
         e["proof_ladder"] = json!([{"statement": "boom", "theorem": "idris_proof"}]);
         doc = conforming(vec![e]);
         assert!(validate(&doc).unwrap().is_empty());
@@ -595,7 +595,7 @@ mod test {
 
     #[test]
     fn provisionally_proven_needs_both_certificates() {
-        let mut e = entry("ProvisionallyProven", "passed", "wiring", "boundary");
+        let mut e = entry("ProvisionallyProven", "passed", "Unit", "Functionality");
         assert!(validate(&conforming(vec![e.clone()]))
             .unwrap()
             .iter()
@@ -611,7 +611,7 @@ mod test {
 
     #[test]
     fn unknown_provenance_is_refused_not_defaulted() {
-        let doc = conforming(vec![entry("DefinitelyProven", "passed", "wiring", "boundary")]);
+        let doc = conforming(vec![entry("DefinitelyProven", "passed", "Unit", "Functionality")]);
         assert!(validate(&doc)
             .unwrap()
             .iter()
@@ -620,7 +620,7 @@ mod test {
 
     #[test]
     fn overclaimed_summary_is_refused() {
-        let mut doc = conforming(vec![entry("Unproven", "passed", "wiring", "boundary")]);
+        let mut doc = conforming(vec![entry("Unproven", "passed", "Unit", "Functionality")]);
         assert!(validate(&doc).unwrap().is_empty());
         doc["summary"]["covered_cells"] = json!(40);
         doc["summary"]["lattice_covered"] = json!(40);
@@ -630,13 +630,13 @@ mod test {
 
     #[test]
     fn debt_entries_are_excluded_from_the_ledger() {
-        let mut debt = entry("Unproven", "passed", "wiring", "boundary");
+        let mut debt = entry("Unproven", "passed", "Unit", "Functionality");
         debt["fixture_obligation"] = json!("FixtureDebt");
         debt["fixture_debt_ref"] = json!("DEBT-B2-LEGACY-SUITE");
         debt.as_object_mut().unwrap().remove("fixtures");
         // The emitted summary counts it in the tier tally (the report states what
         // the intended tier IS) but not in `total`: one entry, zero tests.
-        let mut doc = conforming(vec![entry("Unproven", "passed", "wiring", "typing"), debt]);
+        let mut doc = conforming(vec![entry("Unproven", "passed", "Unit", "Security"), debt]);
         assert!(validate(&doc).unwrap().is_empty());
         let s = summarise(&entries_of(&doc), LATTICE_CELLS);
         assert_eq!(s.total, 1, "the debt entry is not a test");
@@ -651,8 +651,8 @@ mod test {
     #[test]
     fn summary_is_recomputed_not_trusted() {
         let doc = conforming(vec![
-            entry("Unproven", "passed", "wiring", "boundary"),
-            entry("Unproven", "passed", "wiring", "typing"),
+            entry("Unproven", "passed", "Unit", "Functionality"),
+            entry("Unproven", "passed", "Unit", "Security"),
         ]);
         let entries = entries_of(&doc);
         let computed = summarise(&entries, LATTICE_CELLS);
