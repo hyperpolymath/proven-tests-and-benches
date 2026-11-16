@@ -28,7 +28,15 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 from typing import Any
+
+_AXES = json.loads((Path(__file__).resolve().parents[1] /
+                    "taxonomy-v2.json").read_text(encoding="utf-8"))
+assert _AXES["schema_version"] == 2
+assert len(_AXES["categories"]) == 17 and len(set(_AXES["categories"])) == 17
+assert len(_AXES["aspects"]) == 14 and len(set(_AXES["aspects"])) == 14
+LATTICE_V2 = len(_AXES["categories"]) * len(_AXES["aspects"])
 
 TIERS = ("Unproven", "ProvisionallyProven")
 OUTCOMES = ("passed", "failed", "error", "skipped")
@@ -67,11 +75,28 @@ def emit(input_doc: Any) -> dict:
     counts = {"passed": 0, "failed": 0, "error": 0, "skipped": 0}
     tiers = {"ActuallyProven": 0, "ProvisionallyProven": 0, "Unproven": 0}
     debt = 0
+    seen_test_ids: set[tuple[str, str, int]] = set()
+    if input_doc.get("cat_aspect_cells", LATTICE_V2) != LATTICE_V2:
+        fail(f"schema-v2 requires cat_aspect_cells={LATTICE_V2}", 1)
 
     for i, t in enumerate(tests):
         where = f"tests[{i}]"
         if not isinstance(t, dict):
             fail(f"{where} is not an object", 1)
+        if t.get("category") not in _AXES["categories"]:
+            fail(f"{where}.category is not a recognised schema-v2 category", 1)
+        if t.get("aspect") not in _AXES["aspects"]:
+            fail(f"{where}.aspect is not a recognised schema-v2 aspect", 1)
+        try:
+            ident = (t.get("module"), t.get("name"), int(t.get("line", 0)))
+        except (TypeError, ValueError, OverflowError):
+            fail(f"{where}.line is not an integer", 1)
+        if (not isinstance(ident[0], str) or not ident[0].strip()
+                or not isinstance(ident[1], str) or not ident[1].strip()):
+            fail(f"{where} has an invalid test identity", 1)
+        if ident in seen_test_ids:
+            fail(f"{where} duplicates a previously emitted test identity", 1)
+        seen_test_ids.add(ident)
         tier = t.get("tier")
         if tier not in TIERS:
             fail(
@@ -102,7 +127,7 @@ def emit(input_doc: Any) -> dict:
             "test_id": {
                 "module_path": t.get("module", ""),
                 "test_name": t.get("name", ""),
-                "line_number": int(t.get("line", 0)),
+                "line_number": ident[2],
             },
             "category": t.get("category"),
             "aspect": t.get("aspect"),
@@ -151,7 +176,7 @@ def emit(input_doc: Any) -> dict:
             "provisionally_proven": tiers["ProvisionallyProven"],
             "unproven": tiers["Unproven"],
             "covered_cells": len(covered),
-            "cat_aspect_cells": input_doc.get("cat_aspect_cells", 238),
+            "cat_aspect_cells": LATTICE_V2,
             "lattice_covered": len(covered),
         },
         "entries": entries,
