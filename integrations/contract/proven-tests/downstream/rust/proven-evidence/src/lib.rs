@@ -30,6 +30,7 @@ pub mod parser_contract;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeSet;
+use std::sync::OnceLock;
 
 pub const TIERS: [&str; 3] = ["ActuallyProven", "ProvisionallyProven", "Unproven"];
 pub const OUTCOMES: [&str; 4] = ["passed", "failed", "error", "skipped"];
@@ -37,6 +38,37 @@ pub const FIXTURE_OBLIGATIONS: [&str; 3] = ["Fixtures", "CannotFailByDesign", "F
 /// The taxonomy's full (category, aspect) lattice, as pinned in
 /// integrations/contract/contract-version.json.
 pub const LATTICE_CELLS: i64 = 238;
+
+/// Schema v2 remains pinned to the historic 17 x 14 lattice.  This file is
+/// shared with the legacy checker and emitter, not sourced from moving main.
+#[derive(Debug, Deserialize)]
+struct TaxonomyV2 {
+    schema_version: i64,
+    categories: Vec<String>,
+    aspects: Vec<String>,
+}
+
+fn taxonomy_v2() -> &'static TaxonomyV2 {
+    static TAXONOMY: OnceLock<TaxonomyV2> = OnceLock::new();
+    TAXONOMY.get_or_init(|| {
+        let axes: TaxonomyV2 =
+            serde_json::from_str(include_str!("../../../../taxonomy-v2.json"))
+                .expect("version-pinned schema-v2 taxonomy must parse");
+        assert_eq!(axes.schema_version, 2, "taxonomy contract version drift");
+        assert_eq!(axes.categories.len(), 17, "v2 has exactly 17 categories");
+        assert_eq!(axes.aspects.len(), 14, "v2 has exactly 14 aspects");
+        assert_eq!(axes.categories.len() * axes.aspects.len(), LATTICE_CELLS as usize);
+        assert_eq!(axes.categories.iter().collect::<BTreeSet<_>>().len(), 17);
+        assert_eq!(axes.aspects.iter().collect::<BTreeSet<_>>().len(), 14);
+        axes
+    })
+}
+
+fn valid_v2_cell(category: &str, aspect: &str) -> bool {
+    let taxonomy = taxonomy_v2();
+    taxonomy.categories.iter().any(|c| c == category)
+        && taxonomy.aspects.iter().any(|a| a == aspect)
+}
 
 /// Python truthiness for JSON values, used by the normative checker.
 fn is_truthy(value: &Value) -> bool {
@@ -157,10 +189,10 @@ pub fn parse(doc: &Value) -> Result<Report, String> {
 ///
 /// Returns detected violations, including malformed entries and an absent
 /// summary. Coverage counts distinct cells from passed, non-debt entries,
-/// including cells with empty coordinates. This checks `covered_cells`, outcome
-/// counts, `total` and tier tallies. The eleven recognised summary counters
-/// must be non-negative integers representable as `i64`; `lattice_covered` and
-/// `cat_aspect_cells` are not independently recomputed. Passing these checks
+/// only if coordinates are recognised schema-v2 axes. This checks `covered_cells`,
+/// both lattice counters, outcome counts, `total` and tier tallies. The eleven
+/// recognised summary counters must be non-negative integers representable as
+/// `i64`. Passing these checks
 /// does not authenticate proof citations or execution.
 ///
 /// # Errors
@@ -179,6 +211,7 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
         .ok_or_else(|| "report has no 'entries' array".to_string())?;
 
     let mut passed_cells: BTreeSet<(String, String)> = BTreeSet::new();
+    let mut seen_test_ids: BTreeSet<(String, String, Option<i64>)> = BTreeSet::new();
     let mut tier_counts = [0i64; 3];
     let mut passed = 0i64;
     let mut failed = 0i64;
@@ -200,6 +233,30 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
         // Do not let malformed evidence count towards a derived summary.
         if !entry.evidence.is_null() && !entry.evidence.is_object() {
             v.push(format!("{where_}.evidence must be an object or null"));
+            continue;
+        }
+
+        // A fabricated label, a current-v3-only label, or duplicate identity
+        // is never a schema-v2 test and cannot mint a covered cell.
+        let taxonomy = taxonomy_v2();
+        if !taxonomy.categories.iter().any(|c| c == &entry.category) {
+            v.push(format!("{where_}.category {:?} is not a schema-v2 category", entry.category));
+            continue;
+        }
+        if !taxonomy.aspects.iter().any(|a| a == &entry.aspect) {
+            v.push(format!("{where_}.aspect {:?} is not a schema-v2 aspect", entry.aspect));
+            continue;
+        }
+        if entry.test_id.module_path.trim().is_empty()
+            || entry.test_id.test_name.trim().is_empty()
+        {
+            v.push(format!("{where_}.test_id must have a module_path and test_name"));
+            continue;
+        }
+        let id = (entry.test_id.module_path.clone(), entry.test_id.test_name.clone(),
+            entry.test_id.line_number);
+        if !seen_test_ids.insert(id) {
+            v.push(format!("{where_}.test_id duplicates an earlier entry"));
             continue;
         }
 
@@ -308,6 +365,14 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
     }
 
     let derived = passed_cells.len() as i64;
+    if get("cat_aspect_cells") != Some(LATTICE_CELLS) {
+        v.push(format!("summary.cat_aspect_cells must be {LATTICE_CELLS} for schema-v2, got {:?}",
+            get("cat_aspect_cells")));
+    }
+    if get("lattice_covered") != Some(derived) {
+        v.push(format!("summary.lattice_covered={:?} but only {derived} valid passed cells",
+            get("lattice_covered")));
+    }
     if get("covered_cells") != Some(derived) {
         v.push(format!(
             "summary.covered_cells={:?} but only {derived} (category x aspect) cell(s) are \
@@ -356,10 +421,10 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
 /// (category, aspect) cells of the entries that ran and passed.
 ///
 /// `FixtureDebt` entries contribute only to recognised tier tallies. The
-/// `lattice_cells` value is copied to `cat_aspect_cells` without validation;
-/// an empty slice produces zero entry and coverage counts. Entries are not validated:
-/// unrecognised outcomes count as skipped and unrecognised tiers are not tallied.
-pub fn summarise(entries: &[Entry], lattice_cells: i64) -> Summary {
+/// The old lattice_cells parameter is retained for API compatibility but is
+/// NEVER trusted: schema-v2's denominator is always 238. An empty slice
+/// produces zero counts; invalid labels cannot contribute covered cells.
+pub fn summarise(entries: &[Entry], _lattice_cells: i64) -> Summary {
     let mut passed = 0i64;
     let mut failed = 0i64;
     let mut errored = 0i64;
@@ -379,7 +444,9 @@ pub fn summarise(entries: &[Entry], lattice_cells: i64) -> Summary {
         match e.result.outcome.as_str() {
             "passed" => {
                 passed += 1;
-                cells.insert(e.cell());
+                if valid_v2_cell(&e.category, &e.aspect) {
+                    cells.insert(e.cell());
+                }
             }
             "failed" => failed += 1,
             "error" => errored += 1,
@@ -398,14 +465,14 @@ pub fn summarise(entries: &[Entry], lattice_cells: i64) -> Summary {
         provisionally_proven: tier_counts[1],
         unproven: tier_counts[2],
         covered_cells: covered,
-        cat_aspect_cells: lattice_cells,
+        cat_aspect_cells: LATTICE_CELLS,
         lattice_covered: covered,
     }
 }
 
 /// Recompute the summary and compare it against the submitted one. The summary
 /// is a derived view; if it disagrees with the entries, the report is malformed.
-/// The submitted `cat_aspect_cells` is reused, so the lattice size is not checked.
+/// The schema-v2 lattice denominator is independently pinned and checked.
 ///
 /// # Errors
 /// Returns Err describing the computed and submitted summaries if they differ.
@@ -413,7 +480,15 @@ pub fn assert_summary_matches(
     entries: &[Entry],
     submitted: &Summary,
 ) -> Result<(), String> {
-    let computed = summarise(entries, submitted.cat_aspect_cells);
+    if entries.iter().any(|e| !valid_v2_cell(&e.category, &e.aspect)) {
+        return Err("one or more entries have an unknown schema-v2 coordinate".to_string());
+    }
+    let mut ids = BTreeSet::new();
+    if entries.iter().any(|e| !ids.insert((&e.test_id.module_path, &e.test_id.test_name,
+                                               e.test_id.line_number))) {
+        return Err("duplicate test_id in schema-v2 report".to_string());
+    }
+    let computed = summarise(entries, LATTICE_CELLS);
     if computed != *submitted {
         return Err(format!(
             "summary does not match the entries: computed {computed:?}, submitted {submitted:?}"
@@ -446,7 +521,11 @@ mod test {
         })
     }
 
-    fn conforming(entries: Vec<Value>) -> Value {
+    fn conforming(mut entries: Vec<Value>) -> Value {
+        // Entries in independent test rows must have distinct test identities.
+        for (i, entry) in entries.iter_mut().enumerate() {
+            entry["test_id"]["test_name"] = json!(format!("t_{i}"));
+        }
         let parsed: Vec<Entry> = entries
             .iter()
             .map(|e| serde_json::from_value(e.clone()).unwrap())
@@ -582,4 +661,49 @@ mod test {
         bogus.covered_cells = 40;
         assert!(assert_summary_matches(&entries, &bogus).is_err());
     }
+    #[test]
+    fn schema_v2_rejects_unknown_and_future_category_or_aspect() {
+        for (category, aspect, needle) in [
+            ("Invented", "Security", "category"),
+            ("Coupling", "Security", "category"),
+            ("Type-Safe", "UnknownAspect", "aspect"),
+        ] {
+            let doc = conforming(vec![entry("Unproven", "passed", category, aspect)]);
+            let violations = validate(&doc).unwrap();
+            assert!(violations.iter().any(|v| v.contains(needle)), "{violations:?}");
+            assert_eq!(summarise(&entries_of(&doc), 252).covered_cells, 0);
+        }
+    }
+
+    #[test]
+    fn schema_v2_refuses_mutated_lattice_denominators_and_occupied_counts() {
+        let mut doc = conforming(vec![entry("Unproven", "passed", "Unit", "Security")]);
+        assert!(validate(&doc).unwrap().is_empty());
+        doc["summary"]["cat_aspect_cells"] = json!(252);
+        assert!(validate(&doc).unwrap().iter().any(|v| v.contains("cat_aspect_cells")));
+        let entries = entries_of(&doc);
+        assert_eq!(summarise(&entries, 252).cat_aspect_cells, 238);
+        let mut submitted: Summary = serde_json::from_value(doc["summary"].clone()).unwrap();
+        assert!(assert_summary_matches(&entries, &submitted).is_err());
+        submitted.cat_aspect_cells = 238;
+        submitted.lattice_covered = 2;
+        assert!(assert_summary_matches(&entries, &submitted).is_err());
+        doc["summary"]["cat_aspect_cells"] = json!(238);
+        doc["summary"]["lattice_covered"] = json!(2);
+        assert!(validate(&doc).unwrap().iter().any(|v| v.contains("lattice_covered")));
+    }
+
+    #[test]
+    fn duplicate_identity_cannot_mint_a_second_cell() {
+        let mut doc = conforming(vec![
+            entry("Unproven", "passed", "Unit", "Security"),
+            entry("Unproven", "passed", "Contract", "Safety"),
+        ]);
+        doc["entries"][1]["test_id"] = doc["entries"][0]["test_id"].clone();
+        let violations = validate(&doc).unwrap();
+        assert!(violations.iter().any(|v| v.contains("duplicates")), "{violations:?}");
+        let entries = entries_of(&doc);
+        assert!(assert_summary_matches(&entries, &summarise(&entries, 238)).is_err());
+    }
+
 }
