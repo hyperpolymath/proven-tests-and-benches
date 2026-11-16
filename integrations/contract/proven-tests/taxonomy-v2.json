@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "categories": [
+    "Unit",
+    "P2P",
+    "E2E",
+    "Build",
+    "Execution",
+    "Reflexive",
+    "Lifecycle",
+    "Smoke",
+    "Property",
+    "Mutation",
+    "Fuzz",
+    "Contract",
+    "Regression",
+    "Chaos",
+    "Compatibility",
+    "Proof-Regression",
+    "Type-Safe"
+  ],
+  "aspects": [
+    "Dependability",
+    "Security",
+    "Usability",
+    "Interoperability",
+    "Safety",
+    "Performance",
+    "Functionality",
+    "Versability",
+    "Accessibility",
+    "Maintainability",
+    "Privacy",
+    "Observability",
+    "Reproducibility",
+    "Portability"
+  ]
+}

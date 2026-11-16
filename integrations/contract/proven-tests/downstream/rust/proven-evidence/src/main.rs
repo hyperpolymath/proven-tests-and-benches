@@ -93,21 +93,12 @@ enum Mode {
     Check,
 }
 
-/// Read `summary.cat_aspect_cells`, defaulting to LATTICE_CELLS when absent
-/// or not representable as an i64. Negative values are returned unchanged.
-fn lattice_cells(doc: &Value) -> i64 {
-    doc.get("summary")
-        .and_then(|s| s.get("cat_aspect_cells"))
-        .and_then(Value::as_i64)
-        .unwrap_or(proven_evidence::LATTICE_CELLS)
-}
-
 /// Derive the summary from the entries and write it.
 ///
-/// Overwrite `output` with pretty JSON using the lattice size from `doc`.
+/// Overwrite `output` using the fixed schema-v2 lattice denominator.
 /// Exit 0 on success or 1 on serialisation or write failure.
-fn emit_summary(_input: &str, output: &str, doc: &Value, report: &proven_evidence::Report) -> ! {
-    let summary = proven_evidence::summarise(&report.entries, lattice_cells(doc));
+fn emit_summary(_input: &str, output: &str, _doc: &Value, report: &proven_evidence::Report) -> ! {
+    let summary = proven_evidence::summarise(&report.entries, proven_evidence::LATTICE_CELLS);
     let text = match serde_json::to_string_pretty(&summary) {
         Ok(text) => text,
         Err(e) => {
@@ -128,8 +119,8 @@ fn emit_summary(_input: &str, output: &str, doc: &Value, report: &proven_evidenc
 
 /// Refuse a submitted summary that disagrees with the report's entries.
 ///
-/// Read `summary_path`. The submitted lattice size is reused without checking
-/// it against the report. Exit 0 for a match, 1 for a mismatch, or 2 if the
+/// Read `summary_path`. The submitted lattice denominator is independently
+/// checked against schema-v2. Exit 0 for a match, 1 for a mismatch, or 2 if the
 /// summary cannot be read or deserialised.
 fn check_summary(
     input: &str,

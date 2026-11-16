@@ -1,0 +1,47 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+= Schema-v3 migration design (proposal, not an implemented contract)
+:toc: left
+
+== Boundary
+
+Schema v2 is immutable: 17 categories x 14 aspects = 238 possible cells.
+The current canonical standards taxonomy includes a new Category 18,
+Coupling / Drift-freedom: a distinct 18 x 14 = 252-cell target.
+No schema-v2 report may claim it has adopted the new category just by changing
+its denominator, adding a fabricated label, or backfilling invented tests.
+
+== Proposed migration sequence
+
+. Pin the current standards source by a reviewed, full 40-hex commit SHA
+  and freeze all 18 category identifiers and 14 aspect identifiers in the
+  *new* v3 vocabulary; keep the v2 file and v2 conformance tests unchanged.
+. Add an explicit `schema_version: 3` reader and producer with separate
+  parsers, fixture corpus and strict 252-cell denominator. Reject a v2
+  envelope containing v3-only claims and reject a v3 envelope claiming to
+  be v2. Cross-version conversion must require an explicit operation and
+  must preserve every original test, provenance, obligation and result.
+. Extend the Idris2 typed category enumeration, exhaustive proofs, Rust
+  consumer and the surviving legacy surface in a coordinated, reviewed
+  migration; add positive and negative cross-language conformance controls.
+. For Category 18, require *actual* cross-artifact drift evidence: an
+  independent check of a test manifest against executed test inventory,
+  CLI versus API parity, lockfile against parser/admission state, and real
+  schema producer/consumer round trips. Mark inapplicable pairs N/A with an
+  explicit justification, not fabricated passing entries.
+. Test failures, skipped work, missing evidence, duplicate identities,
+  non-execution and mutation controls. Require actual CI jobs and the
+  applicable code review and signatures on the latest commit before release.
+
+== Admissibility
+
+A v3 score is *not comparable* to a v2 score without saying which taxonomy
+was used and whether Category 18 is genuinely tested or N/A. An N/A record
+is not a passed test, a covered cell, or proof. The 252 denominator is the
+size of the possibility space, not a claim of 252 executed tests.
+
+== Current state
+
+Design only. No deployed schema-v3 report, proof, migration or test-count
+claim is made here. The existing issue #110 remains open until separately
+reviewed v3 implementation and true coupling evidence are integrated.

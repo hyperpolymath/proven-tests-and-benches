@@ -77,7 +77,7 @@
         "test_name": "t_p2p",
         "line_number": 1
       },
-      "category": "PointToPoint",
+      "category": "P2P",
       "aspect": "Dependability",
       "typesafe_category": null,
       "provenance": "Unproven",
