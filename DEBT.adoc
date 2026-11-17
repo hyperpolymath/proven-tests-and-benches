@@ -57,10 +57,14 @@ claiming attribution was normalised.
 |Add a `+.mailmap+` and normalise. Do *not* bulk-sweep SPDX headers —
 estate policy forbids it and it has mis-licensed files before.
 
-|*L-4* |LOW |`+reuse lint+` runs in no workflow and no `+just+` recipe.
-Compliance is claimed in `+REUSE.toml+` and gated nowhere.
-|`+grep -rn "reuse" .github/workflows/ Justfile+` → no hits |Add to
-`+ci.yml+` alongside the other fast gates.
+|*L-4* |RESOLVED |`+reuse lint+` ran in no workflow and no `+just+` recipe,
+so the compliance claimed in `+REUSE.toml+` was gated nowhere. A later inline
+`+ci.yml+` step gated it only partly: it passed a file whose second
+`+SPDX-License-Identifier+` line was unparseable.
+|`+scripts/check-reuse.sh+` runs in `+ci.yml+` and `+just lint+`. Its planted
+controls are in `+scripts/test/check-reuse.test.sh+` (12 controls, including
+the unparseable-second-identifier case). |Resolved 2026-11-17. Keep `+reuse+`
+pinned in `+ci.yml+`, and bump it only as a reviewed change.
 |===
 
 === Documentation — D
