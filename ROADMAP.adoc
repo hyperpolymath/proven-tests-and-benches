@@ -124,8 +124,9 @@ failing on injected drift.
 1, and changing the grade in `+READINESS.adoc+` without the badge exits
 1.
 
-Debt: D-1, D-2. Also fold in `+reuse lint+` (L-4) and `+pre-commit+`
-(T-4), both claimed and gated nowhere.
+Debt: D-1, D-2. Also fold in `+pre-commit+` (T-4), which is claimed and
+gated nowhere. (`+reuse lint+`, L-4, is now gated by
+`+scripts/check-reuse.sh+`.)
 
 === 3 — Close the panic-attack chain
 
