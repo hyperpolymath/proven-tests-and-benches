@@ -134,6 +134,12 @@ printf '{"non_compliant":{},"files":[{"path":"a.adoc","spdx_expressions":[{"valu
 expect "non-boolean is_valid is no check, not a pass" 2 'NO CHECK PERFORMED: report is not valid' \
   "$CHECK" --json "$WORK/string-valid.json"
 
+# reuse 6.3.0 always emits spdx_expressions as an array, even for a file with
+# no licence at all, so a null or missing value is an unknown shape, not "none".
+printf '{"non_compliant":{},"files":[{"path":"a.adoc","spdx_expressions":null}],"summary":{"compliant":true}}\n' > "$WORK/null-expressions.json"
+expect "null spdx_expressions is no check, not a pass" 2 'NO CHECK PERFORMED: report is not valid' \
+  "$CHECK" --json "$WORK/null-expressions.json"
+
 # A future reuse category this gate does not know: compliant=false with every
 # known category empty must still fail (the catch-all).
 printf '{"non_compliant":{},"files":[],"summary":{"compliant":false,"files_total":1}}\n' > "$WORK/unknown-reason.json"

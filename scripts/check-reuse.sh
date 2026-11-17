@@ -76,8 +76,8 @@ jq -e '
   (.non_compliant | type) == "object"
   and all(.non_compliant[]; type == "array")
   and (.files | type) == "array"
-  and all(.files[]; (.spdx_expressions // []) | type == "array"
-                    and all(.[]; (.is_valid | type) == "boolean"))
+  and all(.files[]; (.spdx_expressions | type) == "array"
+                    and all(.spdx_expressions[]; (.is_valid | type) == "boolean"))
   and (.summary.compliant | type) == "boolean"
 ' "$report" >/dev/null 2>&1 \
   || no_check "report is not valid reuse lint JSON (needs array-valued non_compliant categories, files with boolean is_valid, summary.compliant): $report"
@@ -86,7 +86,7 @@ failures="$(jq -r '
   [ .non_compliant | to_entries[]
     | select((.value | type) == "array" and (.value | length) > 0)
     | "\(.key): \(.value | map(if type == "object" then (.license // .path // tostring) else tostring end) | join(", "))" ]
-  + [ .files[] | .path as $p | (.spdx_expressions // [])[]
+  + [ .files[] | .path as $p | .spdx_expressions[]
       | select(.is_valid == false)
       | "invalid SPDX expression in \($p): \(.value)" ]
   | .[]
