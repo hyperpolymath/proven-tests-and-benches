@@ -62,7 +62,7 @@ so the compliance claimed in `+REUSE.toml+` was gated nowhere. A later inline
 `+ci.yml+` step gated it only partly: it passed a file whose second
 `+SPDX-License-Identifier+` line was unparseable.
 |`+scripts/check-reuse.sh+` runs in `+ci.yml+` and `+just lint+`. Its planted
-controls are in `+scripts/test/check-reuse.test.sh+` (12 controls, including
+controls are in `+scripts/test/check-reuse.test.sh+` (14 controls, including
 the unparseable-second-identifier case). |Resolved 2026-11-17. Keep `+reuse+`
 pinned in `+ci.yml+`, and bump it only as a reviewed change.
 |===

@@ -51,7 +51,7 @@ tree() {
 }
 
 # stage <dir>: reuse honours git's view of the tree, so stage everything.
-stage() { git -C "$1" add -A >/dev/null; }
+stage() { local dir="$1"; git -C "$dir" add -A >/dev/null; }
 
 # expect: run a command, then assert its exit code equals $2 and its combined
 # output matches the extended regex $3. $1 names the control.
@@ -59,7 +59,7 @@ expect() {
   local label="$1" want_rc="$2" want_re="$3" out rc
   shift 3
   if out="$("$@" 2>&1)"; then rc=0; else rc=$?; fi
-  if [ "$rc" -eq "$want_rc" ] && grep -qE -- "$want_re" <<<"$out"; then
+  if [[ "$rc" -eq "$want_rc" ]] && grep -qE -- "$want_re" <<<"$out"; then
     echo "  PASS  $label (exit $rc)"
     passed=$((passed + 1))
   else
@@ -108,10 +108,13 @@ expect "licence used without its text fails" 1 'missing_licenses: Apache-2\.0' "
 expect "nonexistent directory is no check" 2 'NO CHECK PERFORMED: directory not found' \
   "$CHECK" "$WORK/does-not-exist"
 
+# A PATH holding only what the gate needs before it looks for reuse (bash for
+# its shebang, jq), so the control holds wherever reuse happens to be installed.
+mkdir -p "$WORK/bin"
+ln -s "$(command -v bash)" "$WORK/bin/bash"
+ln -s "$(command -v jq)" "$WORK/bin/jq"
 expect "reuse missing from PATH is no check" 2 'NO CHECK PERFORMED: reuse is not installed' \
-  env PATH="$(dirname "$(command -v jq)"):/usr/bin:/bin" PYTHONPATH= bash -c '
-    command -v reuse >/dev/null 2>&1 && { echo "reuse still on PATH; control cannot run"; exit 99; }
-    exec "$0" "$1"' "$CHECK" "$WORK/clean"
+  env PATH="$WORK/bin" "$CHECK" "$WORK/clean"
 
 printf '{ not json' > "$WORK/malformed.json"
 expect "malformed report is no check" 2 'NO CHECK PERFORMED: report is not valid' \
@@ -120,6 +123,16 @@ expect "malformed report is no check" 2 'NO CHECK PERFORMED: report is not valid
 printf '{"summary":{"compliant":true}}\n' > "$WORK/shape.json"
 expect "unknown report shape is no check" 2 'NO CHECK PERFORMED: report is not valid' \
   "$CHECK" --json "$WORK/shape.json"
+
+# Inner shapes the checks read. Each report claims compliant=true, so a gate
+# that skipped the odd value would print OK: these must be exit 2 instead.
+printf '{"non_compliant":{"missing_licenses":"Apache-2.0"},"files":[],"summary":{"compliant":true}}\n' > "$WORK/string-category.json"
+expect "non-array category is no check, not a pass" 2 'NO CHECK PERFORMED: report is not valid' \
+  "$CHECK" --json "$WORK/string-category.json"
+
+printf '{"non_compliant":{},"files":[{"path":"a.adoc","spdx_expressions":[{"value":"MPL-2.0 (code)","is_valid":"false"}]}],"summary":{"compliant":true}}\n' > "$WORK/string-valid.json"
+expect "non-boolean is_valid is no check, not a pass" 2 'NO CHECK PERFORMED: report is not valid' \
+  "$CHECK" --json "$WORK/string-valid.json"
 
 # A future reuse category this gate does not know: compliant=false with every
 # known category empty must still fail (the catch-all).
@@ -130,4 +143,4 @@ expect "non-compliance for an unnamed reason still fails" 1 'for a reason this g
 expect "wrong argument count is no check" 2 'NO CHECK PERFORMED: usage' "$CHECK" a b
 
 echo "check-reuse self-test: $passed passed, $failed failed"
-[ "$failed" -eq 0 ]
+[[ "$failed" -eq 0 ]]

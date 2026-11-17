@@ -46,16 +46,16 @@ command -v jq >/dev/null 2>&1 || no_check "jq is not installed"
 
 report=""
 cleanup=""
-trap '[ -n "$cleanup" ] && rm -f "$cleanup"' EXIT
+trap '[[ -n "$cleanup" ]] && rm -f "$cleanup"' EXIT
 
-if [ "${1:-}" = "--json" ]; then
-  [ $# -eq 2 ] || no_check "usage: $0 --json FILE"
+if [[ "${1:-}" = "--json" ]]; then
+  [[ $# -eq 2 ]] || no_check "usage: $0 --json FILE"
   report="$2"
-  [ -f "$report" ] || no_check "report file not found: $report"
+  [[ -f "$report" ]] || no_check "report file not found: $report"
 else
-  [ $# -le 1 ] || no_check "usage: $0 [DIR] | --json FILE"
+  [[ $# -le 1 ]] || no_check "usage: $0 [DIR] | --json FILE"
   dir="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
-  [ -d "$dir" ] || no_check "directory not found: $dir"
+  [[ -d "$dir" ]] || no_check "directory not found: $dir"
   command -v reuse >/dev/null 2>&1 || no_check "reuse is not installed (pipx install reuse)"
   report="$(mktemp)" || no_check "mktemp failed"
   cleanup="$report"
@@ -63,19 +63,24 @@ else
   # Anything else means it did not judge the tree, and that is not a pass.
   reuse --root "$dir" lint --json > "$report"
   rc=$?
-  if [ "$rc" -ne 0 ] && [ "$rc" -ne 1 ]; then
+  if [[ "$rc" -ne 0 && "$rc" -ne 1 ]]; then
     no_check "reuse lint exited $rc on $dir"
   fi
 fi
 
 # The report must be the shape this gate was written against; an unknown shape
-# is exit 2, never an implicit pass.
+# is exit 2, never an implicit pass. That includes the inner values the checks
+# below read: a non_compliant category that is not an array, or an is_valid that
+# is not a boolean, would otherwise be skipped by those checks and read as clean.
 jq -e '
   (.non_compliant | type) == "object"
+  and all(.non_compliant[]; type == "array")
   and (.files | type) == "array"
+  and all(.files[]; (.spdx_expressions // []) | type == "array"
+                    and all(.[]; (.is_valid | type) == "boolean"))
   and (.summary.compliant | type) == "boolean"
 ' "$report" >/dev/null 2>&1 \
-  || no_check "report is not valid reuse lint JSON (needs non_compliant, files, summary.compliant): $report"
+  || no_check "report is not valid reuse lint JSON (needs array-valued non_compliant categories, files with boolean is_valid, summary.compliant): $report"
 
 failures="$(jq -r '
   [ .non_compliant | to_entries[]
@@ -91,13 +96,13 @@ compliant="$(jq -r '.summary.compliant' "$report")"
 files="$(jq -r '.summary.files_total // "?"' "$report")"
 tool="$(jq -r '.reuse_tool_version // "unknown"' "$report")"
 
-if [ -n "$failures" ]; then
+if [[ -n "$failures" ]]; then
   echo "FAIL: REUSE non-compliance (reuse $tool, $files files):"
   while IFS= read -r line; do echo "  - $line"; done <<<"$failures"
   exit 1
 fi
 
-if [ "$compliant" != "true" ]; then
+if [[ "$compliant" != "true" ]]; then
   echo "FAIL: reuse reports the project non-compliant (reuse $tool, $files files) for a reason this gate does not name."
   echo "  Run \`reuse lint\` for details, then teach scripts/check-reuse.sh the new category."
   exit 1
