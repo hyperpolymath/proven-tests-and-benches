@@ -77,6 +77,95 @@ pub fn classify_json(
     Ok(classify(&envelope, verifier))
 }
 
+/// Search for an exact, pairwise independent subset. In three dimensions
+/// (attempt, delivery, receipt) checking distinct counts is unsound, while a
+/// one-pass greedy choice depends on observation order. Exhaustive backtracking
+/// is bounded: exceeding the search budget is NotRun, never a false denial or
+/// a false Candidate. The limits protect untrusted external evidence inputs.
+fn independent_subset(candidates: &[&Observation], need: usize) -> Option<bool> {
+    const SEARCH_BUDGET: usize = 200_000;
+    // A state budget alone cannot cap stack depth when excluding a long
+    // incompatible suffix. Report NotRun on oversized untrusted input rather
+    // than risking a stack overflow or pretending to have decided the claim.
+    const MAX_RECURSION_DEPTH: usize = 128;
+    fn search<'a>(
+        left: &[&'a Observation], need: usize, selected: &mut Vec<&'a Observation>,
+        budget: &mut usize,
+    ) -> Option<bool> {
+        if need == 0 { return Some(true); }
+        if left.len() < need { return Some(false); }
+        if *budget == 0 { return None; }
+        *budget -= 1;
+        let (first, rest) = left.split_first().expect("checked nonempty above");
+        let compatible = selected.iter().all(|prior| {
+            first.attempt_id != prior.attempt_id
+                && first.delivery_id != prior.delivery_id
+                && first.receipt_ref != prior.receipt_ref
+        });
+        let include = if compatible {
+            selected.push(*first);
+            let answer = search(rest, need - 1, selected, budget);
+            selected.pop();
+            answer
+        } else { Some(false) };
+        if include == Some(true) { return Some(true); }
+        let exclude = search(rest, need, selected, budget);
+        if exclude == Some(true) { Some(true) }
+        else if include.is_none() || exclude.is_none() { None }
+        else { Some(false) }
+    }
+    if need == 0 { return Some(true); }
+    if candidates.len() < need { return Some(false); }
+
+    // Canonicalize by the three identity dimensions. Duplicate triples
+    // cannot contribute additional independent confirmations.
+    let mut ordered: Vec<&Observation> = candidates.to_vec();
+    ordered.sort_unstable_by(|a, b| {
+        (a.attempt_id.as_str(), a.delivery_id.as_str(), a.receipt_ref.as_str())
+            .cmp(&(b.attempt_id.as_str(), b.delivery_id.as_str(), b.receipt_ref.as_str()))
+    });
+    ordered.dedup_by(|a, b| {
+        a.attempt_id == b.attempt_id
+            && a.delivery_id == b.delivery_id
+            && a.receipt_ref == b.receipt_ref
+    });
+    if ordered.len() < need { return Some(false); }
+
+    // Marginal distinct-ID counts are necessary, not sufficient. It is
+    // sound to reject when any one dimension has too few distinct IDs.
+    let attempts: BTreeSet<&str> = ordered.iter().map(|o| o.attempt_id.as_str()).collect();
+    let deliveries: BTreeSet<&str> = ordered.iter().map(|o| o.delivery_id.as_str()).collect();
+    let receipts: BTreeSet<&str> = ordered.iter().map(|o| o.receipt_ref.as_str()).collect();
+    if attempts.len() < need || deliveries.len() < need || receipts.len() < need {
+        return Some(false);
+    }
+
+    // A greedy *success* is a constructive witness. Its failure does not
+    // imply nonexistence, and therefore is never a Denied result.
+    // Separate identity sets preserve the greedy choices without scanning
+    // every previously chosen observation for each candidate.
+    let mut chosen_attempts = BTreeSet::new();
+    let mut chosen_deliveries = BTreeSet::new();
+    let mut chosen_receipts = BTreeSet::new();
+    for candidate in &ordered {
+        if !chosen_attempts.contains(candidate.attempt_id.as_str())
+            && !chosen_deliveries.contains(candidate.delivery_id.as_str())
+            && !chosen_receipts.contains(candidate.receipt_ref.as_str())
+        {
+            chosen_attempts.insert(candidate.attempt_id.as_str());
+            chosen_deliveries.insert(candidate.delivery_id.as_str());
+            chosen_receipts.insert(candidate.receipt_ref.as_str());
+            if chosen_attempts.len() >= need { return Some(true); }
+        }
+    }
+
+    // Only unresolved inputs need exact search. Fixed sorting ensures
+    // equivalent input permutations consume the same search budget.
+    if ordered.len() > MAX_RECURSION_DEPTH { return None; }
+    let mut budget = SEARCH_BUDGET;
+    search(&ordered, need, &mut Vec::new(), &mut budget)
+}
+
 /// Classify an execution claim using verified substantive receipts.
 ///
 /// `Candidate` requires every required obligation to pass the checks; it is
@@ -85,8 +174,9 @@ pub fn classify_json(
 /// summary is ignored. Obligations are checked in sorted order and the first
 /// non-candidate decision is returned.
 ///
-/// For each obligation, confirmations are counted in observation order, only
-/// when the attempt, delivery and receipt IDs are all new to the count.
+/// For each obligation, evidence is admitted only if some subset of verified
+/// observations has mutually distinct attempt, delivery and receipt IDs.
+/// Exhausting the bounded search returns NotRun, not success or denial.
 pub fn classify(c: &Envelope, verifier: &impl ReceiptVerifier) -> Decision {
     if c.contract_version != "1.0.0" {
         return Decision::Denied("unsupported_contract_version");
@@ -159,21 +249,10 @@ pub fn classify(c: &Envelope, verifier: &impl ReceiptVerifier) -> Decision {
         if valid.is_empty() {
             return Decision::NotRun("no_verified_substantive_receipt");
         }
-        let mut attempts: BTreeSet<&str> = BTreeSet::new();
-        let mut deliveries: BTreeSet<&str> = BTreeSet::new();
-        let mut receipts: BTreeSet<&str> = BTreeSet::new();
-        let independent = valid.iter().filter(|o| {
-            let (a, d, r) = (o.attempt_id.as_str(), o.delivery_id.as_str(), o.receipt_ref.as_str());
-            let fresh = !attempts.contains(a) && !deliveries.contains(d) && !receipts.contains(r);
-            if fresh {
-                attempts.insert(a);
-                deliveries.insert(d);
-                receipts.insert(r);
-            }
-            fresh
-        }).count();
-        if independent < c.min_independent {
-            return Decision::Denied("duplicate_delivery_not_independent");
+        match independent_subset(&valid, c.min_independent) {
+            Some(true) => {}
+            Some(false) => return Decision::Denied("duplicate_delivery_not_independent"),
+            None => return Decision::NotRun("independence_search_incomplete"),
         }
     }
     Decision::Candidate

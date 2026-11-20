@@ -83,3 +83,48 @@ deliveryReplayedWithNewAttempt =
   { minIndependent := 2
   , observations := [goodObservation, { attempt := "attempt-B" } goodObservation]
   } silence
+
+-- Pinned counterexample: each identity column has at least two values,
+-- but no pair of observations is simultaneously independent in all three.
+-- The previous per-column nub-count check incorrectly returned Candidate.
+public export
+crossedConfirmations : ExecutionClaim
+crossedConfirmations =
+  { minIndependent := 2
+  , observations :=
+      [ goodObservation
+      , { delivery := "delivery-B", receipt := "receipt-B" } goodObservation
+      , { attempt := "attempt-B", receipt := "receipt-B" } goodObservation
+      ]
+  } silence
+
+-- A valid pair exists (second and third observations) even though selecting
+-- the first observation greedily rules out both. Permutations must not
+-- change the verdict; a true matching search is needed.
+public export
+independentAfterConflict : ExecutionClaim
+independentAfterConflict =
+  { minIndependent := 2
+  , observations :=
+      [ goodObservation
+      , { delivery := "delivery-B", receipt := "receipt-B" } goodObservation
+      , { attempt := "attempt-B", delivery := "delivery-C" } goodObservation
+      ]
+  } silence
+
+-- Forty distinct, mutually independent confirmations with threshold 41.
+-- This planted impossible claim used to trigger enormous futile search.
+independentPopulation : Nat -> List Observation
+independentPopulation Z = []
+independentPopulation (S k) =
+  ({ attempt := "attempt-" ++ show k
+   , delivery := "delivery-" ++ show k
+   , receipt := "receipt-" ++ show k
+   } goodObservation) :: independentPopulation k
+
+public export
+unattainableFortyOne : ExecutionClaim
+unattainableFortyOne =
+  { minIndependent := 41
+  , observations := independentPopulation 40
+  } silence
