@@ -18,6 +18,12 @@ done
 
 idris2 --version
 
+# Shared local/hosted CI entry point: no GitHub-only assertion that just ci
+# can silently omit. The contract harness qualifies itself with actual
+# compiled/linkable silence, planted firing, and no-run controls.
+echo "--- qualifying reusable C ABI contract harness ---"
+bash integrations/contract/c-abi/test.sh
+
 echo "--- building library ---"
 idris2 --build proven-tests.ipkg
 

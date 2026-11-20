@@ -1,0 +1,225 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+# Silence, firing and void controls for the generic, non-proof C ABI harness.
+set -euo pipefail
+root=$(cd "$(dirname "$0")" && pwd)
+runner=$root/run.sh
+command -v cc >/dev/null 2>&1 || { echo 'NOT RUN: cc missing' >&2; exit 2; }
+command -v ar >/dev/null 2>&1 || { echo 'NOT RUN: ar missing' >&2; exit 2; }
+temp=$(mktemp -d) || exit 2
+trap 'rm -rf "$temp"' EXIT
+cat > "$temp/fixture.h" <<'EOF'
+#ifndef FIXTURE_H
+#define FIXTURE_H
+#define CONTRACT_MAGIC 7
+int contract_magic(void);
+#endif
+EOF
+cat > "$temp/implementation.c" <<'EOF'
+#include "fixture.h"
+int contract_magic(void) { return 7; }
+EOF
+cat > "$temp/consumer.c" <<'EOF'
+#include "fixture.h"
+_Static_assert(CONTRACT_MAGIC == 7, "header contract drift");
+int main(void) { return contract_magic() == CONTRACT_MAGIC ? 0 : 1; }
+EOF
+cc -std=c11 -Wall -Wextra -Werror -I"$temp" -c "$temp/implementation.c" -o "$temp/implementation.o"
+ar rcs "$temp/fixture.a" "$temp/implementation.o"
+bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a" > "$temp/output"
+grep -Fq 'PASS: compiled, linked and executed' "$temp/output"
+echo 'ok: silence control compiles, links and executes'
+expect() {
+  local want=$1 label=$2
+  shift 2
+  local got=0
+  "$@" > "$temp/out" 2>&1 || got=$?
+  [[ "$got" == "$want" ]] || {
+    printf 'FAIL: %s returned %s, expected %s\n' "$label" "$got" "$want" >&2
+    cat "$temp/out" >&2
+    exit 1
+  }
+  echo "ok: $label (exit $want)"
+}
+# The supplied API may live in a compiler system include directory.
+mkdir "$temp/system"
+cp "$temp/fixture.h" "$temp/system/system.h"
+sed 's/"fixture.h"/<system.h>/' "$temp/consumer.c" > "$temp/system-consumer.c"
+expect 0 'silence: supplied system header is traced' \
+  env CC="cc -isystem $temp/system" bash "$runner" "$temp/system/system.h" "$temp/system-consumer.c" "$temp/fixture.a"
+# A dependency token must survive even when its glob pattern matches a decoy.
+cp "$temp/fixture.h" "$temp/literal[1].h"
+cp "$temp/fixture.h" "$temp/literal1.h"
+sed 's/"fixture.h"/"literal[1].h"/' "$temp/consumer.c" > "$temp/glob-consumer.c"
+expect 0 'silence: glob characters in header path remain literal' \
+  bash "$runner" "$temp/literal[1].h" "$temp/glob-consumer.c" "$temp/fixture.a"
+# A source-level mutation must be detected at compile time, not merely grep.
+sed -i 's/CONTRACT_MAGIC 7/CONTRACT_MAGIC 8/' "$temp/fixture.h"
+expect 1 'firing: header constant mutation' bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
+sed -i 's/CONTRACT_MAGIC 8/CONTRACT_MAGIC 7/' "$temp/fixture.h"
+# A separate firing control reaches the executable, then fails its assertion.
+sed -i 's/return contract_magic() == CONTRACT_MAGIC ? 0 : 1;/return contract_magic() == 999 ? 0 : 1;/' "$temp/consumer.c"
+expect 1 'firing: runtime contract violation' bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
+sed -i 's/contract_magic() == 999/contract_magic() == CONTRACT_MAGIC/' "$temp/consumer.c"
+# A syntactically bad client must also make the gate red.
+printf '\nnot a valid C declaration\n' >> "$temp/consumer.c"
+expect 1 'firing: client compile defect' bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
+sed -i '$d' "$temp/consumer.c"
+# Missing tool and missing subject must NOT be mistaken for test failures.
+expect 2 'void: missing library' bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/absent.a"
+expect 2 'void: missing compiler' env CC=nonexistent_c_compiler bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
+expect 2 'void: missing consumer' bash "$runner" "$temp/fixture.h" "$temp/absent.c" "$temp/fixture.a"
+expect 2 'void: missing arguments' bash "$runner"
+# The C preprocessor normally looks beside the consumer before -I paths:
+# a local stale header must not cause the supplied public header to be ignored.
+mkdir -p "$temp/public" "$temp/adjacent"
+cp "$temp/fixture.h" "$temp/public/fixture.h"
+cp "$temp/fixture.h" "$temp/adjacent/fixture.h"
+cp "$temp/consumer.c" "$temp/adjacent/consumer.c"
+sed -i 's/CONTRACT_MAGIC 7/CONTRACT_MAGIC 8/' "$temp/public/fixture.h"
+expect 1 'firing: supplied header beats stale adjacent header' \
+  bash "$runner" "$temp/public/fixture.h" "$temp/adjacent/consumer.c" "$temp/fixture.a"
+
+# A source-local macro can configure the public header before inclusion.
+# Forced -include broke valid clients, but dependency tracking preserves order.
+cat > "$temp/configurable.h" <<'EOF'
+#ifndef CONFIGURABLE_H
+#define CONFIGURABLE_H
+#ifdef WIDE_API
+typedef unsigned long contract_width;
+#else
+typedef unsigned char contract_width;
+#endif
+int contract_magic(void);
+#endif
+EOF
+cat > "$temp/configured-consumer.c" <<'EOF'
+#define WIDE_API 1
+#include "configurable.h"
+_Static_assert(sizeof(contract_width) == sizeof(unsigned long), "macro configuration was lost");
+int main(void) { return contract_magic() == 7 ? 0 : 1; }
+EOF
+expect 0 'silence: consumer macro configures public header before include' \
+  bash "$runner" "$temp/configurable.h" "$temp/configured-consumer.c" "$temp/fixture.a"
+# A deprecated-but-still-supported C declaration can warn without violating
+# its advertised runtime ABI. Warning promotion remains consumer opt-in.
+cat > "$temp/deprecated.h" <<'EOF'
+#ifndef DEPRECATED_H
+#define DEPRECATED_H
+int contract_magic(void) __attribute__((deprecated));
+#endif
+EOF
+cat > "$temp/deprecated-consumer.c" <<'EOF'
+#include "deprecated.h"
+int main(void) { return contract_magic() == 7 ? 0 : 1; }
+EOF
+expect 0 'silence: deprecated valid C ABI is usable by default' \
+  bash "$runner" "$temp/deprecated.h" "$temp/deprecated-consumer.c" "$temp/fixture.a"
+expect 1 'firing: optional strict-warnings policy rejects deprecated C ABI' \
+  env C_ABI_STRICT_WARNINGS=yes bash "$runner" "$temp/deprecated.h" "$temp/deprecated-consumer.c" "$temp/fixture.a"
+
+# A native archive may need another archive. One-pass linkers require
+# dependencies to follow the subject, never precede it.
+cat > "$temp/helper.c" <<'EOF'
+int helper_magic(void) { return 7; }
+EOF
+cat > "$temp/needs_helper.c" <<'EOF'
+#include "fixture.h"
+extern int helper_magic(void);
+int contract_magic(void) { return helper_magic(); }
+EOF
+cc -std=c11 -Wall -Wextra -Werror -c "$temp/helper.c" -o "$temp/helper.o"
+cc -std=c11 -Wall -Wextra -Werror -I"$temp" -c "$temp/needs_helper.c" -o "$temp/needs_helper.o"
+ar rcs "$temp/helper.a" "$temp/helper.o"
+ar rcs "$temp/needs-helper.a" "$temp/needs_helper.o"
+expect 1 'firing: omitted required static dependency' \
+  bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/needs-helper.a"
+expect 0 'silence: dependency after native subject archive' \
+  env C_ABI_LDLIBS="$temp/helper.a" bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/needs-helper.a"
+
+# A contract consumer that hangs must terminate promptly with a failure,
+# not leave a required CI job waiting indefinitely.
+cat > "$temp/hanging.c" <<'EOF'
+#include "fixture.h"
+int main(void) {
+  volatile unsigned long counter = 0;
+  for (;;) { counter++; }
+}
+EOF
+expect 1 'firing: bounded non-terminating ABI client' \
+  env C_ABI_TIMEOUT=1s bash "$runner" "$temp/fixture.h" "$temp/hanging.c" "$temp/fixture.a"
+# Record the actual consumer PID so an early launcher exit cannot masquerade
+# as a bounded failure while leaving a TERM-ignoring consumer running.
+cat > "$temp/stubborn.c" <<'EOF'
+#include "fixture.h"
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+int main(void) {
+  if (signal(SIGTERM, SIG_IGN) == SIG_ERR) return 1;
+  FILE *receipt = fopen(getenv("C_ABI_PID_FILE"), "w");
+  if (!receipt) return 1;
+  fprintf(receipt, "%ld\n", (long)getpid());
+  if (fclose(receipt) != 0) return 1;
+  for (;;) pause();
+}
+EOF
+expect 1 'firing: TERM-ignoring consumer reaches kill deadline' \
+  env C_ABI_PID_FILE="$temp/consumer.pid" C_ABI_TIMEOUT=1s \
+  timeout --kill-after=2s 8s bash "$runner" "$temp/fixture.h" "$temp/stubborn.c" "$temp/fixture.a"
+[[ -s "$temp/consumer.pid" ]] || { echo 'FAIL: stubborn consumer never started' >&2; exit 1; }
+read -r consumer_pid < "$temp/consumer.pid"
+# An orphan may remain a zombie until the host init reaps it; it cannot run.
+consumer_state=$(ps -o stat= -p "$consumer_pid") || consumer_state=
+if [[ -n $consumer_state && $consumer_state != Z* ]]; then
+  kill -KILL "$consumer_pid"
+  echo 'FAIL: consumer still running after runner reported failure' >&2
+  exit 1
+fi
+grep -Fq 'failed to terminate within 1s' "$temp/out"
+echo 'ok: TERM-ignoring consumer stopped before runner returned'
+expect 2 'void: invalid runner timeout' \
+  env C_ABI_TIMEOUT=invalid bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
+# A discoverable compiler command may still fail at exec() due to a
+# missing shebang interpreter. That is a void check, not compiler diagnostics.
+cat > "$temp/broken-compiler" <<'EOF'
+#!/nonexistent/c-compiler-interpreter
+exit 0
+EOF
+chmod +x "$temp/broken-compiler"
+expect 2 'void: discoverable compiler wrapper cannot launch' \
+  env CC="$temp/broken-compiler" bash "$runner" "$temp/fixture.h" "$temp/consumer.c" "$temp/fixture.a"
+
+# A consumer terminated by signal produces no finished assertion receipt.
+cat > "$temp/signaled.c" <<'EOF'
+#include "fixture.h"
+#include <signal.h>
+int main(void) { raise(SIGTERM); return 0; }
+EOF
+expect 2 'void: signaled consumer did not complete assertions' \
+  bash "$runner" "$temp/fixture.h" "$temp/signaled.c" "$temp/fixture.a"
+
+# Exit 125, 126 and 127 are legal *executed* client failures. They must
+# never be reclassified as NOT RUN just because GNU timeout reserves them.
+for code in 125 126 127; do
+  cat > "$temp/reserved-exit.c" <<EOF
+#include "fixture.h"
+int main(void) { return $code; }
+EOF
+  expect 1 "firing: executed subject returned reserved exit $code" \
+    bash "$runner" "$temp/fixture.h" "$temp/reserved-exit.c" "$temp/fixture.a"
+  grep -Fq "FAIL: executed ABI consumer exited $code" "$temp/out" || {
+    echo "FAIL: execution handshake lost subject exit $code" >&2; exit 1;
+  }
+done
+# Conversely, a missing executable must be reported as no-run by the same
+# launcher, not confused with an executed client's deliberate exit 127.
+cc -std=c11 -Wall -Wextra -Werror "$root/launcher.c" -o "$temp/launcher"
+expect 2 'void: launcher could not exec missing consumer binary' \
+  "$temp/launcher" "$temp/nonexistent-executable"
+grep -Fq 'NOT RUN: child exec failed' "$temp/out" || {
+  echo 'FAIL: missing executable not classified as NOT RUN' >&2; exit 1;
+}
+echo 'ok: genuine compile/link/run, reserved exits 125-127, no-exec, header, dependency, deadline and unavailable controls'
