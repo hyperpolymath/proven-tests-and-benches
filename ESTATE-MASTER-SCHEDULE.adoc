@@ -33,10 +33,27 @@ Nothing is skipped silently. About 320 repos are waiting on sweep 1.
 | Sweep 2: E2E, reflexive, contract, aspects, regression, proof-regression, type-safe, drift | next | Per language.
 | Sweep 3: property, fuzz, compat, lifecycle, mutation | later |
 | Sweep 4: everything plus DOG, CR, pipeline-tail benches | later |
-| This repo's 13 open PRs | in progress | `main` is red until #114 merges. SR-005: no proven gate here yet, so green drafts go to the owner.
+| This repo's 13 open PRs | triaged, 2 new PRs | `main` is red until #114 merges. #122 clears the 3 SonarCloud findings behind #115, #119 and #120. SR-005: no proven gate here yet, so green drafts go to the owner. Detail below.
 | Tagged kit releases for Dependabot | waiting | Needs the foundation PR merged first.
 |===
 
 == Who is waiting on F1
 
 rsr-template-repo, gitbot-fleet, and the other Tier A threads. Each gets the file list and SHA from `kit/README.adoc`.
+
+== The 13 open PRs, as of this update
+
+[cols="1,3,3",options="header"]
+|===
+| PR | State | What is left
+| #114 | green | Owner merges first. Fixes `main`'s REUSE failure.
+| #122 | new, draft | Pins `reuse`, forces HTTPS on one `curl`. Merge second.
+| #113, #116 | red only from the REUSE failure | Update branch after #114; then green.
+| #107, #112 | green | Open CodeRabbit CHANGES_REQUESTED threads to confirm addressed.
+| #108, #109 | green except SonarCloud `cancelled` | A timeout is not evidence (SR-006); re-run once at most.
+| #111 | red only on SonarCloud S7635 | Accepted by design: the reusable requires `secrets: inherit`. F2 swap replaces the caller.
+| #115 | red only on SonarCloud S6506 | Cleared by #122.
+| #117 | red: governance, Hypatia baseline, Python policy | Python policy is fixed by #120. The rest is the F2 swap. 3 bot threads open.
+| #118 | green | pre-commit.ci autoupdate; owner approved already.
+| #119, #120 | overlap: Python to Rust | Keep #120 (later, parity findings). Close #119 only after #120 merges. Bot threads open on both; Sonar findings beyond #122 are code-smell complexity, which does not fail the gate.
+|===
