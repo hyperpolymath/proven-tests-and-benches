@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+= Estate master schedule: the proven swap, from the F1 thread
+:toc:
+
+[NOTE]
+====
+No file called the estate master scheduler was found in this repository or in `metadatastician/standards`
+(another worker thread reports the same). This is my reading of it: a plain-language, one-page view of where the
+proven swap is going and where F1 (this repo) is on it, kept current as work lands. If a canonical one exists
+elsewhere, point me at it and I will mirror this into it.
+====
+
+Owner's order (26 Nov 2026): sweep one tier at a time across all repos. Tier A first.
+Last updated: 2026-11-26, F1 thread.
+
+== The destination
+
+Every repository calls one umbrella `proven` workflow (F2, `proven-cicd-and-workflows`). That workflow runs per-language
+tests and benches from this repository (F1). A category added here reaches every repo on its next version bump.
+Nothing is skipped silently. About 320 repos are waiting on sweep 1.
+
+== Where F1 is
+
+[cols="2,1,3",options="header"]
+|===
+| Work | State | Note
+| Sweep 1 assets: unit, smoke, build, P2P | v0 landed in PR | Rust, Bash, Agda verified. Idris2, Julia, Zig, Elixir, Gleam written, unverified.
+| Coverage matrix (18 + 14 + 7 ids by language) | landed | `taxonomy-coverage/COVERAGE-MATRIX.adoc`, generated, drift-checked.
+| N/A manifest and fail-closed checker | landed | `kit/check-coverage.sh`, `.proven/coverage.tsv`.
+| Six Sigma bench runner, baseline = mean of last 10 main | landed | `benchmarks/sixsigma/`.
+| Agda proof: `--safe --cubical-compatible` plus doubt check | landed | The Agda "proven suite" itself was not found; see `LATER.adoc` P-2.
+| Sweep 2: E2E, reflexive, contract, aspects, regression, proof-regression, type-safe, drift | next | Per language.
+| Sweep 3: property, fuzz, compat, lifecycle, mutation | later |
+| Sweep 4: everything plus DOG, CR, pipeline-tail benches | later |
+| This repo's 13 open PRs | in progress | `main` is red until #114 merges. SR-005: no proven gate here yet, so green drafts go to the owner.
+| Tagged kit releases for Dependabot | waiting | Needs the foundation PR merged first.
+|===
+
+== Who is waiting on F1
+
+rsr-template-repo, gitbot-fleet, and the other Tier A threads. Each gets the file list and SHA from `kit/README.adoc`.

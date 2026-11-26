@@ -1,0 +1,46 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+= Later list (F1: proven-tests-and-benches foundation)
+:toc:
+
+Things that need more than this session can honestly give. Updated as work lands.
+Last update: 2026-11-26.
+
+== Proof order (owner's ruling)
+
+[cols="1,4",options="header"]
+|===
+| Id | Item
+| P-1 | DONE (v0): `scripts/agda-prove.sh` checks every Agda file under `--safe --cubical-compatible` plus the doubt check, with a false-claim negative control.
+| P-2 | The "proven suite" in Agda was NOT FOUND. No `.agda` source existed in this repo before v0. The Agda proofs the owner means are presumably in `hyperpolymath/proven`, which this session cannot read. Point `agda-prove.sh` at them once attached.
+| P-3 | Full `--cubical`: later, per the owner. Flag exists in `agda-prove.sh`'s comments only; not used.
+| P-4 | Proof witnesses: later, per the owner. Items needing them: the 115 Provisionally-Proven tests in the Idris2 spec suite (`PROOFS.adoc`), every `Unproven` tier use, and any `ProvisionallyProven` property in the new templates.
+| P-5 | Idris2 proofs are checked by Idris2, not Agda. Cross-prover regression (CR-8) needs a shared statement corpus; none exists yet.
+|===
+
+== The doubt check
+
+D-1: "doubt check" is not defined in this repo or in `metadatastician/standards` (searched both for `doubt`; only an unrelated licence text matched). The best honest reading, implemented in
+`scripts/agda-doubt-check.sh`: a source-level audit for every place a proof can quietly stop being a proof (postulate, TERMINATING and similar pragmas, type-in-type, unsound flags, trustMe, REWRITE, holes, FOREIGN/COMPILE, and a file whose own OPTIONS pragma does not state `--safe --cubical-compatible`), with justified exceptions listed in an allow file. If the owner meant something else (for example a runtime "second look" step, or a check on the Idris2 side), this needs one line from the owner; nothing downstream depends on it yet.
+
+== Sweeps not yet shipped
+
+[cols="1,4",options="header"]
+|===
+| Sweep | Missing
+| 2 | E2E, reflexive, contract, regression, proof-regression, type-safe, coupling/drift per language; the 14 aspect tests per language; benches baselined in the Ordinary range (needs the first real main runs).
+| 3 | Property, fuzz, compatibility, lifecycle, mutation (over 80 percent), benches on six or more targets.
+| 4 | Execution/runtime, chaos, DOG-01..DOG-08, CR-1..CR-10, cross-prover proof regression, pipeline-tail benches (panic-attack, hypatia, echidna, verisim), cold-start versus warm-start, shared fixtures.
+|===
+
+== Unverified in v0
+
+Idris2, Julia, Zig, Elixir, Gleam templates: written, never executed here (no toolchain).
+`benchmarks/sixsigma/fetch-baseline.sh`: syntax-checked only; needs a real run against a repo that uploads `proven-bench-<run-id>`.
+
+== Blocked or waiting
+
+* Tagged releases (`kit-v0.x`) for Dependabot to bump: needs the owner to merge the foundation PR; tags are an outward action.
+* Merging this repo's 13 open PRs: SR-005 requires the stamped `proven-lock-gate` workflow, which this repo does not have. Draft/green handoff to the owner until F2 lands the gate here.
+* `main` is red on `Build, test and benchmark` (REUSE: two docs lack copyright info). PR #114 is the fix. Everything else is blocked behind it.
+* Reconcile `sixsigma.sh` (taxonomy-literal) with `scripts/check-bench-regression.sh` (ratio gate, 2.0x override).

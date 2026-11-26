@@ -110,3 +110,6 @@ hooks/playbook-to-recipe/Cargo.lock
 .verisimdb/ecosystem-ingest/Cargo.lock
 # Backup/scratch files (never commit)
 *.backup
+
+# Agda build products (agda-prove.sh type-checks in place)
+*.agdai
