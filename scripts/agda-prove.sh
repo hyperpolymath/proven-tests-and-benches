@@ -15,7 +15,7 @@ here="$(cd "$(dirname "$0")" && pwd)"
 command -v agda >/dev/null || { echo "NO CHECK PERFORMED: agda not installed" >&2; exit 2; }
 "$here/agda-doubt-check.sh" "$@"; d=$?
 [ "$d" -eq 2 ] && exit 2
-allowarg=(); paths=()
+paths=()
 while [ $# -gt 0 ]; do case "$1" in --allow) shift 2 ;; *) paths+=("$1"); shift ;; esac; done
 mapfile -t files < <(find "${paths[@]}" -type f \( -name '*.agda' -o -name '*.lagda' -o -name '*.lagda.md' \) | sort)
 bad=0
