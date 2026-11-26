@@ -21,18 +21,18 @@
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-contract="$(cd "$here/../.." && pwd)"
 out="${1:-$here/build/proven-run-report.json}"
 mkdir -p "$(dirname "$out")"
 
-for tool in python3; do
-  command -v "$tool" >/dev/null 2>&1 || {
-    echo "run.sh: '$tool' is required but was not found" >&2
-    exit 2
-  }
-done
+command -v cargo >/dev/null 2>&1 || {
+  echo "run.sh: 'cargo' is required but was not found" >&2
+  exit 2
+}
 
-python3 "$here/emit_report.py" "$here/example-tests.json" "$out"
-python3 "$contract/check_contract.py" validate-file "$out" proven-tests
+crate="$here/rust/proven-evidence"
+proven_contract() { cargo run --quiet --manifest-path "$crate/Cargo.toml" --bin proven-contract -- "$@"; }
+
+proven_contract emit-report "$here/example-tests.json" "$out"
+proven_contract validate-file "$out" proven-tests
 
 echo "downstream fixture: $out conforms to the Proven-Tests integration contract"

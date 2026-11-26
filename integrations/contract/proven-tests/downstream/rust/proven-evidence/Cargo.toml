@@ -4,7 +4,10 @@
 # Minimal downstream fixture: emit and validate a Proven-Tests schema_version-2
 # run report with no Python or Idris2 dependency on the runner.
 #
-# This is the Rust-native twin of emit_report.py / check_contract.py. Both
+# It also holds the contract checker and emitter (src/contract_check.rs, the
+# `proven-contract` binary), which replaced check_contract.py and emit_report.py.
+#
+# The typed library in src/lib.rs is the Rust-native twin of that checker. Both
 # implement the contract in docs/INTEGRATION-CONTRACT.adoc; the unit tests in
 # tests/contract.rs pin the shared semantics.
 
@@ -14,10 +17,11 @@ version = "0.1.0"
 edition = "2021"
 license = "MPL-2.0"
 description = "Emit and validate a Proven-Tests schema_version-2 run report."
+default-run = "proven-evidence"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 
 [dev-dependencies]
-serde_json = "1"
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }

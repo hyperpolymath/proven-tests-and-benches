@@ -196,7 +196,7 @@ jobs:
           key: idris2-v${{ env.IDRIS2_VERSION }}-${{ runner.os }}-chez${{ steps.chez.outputs.version }}
 
       - name: Adversarial evidence contract controls
-        run: python3 -m unittest discover -s integrations/contract -p "test*.py"
+        run: cargo test --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --test contract_check
 
       - name: Check installer release references
         run: bash scripts/test/install-idris2.test.sh

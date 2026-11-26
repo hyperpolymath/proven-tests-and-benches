@@ -3,7 +3,7 @@
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
 // The downstream Proven-Tests contract, asserted against the Rust reader. The
-// same assertions live in Python (integrations/contract/check_contract.py) and
+// same assertions live in the proven-contract checker (src/contract_check.rs) and
 // in the bash fixture runner: the schema's rules — a test id, a provenance, a
 // result and a fixture obligation on every entry; coverage DERIVED from the
 // entries that ran and passed; no cell counted twice; no tier carried by

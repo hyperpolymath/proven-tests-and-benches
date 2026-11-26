@@ -21,16 +21,23 @@ cd "$(dirname "$0")/.." || {
   exit 2
 }
 
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "check-integration-contract: python3 is required but was not found" >&2
+crate=integrations/contract/proven-tests/downstream/rust/proven-evidence
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "check-integration-contract: cargo is required but was not found" >&2
   exit 2
 fi
+# Build the checker once, so a compile failure reads as "no check performed".
+if ! cargo build --quiet --manifest-path "$crate/Cargo.toml" --bin proven-contract; then
+  echo "check-integration-contract: could not build proven-contract" >&2
+  exit 2
+fi
+proven_contract() { cargo run --quiet --manifest-path "$crate/Cargo.toml" --bin proven-contract -- "$@"; }
 
 status=0
 
 echo "== proven-tests submission contract =="
 rc=0
-python3 integrations/contract/check_contract.py proven-tests || rc=$?
+proven_contract proven-tests || rc=$?
 if [ "$rc" -eq 2 ]; then
   echo "check-integration-contract: NO CHECK WAS PERFORMED (proven-tests, exit 2)" >&2
   exit 2
@@ -42,7 +49,7 @@ fi
 echo
 echo "== cicd-squabbler legitimate-green contract =="
 rc=0
-python3 integrations/contract/check_contract.py cicd-squabbler || rc=$?
+proven_contract cicd-squabbler || rc=$?
 if [ "$rc" -eq 2 ]; then
   echo "check-integration-contract: NO CHECK WAS PERFORMED (cicd-squabbler, exit 2)" >&2
   exit 2
