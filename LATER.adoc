@@ -36,7 +36,7 @@ D-1: "doubt check" is not defined in this repo or in `metadatastician/standards`
 == Unverified in v0
 
 Idris2, Julia, Zig, Elixir, Gleam templates: written, never executed here (no toolchain).
-`benchmarks/sixsigma/fetch-baseline.sh`: syntax-checked only; needs a real run against a repo that uploads `proven-bench-<run-id>`.
+`benchmarks/sixsigma/fetch-baseline.sh`: syntax-checked only; verified against a stub gh only (template `proven-bench-<name>`, legacy prefix); needs a real run on a repo that uploads these artifacts.
 
 == Blocked or waiting
 

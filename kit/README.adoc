@@ -57,7 +57,7 @@ no id is silently absent.
 == Bench protocol
 
 A bench job writes `name<TAB>value<TAB>lower|higher[<TAB>abs_max]` rows, uploads them as
-artifact `proven-bench-<run-id>` on main, and PRs run `fetch-baseline.sh` then
+artifact `proven-bench-<name>` on main, and PRs run `fetch-baseline.sh` then
 `sixsigma.sh --baseline-dir DIR results.tsv`. Exit `0` pass (Ordinary or Extraordinary), `3` soft fail
 (Acceptable: warn, reviewer approval), `1` hard fail (Unacceptable), `2` no check performed.
 Thresholds are the taxonomy's: more than 50 percent worse is Unacceptable, 20 to 50 percent Acceptable,
