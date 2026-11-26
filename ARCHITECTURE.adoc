@@ -120,7 +120,7 @@ exits non-zero on a bad verdict, so the CI gate the design assumes
 cannot actually fail, and no workflow or `+just+` recipe invokes the
 script.
 * _Native run-report ingestion_ does not work. `+panic-attack+`’s
-panic-attack’s `+src/aggregate/proven_tests.rs+` (in the
+panic-attack’s `+panic-attack/src/aggregate/proven_tests.rs+` (in the
 `+panic-attack+` repo, not this tree) parses this repo’s report schema
 correctly and is unit-tested, but it is declared once in
 `+aggregate/mod.rs+` and reachable from no CLI flag.
