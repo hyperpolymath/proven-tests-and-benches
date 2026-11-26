@@ -5,6 +5,7 @@
 module Sweep1
 
 import Data.List
+import Data.Maybe
 import Data.String
 import System
 

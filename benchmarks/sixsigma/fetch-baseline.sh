@@ -32,6 +32,8 @@ case "$art" in *"<name>"*) [ -n "$bname" ] || { echo "NO CHECK PERFORMED: --name
 art=${art//"<name>"/$bname}
 [ "$legacy" -eq 0 ] || art="$art<run-id>"
 mkdir -p "$dir"
+# a baseline must be exactly this fetch: leftover files would be picked by name order
+if compgen -G "$dir/*.tsv" >/dev/null; then echo "NO CHECK PERFORMED: $dir already holds *.tsv baseline files; use an empty directory" >&2; exit 2; fi
 got=0; skipped=0
 # oldest-first ordering is restored by the zero-padded sequence below
 ids=$(gh api "repos/$repo/actions/workflows/$wf/runs?branch=$branch&status=success&per_page=$((window*3))" --jq '.workflow_runs[].id')

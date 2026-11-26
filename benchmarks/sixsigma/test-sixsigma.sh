@@ -43,5 +43,22 @@ printf 'novel\t5\tlower\n' > "$tmp/nb.tsv"
 want bench-without-baseline-2  2 "no baseline rows" "$sx" --baseline-dir "$b" "$tmp/nb.tsv"
 want short-window-strict-is-2  2 "require-full-window" "$sx" --require-full-window --window 20 --baseline-dir "$b" "$tmp/w.tsv"
 want json-output               0 '"class":"Ordinary"' "$sx" --json --baseline-dir "$b" "$tmp/w.tsv"
+# exact decimal boundaries must not depend on binary rounding
+mkdir -p "$tmp/db"; printf 'lat\t0.1\tlower\n' > "$tmp/db/00000001-run.tsv"
+printf 'lat\t0.12\tlower\n' > "$tmp/d1.tsv"; printf 'lat\t0.08\tlower\n' > "$tmp/d2.tsv"
+want decimal-20pct-regress-is-3 3 "Acceptable" "$sx" --baseline-dir "$tmp/db" "$tmp/d1.tsv"
+want decimal-20pct-improve-ord  0 "Ordinary"   "$sx" --baseline-dir "$tmp/db" "$tmp/d2.tsv"
+# a supplied but malformed abs_max must not silently disable the backstop
+printf 'lat\t110\tlower\t105ms\n' > "$tmp/badmax.tsv"
+want malformed-abs-max-is-2     2 "bad abs_max" "$sx" --baseline-dir "$b" "$tmp/badmax.tsv"
+# duplicate names must not overwrite a measurement or weight a baseline run twice
+printf 'lat\t200\tlower\nlat\t100\tlower\n' > "$tmp/dup.tsv"
+want duplicate-result-name-is-2 2 "duplicate benchmark" "$sx" --baseline-dir "$b" "$tmp/dup.tsv"
+mkdir -p "$tmp/dupb"; printf 'lat\t100\tlower\nlat\t900\tlower\n' > "$tmp/dupb/00000001-run.tsv"
+printf 'lat\t100\tlower\n' > "$tmp/one.tsv"
+want duplicate-baseline-name-2  2 "duplicate benchmark" "$sx" --baseline-dir "$tmp/dupb" "$tmp/one.tsv"
+# JSON names are encoded, so the report stays valid JSON
+printf 'a"b\t100\tlower\n' > "$tmp/q.tsv"; mkdir -p "$tmp/qb"; cp "$tmp/q.tsv" "$tmp/qb/00000001-run.tsv"
+want json-escapes-quote         0 'a\\"b' "$sx" --json --baseline-dir "$tmp/qb" "$tmp/q.tsv"
 echo "sixsigma self-test: $pass passed, $fail failed"
-[ "$fail" -eq 0 ] && [ "$pass" -ge 19 ]
+[ "$fail" -eq 0 ] && [ "$pass" -ge 25 ]

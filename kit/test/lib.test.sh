@@ -16,4 +16,9 @@ ptb_fails build-failing-cmd     "$here/build-check.sh" --artifact "$tmp/a.out" -
 ptb_fails build-missing-art     "$here/build-check.sh" --artifact "$tmp/none" -- true
 echo old > "$tmp/stale"; sleep 3
 ptb_fails build-stale-artifact  "$here/build-check.sh" --artifact "$tmp/stale" -- true
+mkdir "$tmp/sd"; echo x > "$tmp/sd/f"; touch -d '2 days ago' "$tmp/sd/f" "$tmp/sd"
+ptb_fails build-stale-dir-fails "$here/build-check.sh" --artifact "$tmp/sd" -- true
+ptb_ok    build-fresh-dir-passes "$here/build-check.sh" --artifact "$tmp/sd" -- touch "$tmp/sd/f"
+ptb_fails build-bench-out-unwritable "$here/build-check.sh" --artifact "$tmp/sd" --bench-out "$tmp/nodir/x.tsv" -- touch "$tmp/sd/f"
+ptb_fails smoke-term-ignored-still-bounded "$here/smoke.sh" --timeout 1 --expect . -- bash -c 'trap "" TERM; while :; do sleep 1; done'
 ptb_done

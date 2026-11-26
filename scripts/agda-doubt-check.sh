@@ -18,10 +18,15 @@
 set -u
 allow=""; paths=()
 while [ $# -gt 0 ]; do
-  case "$1" in --allow) allow="$2"; shift 2 ;; *) paths+=("$1"); shift ;; esac
+  case "$1" in
+    --allow) [ $# -ge 2 ] || { echo "usage: agda-doubt-check.sh [--allow FILE] PATH..." >&2; exit 2; }; allow="$2"; shift 2 ;;
+    *) paths+=("$1"); shift ;;
+  esac
 done
 [ "${#paths[@]}" -gt 0 ] || { echo "NO CHECK PERFORMED: no PATH given" >&2; exit 2; }
-mapfile -t files < <(find "${paths[@]}" -type f \( -name '*.agda' -o -name '*.lagda' -o -name '*.lagda.md' -o -name '*.lagda.tex' -o -name '*.lagda.rst' \) 2>/dev/null | sort)
+for pth in "${paths[@]}"; do [ -e "$pth" ] || { echo "NO CHECK PERFORMED: $pth does not exist" >&2; exit 2; }; done
+found=$(find "${paths[@]}" -type f \( -name '*.agda' -o -name '*.lagda' -o -name '*.lagda.md' -o -name '*.lagda.tex' -o -name '*.lagda.rst' \)) || { echo "NO CHECK PERFORMED: source discovery failed" >&2; exit 2; }
+mapfile -t files < <(printf '%s\n' "$found" | sed '/^$/d' | sort)
 [ "${#files[@]}" -gt 0 ] || { echo "NO CHECK PERFORMED: no Agda sources under ${paths[*]}" >&2; exit 2; }
 
 # id<TAB>ERE (applied per line, comments after -- stripped first)

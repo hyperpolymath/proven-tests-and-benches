@@ -26,8 +26,11 @@ pub fn serve_once(listener: &TcpListener) -> std::io::Result<()> {
 /// Client half of the seam.
 pub fn call(addr: std::net::SocketAddr, line: &str) -> std::io::Result<String> {
     let mut s = TcpStream::connect(addr)?;
+    let limit = Some(std::time::Duration::from_secs(5));   // a silent peer is a failure, not a hang
+    s.set_read_timeout(limit)?; s.set_write_timeout(limit)?;
     s.write_all(format!("{line}\n").as_bytes())?;
     let mut out = String::new();
     BufReader::new(s).read_line(&mut out)?;
+    if out.is_empty() { return Err(std::io::ErrorKind::UnexpectedEof.into()); }   // peer closed without replying
     Ok(out.trim_end().to_string())
 }

@@ -13,7 +13,8 @@ set -u
 here="$(cd "$(dirname "$0")" && pwd)"; root="$(dirname "$here")"
 ids="$root/kit/ids.tsv"; assets="$here/assets.tsv"; out="$here/COVERAGE-MATRIX.adoc"
 [ -r "$ids" ] && [ -r "$assets" ] || { echo "NO CHECK PERFORMED: ids/assets missing" >&2; exit 2; }
-[ "${1:-}" = "--check" ] && { dest="$(mktemp)"; check=1; } || { dest="$out"; check=0; }
+dest="$(mktemp)" || exit 2   # always render to a temp file; replace the matrix only on success
+[ "${1:-}" = "--check" ] && check=1 || check=0
 langs="rust idris2 julia zig elixir gleam bash agda any"
 sweep() { case "$1" in UT|SMK|BLD|P2P) echo 1;; PBT|FUZ|CMP|LCY|MUT) echo 3;; EXE|CHS) echo 4;; *) echo 2;; esac; }
 bad=0
@@ -63,5 +64,6 @@ echo; echo '== Asset paths'; echo; echo '[cols="1,1,1,4",options="header"]'; ech
 grep -v '^#' "$assets" | while IFS=$'\t' read -r a b c d; do echo "| $a | $b | $c | \`$d\`"; done
 echo '|==='
 } > "$dest"
-if [ "$check" -eq 1 ]; then diff -q "$dest" "$out" >/dev/null 2>&1 || { echo "DRIFT: taxonomy-coverage/COVERAGE-MATRIX.adoc is stale; run taxonomy-coverage/gen-matrix.sh" >&2; rm -f "$dest"; exit 1; }; rm -f "$dest"; fi
+if [ "$check" -eq 1 ]; then diff -q "$dest" "$out" >/dev/null 2>&1 || { echo "DRIFT: taxonomy-coverage/COVERAGE-MATRIX.adoc is stale; run taxonomy-coverage/gen-matrix.sh" >&2; rm -f "$dest"; exit 1; }; rm -f "$dest"
+else chmod 644 "$dest"; mv "$dest" "$out" || { rm -f "$dest"; echo "cannot write $out" >&2; exit 1; }; fi
 [ "$bad" -eq 0 ]

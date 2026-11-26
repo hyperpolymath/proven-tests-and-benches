@@ -51,13 +51,26 @@ fi
 [ "${#files[@]}" -ge "$window" ] || echo "note: baseline uses ${#files[@]} of $window runs" >&2
 
 awk -F'\t' -v json="$json" -v nfiles="${#files[@]}" '
+function jstr(s,   o, i, c) {            # JSON string encoding for names
+  o = ""
+  for (i = 1; i <= length(s); i++) {
+    c = substr(s, i, 1)
+    if (c == "\"") o = o "\\\""; else if (c == "\\") o = o "\\\\"
+    else if (c < " ") o = o sprintf("\\u%04x", index("\001\002\003\004\005\006\007\010\011\012\013\014\015\016\017\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036\037", c))
+    else o = o c
+  }
+  return o
+}
 function numeric(s) { return s ~ /^[0-9]+([.][0-9]+)?([eE][-+]?[0-9]+)?$/ }
 function rank(c) { return c=="Unacceptable"?4 : c=="Acceptable"?3 : c=="Extraordinary"?2 : 1 }
 FNR==1 { fidx++ }
 /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
 {
   if (!numeric($2) || $2+0 <= 0 || ($3 != "lower" && $3 != "higher")) { malformed = malformed "\n  " FILENAME ":" FNR ": " $0; next }
-  if (FILENAME == ARGV[1]) { cur[$1] = $2+0; dir[$1] = $3; absmax[$1] = ($4 != "" && numeric($4)) ? $4+0 : ""; order[++n] = $1 }
+  if ($4 != "" && !numeric($4)) { malformed = malformed "\n  " FILENAME ":" FNR ": bad abs_max \"" $4 "\": " $0; next }
+  if (($1 SUBSEP FILENAME) in seenrow) { malformed = malformed "\n  " FILENAME ":" FNR ": duplicate benchmark name \"" $1 "\""; next }
+  seenrow[$1, FILENAME] = 1
+  if (FILENAME == ARGV[1]) { cur[$1] = $2+0; dir[$1] = $3; absmax[$1] = ($4 != "") ? $4+0 : ""; order[++n] = $1 }
   else { sum[$1] += $2; sq[$1] += $2*$2; cnt[$1]++ }
 }
 END {
@@ -71,16 +84,17 @@ END {
     mean = sum[b] / cnt[b]; var = sq[b]/cnt[b] - mean*mean; if (var < 0) var = 0; sigma = sqrt(var)
     reg = (dir[b] == "lower") ? (cur[b] - mean) / mean : (mean - cur[b]) / mean   # positive = worse
     cls = "Ordinary"
-    if (reg > 0.5) cls = "Unacceptable"
-    else if (reg >= 0.2) cls = "Acceptable"
-    else if (reg < -0.2) cls = "Extraordinary"
+    eps = 1e-9   # exact decimal boundaries (0.1 -> 0.12) must not fall on the wrong side of binary rounding
+    if (reg > 0.5 + eps) cls = "Unacceptable"
+    else if (reg >= 0.2 - eps) cls = "Acceptable"
+    else if (reg < -0.2 - eps) cls = "Extraordinary"
     why = ""
     if (absmax[b] != "") {
       breach = (dir[b] == "lower") ? (cur[b] > absmax[b]) : (cur[b] < absmax[b])
       if (breach) { cls = "Unacceptable"; why = "absolute threshold breached" }
     }
     if (rank(cls) > worst) worst = rank(cls)
-    if (json) printf "%s{\"name\":\"%s\",\"value\":%s,\"baseline_mean\":%.6g,\"sigma\":%.6g,\"baseline_runs\":%d,\"regression_pct\":%.2f,\"class\":\"%s\"}", (i>1?",":""), b, cur[b], mean, sigma, cnt[b], reg*100, cls
+    if (json) printf "%s{\"name\":\"%s\",\"value\":%s,\"baseline_mean\":%.6g,\"sigma\":%.6g,\"baseline_runs\":%d,\"regression_pct\":%.2f,\"class\":\"%s\"}", (i>1?",":""), jstr(b), cur[b], mean, sigma, cnt[b], reg*100, cls
     else printf "%-32s cur=%-12.6g base=%-12.6g sigma=%-10.4g n=%-2d regression=%+7.2f%%  %s%s\n", b, cur[b], mean, sigma, cnt[b], reg*100, cls, (why!="" ? "  (" why ")" : "")
   }
   if (json) printf "]\n"

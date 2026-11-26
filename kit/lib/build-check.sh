@@ -17,7 +17,13 @@ start=$(date +%s.%N); marker=$(mktemp); touch -d "@$(( $(date +%s) - 1 ))" "$mar
 "$@" || { echo "BUILD FAIL: $*" >&2; rm -f "$marker"; exit 1; }
 end=$(date +%s.%N)
 [ -s "$art" ] || { echo "BUILD FAIL: artefact $art missing or empty after a build that exited 0" >&2; rm -f "$marker"; exit 1; }
-[ "$art" -nt "$marker" ] || [ -d "$art" ] || { echo "BUILD FAIL: artefact $art is stale (not rebuilt)" >&2; rm -f "$marker"; exit 1; }
+if [ -d "$art" ]; then   # a directory artefact is fresh only if the build wrote a file inside it
+  [ -n "$(find "$art" -type f -newer "$marker" -print -quit 2>/dev/null)" ] || { echo "BUILD FAIL: directory artefact $art has no file newer than the build start (stale)" >&2; rm -f "$marker"; exit 1; }
+else
+  [ "$art" -nt "$marker" ] || { echo "BUILD FAIL: artefact $art is stale (not rebuilt)" >&2; rm -f "$marker"; exit 1; }
+fi
 rm -f "$marker"
-[ -z "$out" ] || awk -v s="$start" -v e="$end" -v n="$name" 'BEGIN{printf "%s\t%.3f\tlower\n", n, e-s}' >> "$out"
+if [ -n "$out" ]; then
+  awk -v s="$start" -v e="$end" -v n="$name" 'BEGIN{printf "%s\t%.3f\tlower\n", n, e-s}' >> "$out" || { echo "BUILD FAIL: could not write benchmark row to $out" >&2; exit 1; }
+fi
 echo "BUILD OK: $art"

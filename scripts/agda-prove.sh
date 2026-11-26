@@ -16,8 +16,16 @@ command -v agda >/dev/null || { echo "NO CHECK PERFORMED: agda not installed" >&
 "$here/agda-doubt-check.sh" "$@"; d=$?
 [ "$d" -eq 2 ] && exit 2
 paths=()
-while [ $# -gt 0 ]; do case "$1" in --allow) shift 2 ;; *) paths+=("$1"); shift ;; esac; done
-mapfile -t files < <(find "${paths[@]}" -type f \( -name '*.agda' -o -name '*.lagda' -o -name '*.lagda.md' \) | sort)
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --allow) [ $# -ge 2 ] || { echo "usage: agda-prove.sh [--allow FILE] PATH..." >&2; exit 2; }; shift 2 ;;
+    *) paths+=("$1"); shift ;;
+  esac
+done
+for pth in "${paths[@]}"; do [ -e "$pth" ] || { echo "NO CHECK PERFORMED: $pth does not exist" >&2; exit 2; }; done
+found=$(find "${paths[@]}" -type f \( -name '*.agda' -o -name '*.lagda' -o -name '*.lagda.md' -o -name '*.lagda.tex' -o -name '*.lagda.rst' \)) || { echo "NO CHECK PERFORMED: source discovery failed" >&2; exit 2; }
+mapfile -t files < <(printf '%s\n' "$found" | sed '/^$/d' | sort)
+[ "${#files[@]}" -gt 0 ] || { echo "NO CHECK PERFORMED: no Agda sources" >&2; exit 2; }
 bad=0
 for f in "${files[@]}"; do
   # --safe/--cubical-compatible on the command line AND (checked above) in the file

@@ -14,7 +14,12 @@ want doubtful-file-rejected       1 "$p" "$fx/doubtful"
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 want no-sources-is-no-check       2 "$p" "$tmp"
 # an exception with no real reason must itself be a violation
-printf 'Doubtful.agda\tpostulate\tbad\n' > "$tmp/allow.tsv"
-want allow-without-reason-fails   1 "$root/scripts/agda-doubt-check.sh" --allow "$tmp/allow.tsv" "$fx/doubtful"
+# (isolated: the fixture is otherwise audit-clean, so only the short reason can fail it)
+printf 'Good.agda\tpostulate\tbad\n' > "$tmp/allow.tsv"
+want allow-without-reason-fails   1 "$root/scripts/agda-doubt-check.sh" --allow "$tmp/allow.tsv" "$fx/good"
+printf 'Good.agda\tpostulate\tjustified in writing, twenty chars+\n' > "$tmp/allow-ok.tsv"
+want allow-with-reason-control    0 "$root/scripts/agda-doubt-check.sh" --allow "$tmp/allow-ok.tsv" "$fx/good"
+want allow-without-file-is-2      2 "$p" --allow
+want missing-target-is-2          2 "$p" "$fx/good" "$tmp/does-not-exist"
 echo "agda-prove self-test: $pass passed, $fail failed"
-[ "$fail" -eq 0 ] && [ "$pass" -ge 5 ]
+[ "$fail" -eq 0 ] && [ "$pass" -ge 8 ]

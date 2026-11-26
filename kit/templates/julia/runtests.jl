@@ -7,7 +7,7 @@ using Test, Sockets
 module Subject
 parse_kv(s) = begin
     i = findfirst('=', s); i === nothing && throw(ArgumentError("no separator"))
-    k = strip(s[1:i-1]); isempty(k) && throw(ArgumentError("empty key"))
+    k = strip(s[1:prevind(s, i)]); isempty(k) && throw(ArgumentError("empty key"))
     (k, s[i+1:end])
 end
 end
@@ -15,6 +15,7 @@ end
 @testset "UT" begin
     @test Subject.parse_kv("a=b=c") == ("a", "b=c")
     @test Subject.parse_kv("k=") == ("k", "")
+    @test Subject.parse_kv("é=v") == ("é", "v")   # key ends on a multi-byte character
     @test_throws ArgumentError Subject.parse_kv("kv")
     @test_throws ArgumentError Subject.parse_kv(" =v")
 end
