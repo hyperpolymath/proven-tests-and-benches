@@ -15,10 +15,29 @@ fn clean() -> Value {
     serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("fixture json")
 }
 
-fn scratch(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("proven-contract-{}-{name}", std::process::id()));
+/// A test-owned scratch directory, removed when the guard drops (also on a
+/// failed assertion).
+struct Scratch(PathBuf);
+
+impl std::ops::Deref for Scratch {
+    type Target = Path;
+    fn deref(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl Drop for Scratch {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+fn scratch(name: &str) -> Scratch {
+    static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    let dir = std::env::temp_dir().join(format!("proven-contract-{}-{name}-{n}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("scratch dir");
-    dir
+    Scratch(dir)
 }
 
 fn run(args: &[&str], root: &Path) -> (i32, String) {
@@ -270,4 +289,98 @@ fn emit_refuses_dishonest_facts() {
     }
     assert_eq!(emit(&json!([])).expect_err("not an object").code, 2);
     assert_eq!(emit(&json!({})).expect_err("no tests").code, 2);
+}
+
+// ── review follow-ups: parsing and comparison fidelity with Python ──────────
+
+fn status_raw(raw: &str, surface: &str) -> i32 {
+    let dir = scratch("raw");
+    let path = dir.join("doc.json");
+    std::fs::write(&path, raw).expect("write");
+    run(&["validate-file", path.to_str().expect("utf8"), surface], &default_root()).0
+}
+
+fn clean_text() -> String {
+    std::fs::read_to_string(default_root().join("proven-tests/fixtures/report-valid-mixed.json")).expect("fixture")
+}
+
+#[test]
+fn negative_zero_integer_is_a_valid_counter_but_negative_zero_float_is_not() {
+    let raw = clean_text();
+    assert!(raw.contains("\"failed\": 0"), "fixture shape changed");
+    assert_eq!(status_raw(&raw.replace("\"failed\": 0", "\"failed\": -0"), "proven-tests"), 0);
+    assert_eq!(status_raw(&raw.replace("\"failed\": 0", "\"failed\": -0.0"), "proven-tests"), 1);
+}
+
+#[test]
+fn near_two_schema_version_is_not_two() {
+    let raw = clean_text();
+    let needle = "\"schema_version\": 2";
+    assert!(raw.contains(needle), "fixture shape changed");
+    assert_eq!(status_raw(&raw.replace(needle, "\"schema_version\": 1.9999999999999998"), "proven-tests"), 1);
+}
+
+fn emit_raw(raw: &str) -> Value {
+    let dir = scratch("emit");
+    let (input, output) = (dir.join("in.json"), dir.join("out.json"));
+    std::fs::write(&input, raw).expect("write");
+    let args: Vec<String> = vec![input.to_str().unwrap().into(), output.to_str().unwrap().into()];
+    let (mut out, mut err) = (Vec::new(), Vec::new());
+    let code = proven_evidence::contract_check::emit_main(&args, &mut out, &mut err);
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&err));
+    serde_json::from_str(&std::fs::read_to_string(&output).expect("report")).expect("json")
+}
+
+fn one_test(duration: &str) -> String {
+    format!(
+        "{{\"tests\":[{{\"tier\":\"Unproven\",\"outcome\":\"passed\",\"module\":\"m\",\"name\":\"n\",\"duration_ms\":{duration},\"category\":\"c\",\"aspect\":\"a\",\"silence\":\"s\",\"firing\":\"f\"}}]}}"
+    )
+}
+
+fn duration_of(report: &Value) -> Value {
+    report["entries"][0]["duration_ms"].clone()
+}
+
+#[test]
+fn emit_keeps_raw_float_and_unicode_digit_and_i64_edge_durations() {
+    // raw text, so the test input is not rounded before the code under test sees it
+    assert_eq!(duration_of(&emit_raw(&one_test("1.9999999999999998"))), json!(1));
+    assert_eq!(duration_of(&emit_raw(&one_test("\"\\u0661\\u0662\""))), json!(12)); // Arabic-Indic 12
+    assert_eq!(duration_of(&emit_raw(&one_test("9.21e18"))), json!(9210000000000000000i64));
+    assert_eq!(duration_of(&emit_raw(&one_test("-9223372036854775808.0"))), json!(i64::MIN));
+}
+
+#[test]
+fn emit_rejects_out_of_range_and_non_decimal_digits() {
+    let dir = scratch("reject");
+    for (i, d) in ["9223372036854775808.0", "\"\\u00b2\"", "\"\\u00bd\""].iter().enumerate() {
+        let (input, output) = (dir.join(format!("in{i}.json")), dir.join(format!("out{i}.json")));
+        std::fs::write(&input, one_test(d)).unwrap();
+        let args: Vec<String> = vec![input.to_str().unwrap().into(), output.to_str().unwrap().into()];
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+        assert_eq!(proven_evidence::contract_check::emit_main(&args, &mut out, &mut err), 1, "{d}");
+    }
+}
+
+#[test]
+fn numeric_expectations_compare_by_value() {
+    let root = scratch("numeq");
+    let surface = root.join("cicd-squabbler");
+    std::fs::create_dir_all(&surface).unwrap();
+    std::fs::write(
+        surface.join("gate.json"),
+        r#"{"required_contexts":["a"],"checks":[{"required_context":"a","run":"skipped"}]}"#,
+    )
+    .unwrap();
+    let write_cases = |want: &str| {
+        std::fs::write(
+            surface.join("cases.json"),
+            format!(r#"{{"cases":[{{"id":"c","fixture":"gate.json","expect":{{"evidence_free":{want}}}}}]}}"#),
+        )
+        .unwrap();
+    };
+    write_cases("1.0");
+    assert_eq!(run(&["cicd-squabbler"], &root).0, 0);
+    write_cases("1.5");
+    assert_eq!(run(&["cicd-squabbler"], &root).0, 1);
 }

@@ -538,14 +538,15 @@ failing required checks cannot produce a legitimate-green result. Run them with
 == Part III — Conformance
 
 The normative, executable statement of both surfaces is
-`proven-contract` (Rust, crate `integrations/contract/proven-tests/downstream/rust/proven-evidence`, source `src/contract_check.rs`). It is the portable floor: the Idris2 types and the
+`proven-contract` (Rust, crate `integrations/contract/proven-tests/downstream/rust/proven-evidence`, source `src/contract_check.rs`). Build it with
+`cargo build --release --bin proven-contract` in that crate; the examples below call the built binary as `proven-contract`, and `cargo run --quiet --bin proven-contract -- <args>` is equivalent. It is the portable floor: the Idris2 types and the
 SPARK proof are the authoritative semantics, but a downstream repository cannot
 compile either without adopting the whole toolchain.
 
 [source,bash]
 ----
- proven-tests
- cicd-squabbler
+proven-contract proven-tests
+proven-contract cicd-squabbler
 bash scripts/check-integration-contract.sh     # both, and the downstream fixture
 ----
 

@@ -17,10 +17,11 @@ version = "0.1.0"
 edition = "2021"
 license = "MPL-2.0"
 description = "Emit and validate a Proven-Tests schema_version-2 run report."
+default-run = "proven-evidence"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1", features = ["preserve_order"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 
 [dev-dependencies]
-serde_json = { version = "1", features = ["preserve_order"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }

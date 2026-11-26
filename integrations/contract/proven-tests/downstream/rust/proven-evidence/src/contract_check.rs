@@ -456,14 +456,14 @@ fn evaluate_gate(kinds: &[&str]) -> &'static str {
 /// dropped or renamed away a required context. Stricter than Green: an
 /// all-Skipped gate proves nothing, and a gate missing a required context is a
 /// bypass, not a win.
-fn legitimate_green(required: &[String], contexts: &[&str], kinds: &[&str]) -> bool {
+fn legitimate_green(required: &[String], contexts: &BTreeSet<&str>, kinds: &[&str]) -> bool {
     if evaluate_gate(kinds) != "Green" {
         return false;
     }
     if required.is_empty() || kinds.is_empty() {
         return false;
     }
-    if required.iter().any(|r| !contexts.contains(&r.as_str())) {
+    if required.iter().any(|r| !contexts.contains(r.as_str())) {
         return false; // a dropped or renamed-away required context
     }
     if kinds.iter().any(|k| matches!(*k, "Missing" | "Pending" | "Failed")) {
@@ -491,11 +491,13 @@ pub fn validate_squabbler_gate(doc: &Value) -> Result<(&'static str, bool, i64),
             _ => return cerr("required contexts must be non-empty strings"),
         }
     }
-    let mut contexts: Vec<&str> = Vec::new();
+    let mut contexts: BTreeSet<&str> = BTreeSet::new();
     let mut kinds: Vec<&'static str> = Vec::new();
     for c in checks {
         match c.get("required_context") {
-            Some(Value::String(s)) if !blank(s) => contexts.push(s),
+            Some(Value::String(s)) if !blank(s) => {
+                contexts.insert(s.as_str());
+            }
             _ => return cerr("a check is missing required_context"),
         }
         kinds.push(kind(c.get("run"))?); // structural check
@@ -508,6 +510,60 @@ pub fn validate_squabbler_gate(doc: &Value) -> Result<(&'static str, bool, i64),
 // case runner
 // ════════════════════════════════════════════════════════════════════════════
 
+/// Python `got == want` for an expectation. Numbers compare by value, so an
+/// integer 1 meets an expected 1.0 and 1.5 does not; strings and booleans
+/// compare exactly; an absent key meets an expected null.
+fn expectation_met(got: Option<&Value>, want: &Value) -> bool {
+    match (got, want) {
+        (None, w) => w.is_null(),
+        (Some(Value::Number(a)), Value::Number(b)) => match (a.as_i64(), b.as_i64()) {
+            (Some(x), Some(y)) => x == y,
+            _ => a.as_f64() == b.as_f64(),
+        },
+        (Some(g), w) => g == w,
+    }
+}
+
+/// Parse JSON the way Python's `json.loads` reads numbers: `-0` is the integer
+/// zero (serde_json reads it as a float), and floats round-trip exactly.
+fn parse_json(raw: &str) -> Result<Value, serde_json::Error> {
+    serde_json::from_str(&normalise_negative_zero(raw))
+}
+
+/// Rewrite each bare `-0` integer token (outside strings) to `0`. `-0.0`, `-0e0`
+/// and `-01` are left for the parser to treat as it already does.
+fn normalise_negative_zero(raw: &str) -> String {
+    let b = raw.as_bytes();
+    let mut out = String::with_capacity(raw.len());
+    let (mut i, mut in_str, mut esc) = (0usize, false, false);
+    while i < b.len() {
+        let c = b[i];
+        if in_str {
+            if esc {
+                esc = false;
+            } else if c == b'\\' {
+                esc = true;
+            } else if c == b'"' {
+                in_str = false;
+            }
+        } else if c == b'"' {
+            in_str = true;
+        } else if c == b'-'
+            && b.get(i + 1) == Some(&b'0')
+            && !matches!(b.get(i + 2), Some(b'0'..=b'9' | b'.' | b'e' | b'E'))
+        {
+            out.push('0');
+            i += 2;
+            continue;
+        }
+        let ch_len = raw[i..].chars().next().map_or(1, char::len_utf8);
+        out.push_str(&raw[i..i + ch_len]);
+        i += ch_len;
+        continue;
+    }
+    out
+}
+
 /// Read a UTF-8 JSON file. A missing, unreadable or unparseable file means no
 /// check could be performed.
 pub fn load(path: &Path) -> Result<Value, ContractError> {
@@ -516,7 +572,7 @@ pub fn load(path: &Path) -> Result<Value, ContractError> {
     }
     let raw = std::fs::read_to_string(path)
         .map_err(|e| ContractError(format!("cannot read {}: {e}", path.display())))?;
-    serde_json::from_str(&raw).map_err(|e| ContractError(format!("unparseable JSON in {}: {e}", path.display())))
+    parse_json(&raw).map_err(|e| ContractError(format!("unparseable JSON in {}: {e}", path.display())))
 }
 
 fn is_proven(surface: &str) -> bool {
@@ -570,7 +626,7 @@ pub fn run_surface(root: &Path, surface: &str, out: &mut dyn Write) -> Result<i3
         let mut bad: Vec<String> = Vec::new();
         for (key, want) in expect {
             let got = actual.get(key);
-            if got != Some(want) && !(got.is_none() && want.is_null()) {
+            if !expectation_met(got, want) {
                 bad.push(format!("{key}={} (expected {})", got.map_or("None".into(), py_repr), py_repr(want)));
             }
         }
@@ -714,6 +770,23 @@ fn efail<T>(message: impl Into<String>, code: i32) -> Result<T, EmitError> {
     Err(EmitError { message: message.into(), code })
 }
 
+/// First code point of every run of ten Unicode decimal digits (category Nd),
+/// as Python's `int()` reads them. Superscripts and fractions are not here.
+const ND_ZEROS: [u32; 68] = [
+    0x30, 0x660, 0x6f0, 0x7c0, 0x966, 0x9e6, 0xa66, 0xae6, 0xb66, 0xbe6, 0xc66, 0xce6, 0xd66, 0xde6, 0xe50,
+    0xed0, 0xf20, 0x1040, 0x1090, 0x17e0, 0x1810, 0x1946, 0x19d0, 0x1a80, 0x1a90, 0x1b50, 0x1bb0, 0x1c40,
+    0x1c50, 0xa620, 0xa8d0, 0xa900, 0xa9d0, 0xa9f0, 0xaa50, 0xabf0, 0xff10, 0x104a0, 0x10d30, 0x11066,
+    0x110f0, 0x11136, 0x111d0, 0x112f0, 0x11450, 0x114d0, 0x11650, 0x116c0, 0x11730, 0x118e0, 0x11950,
+    0x11c50, 0x11d50, 0x11da0, 0x11f50, 0x16a60, 0x16ac0, 0x16b50, 0x1d7ce, 0x1d7d8, 0x1d7e2, 0x1d7ec,
+    0x1d7f6, 0x1e140, 0x1e2f0, 0x1e4f0, 0x1e950, 0x1fbf0,
+];
+
+/// The value 0..=9 of a Unicode decimal digit, else None.
+fn decimal_digit(c: char) -> Option<u8> {
+    let cp = c as u32;
+    ND_ZEROS.iter().find(|z| cp >= **z && cp < **z + 10).map(|z| (cp - *z) as u8)
+}
+
 /// Python's `int(value)` for a JSON value: ints, truncated floats, bools and
 /// numeric strings convert; anything else is an error.
 fn py_int(v: &Value) -> Result<i64, String> {
@@ -722,7 +795,9 @@ fn py_int(v: &Value) -> Result<i64, String> {
         Value::Number(n) => match n.as_i64() {
             Some(i) => Ok(i),
             None => match n.as_f64() {
-                Some(f) if f.is_finite() && f.abs() < 9.2e18 => Ok(f.trunc() as i64),
+                Some(f) if f.is_finite() && f.trunc() >= -9_223_372_036_854_775_808.0 && f.trunc() < 9_223_372_036_854_775_808.0 => {
+                    Ok(f.trunc() as i64)
+                }
                 _ => Err(format!("cannot convert {} to an integer", py_repr(v))),
             },
         },
@@ -736,11 +811,11 @@ fn py_int(v: &Value) -> Result<i64, String> {
                 && !digits.starts_with('_')
                 && !digits.ends_with('_')
                 && !digits.contains("__")
-                && digits.chars().all(|c| c.is_ascii_digit() || c == '_');
+                && digits.chars().all(|c| decimal_digit(c).is_some() || c == '_');
             if !valid {
                 return Err(format!("invalid literal for int(): {}", py_repr(v)));
             }
-            let clean: String = digits.chars().filter(|c| *c != '_').collect();
+            let clean: String = digits.chars().filter(|c| *c != '_').filter_map(|c| decimal_digit(c).map(|d| char::from(b'0' + d))).collect();
             clean.parse::<i64>().map(|n| n * sign).map_err(|_| format!("integer out of range: {}", py_repr(v)))
         }
         other => Err(format!("int() argument must be a string or a number, not {}", py_repr(other))),
@@ -940,7 +1015,7 @@ pub fn emit_main(args: &[String], out: &mut dyn Write, err: &mut dyn Write) -> i
         Ok(r) => r,
         Err(e) => return fail(err, format!("cannot read {in_path}: {e}"), 2),
     };
-    let doc: Value = match serde_json::from_str(&raw) {
+    let doc: Value = match parse_json(&raw) {
         Ok(d) => d,
         Err(e) => return fail(err, format!("{in_path} is not valid JSON: {e}"), 2),
     };
