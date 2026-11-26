@@ -10,7 +10,7 @@
 # Manifest: tab-separated, '#' comments, columns:
 #   id <TAB> status <TAB> language <TAB> ref
 #   status   covered | na | planned
-#   covered  ref = path (relative to root) of an existing, non-empty file
+#   covered  ref = path (relative to root) of an existing, non-empty regular file
 #   na       ref = written reason, at least 20 characters, not a placeholder
 #   planned  ref = 's1'..'s4' (optionally followed by text): the sweep that will cover it.
 #            Honest progress, not a pass: a planned row whose sweep is <= --through-sweep
@@ -42,13 +42,28 @@ ids="$here/ids.tsv"
 rows=$(grep -vc -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$manifest")
 [ "$rows" -gt 0 ] || { echo "NO CHECK PERFORMED: manifest $manifest has no rows" >&2; exit 2; }
 
-awk -F'\t' -v through="$through" -v root="$root" -v idsfile="$ids" '
+# File existence is checked here in bash, never through a shell built from the
+# manifest: a ref is data, so "; true #" or $(...) in it must not run or pass.
+# A ref must be a non-empty regular file (a directory or empty ref is a violation).
+okrefs="$(mktemp)" || { echo "NO CHECK PERFORMED: mktemp failed" >&2; exit 2; }
+trap 'rm -f "$okrefs"' EXIT
+ln=0
+while IFS=$'\t' read -r _id _st _lang _ref || [ -n "$_id" ]; do
+  ln=$((ln + 1))
+  [ "$_st" = covered ] || continue
+  [ -n "$_ref" ] || continue
+  case "$_ref" in /*) _p="$_ref" ;; *) _p="$root/$_ref" ;; esac
+  if [ -f "$_p" ] && [ -s "$_p" ]; then printf '%s\n' "$ln" >> "$okrefs"; fi
+done < "$manifest"
+
+awk -F'\t' -v through="$through" -v okfile="$okrefs" -v idsfile="$ids" '
 function bad(msg) { print "VIOLATION: " msg > "/dev/stderr"; fails++ }
 BEGIN {
   while ((getline line < idsfile) > 0) {
     if (line ~ /^#/ || line ~ /^[[:space:]]*$/) continue
     split(line, f, "\t"); known[f[2]] = f[1]; order[++n] = f[2]
   }
+  while ((getline line < okfile) > 0) refok[line + 0] = 1
   split("n/a na none todo tbd tba later later. - n.a. not-applicable", ph, " ")
   for (i in ph) placeholder[ph[i]] = 1
 }
@@ -58,9 +73,7 @@ BEGIN {
   if (!(id in known)) { bad("line " NR ": unknown id \"" id "\""); next }
   if (st == "covered") {
     if (lang == "" || lang == "-") bad("line " NR ": " id " covered but language missing")
-    p = (ref ~ /^\//) ? ref : root "/" ref
-    cmd = "test -s \"" p "\""
-    if (system(cmd) != 0) bad("line " NR ": " id " covered but ref \"" ref "\" is missing or empty")
+    if (!(NR in refok)) bad("line " NR ": " id " covered but ref \"" ref "\" is missing or empty")
     else seen[id] = 1
   } else if (st == "na") {
     r = ref; gsub(/^[ \t]+|[ \t]+$/, "", r)

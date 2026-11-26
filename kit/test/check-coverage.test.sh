@@ -53,5 +53,16 @@ expect planned-default-is-strict 1 "$chk" --root "$tmp/r" "$tmp/pl.tsv"
 sed 's|^FUZ\tna.*|FUZ\tplanned\t-\tsoon|' "$tmp/ok.tsv" > "$tmp/plbad.tsv"
 expect planned-without-sweep-fails 1 "$chk" --root "$tmp/r" --through-sweep 1 "$tmp/plbad.tsv"
 expect bad-through-sweep-is-2 2 "$chk" --root "$tmp/r" --through-sweep 9 "$tmp/ok.tsv"
+# covered ref is data, never shell: injection must neither pass nor execute
+sed 's|^UT\tna.*|UT\tcovered\tbash\t"; true #|' "$tmp/ok.tsv" > "$tmp/inj.tsv"
+expect injected-ref-fails 1 "$chk" --root "$tmp/r" "$tmp/inj.tsv"
+sed "s|^UT\tna.*|UT\tcovered\tbash\t\$(touch $tmp/PWNED)|" "$tmp/ok.tsv" > "$tmp/sub.tsv"
+"$chk" --root "$tmp/r" "$tmp/sub.tsv" >/dev/null 2>&1
+if [ -e "$tmp/PWNED" ]; then fail=$((fail+1)); echo "FAIL command-substitution-in-ref-executed"; else pass=$((pass+1)); fi
+# empty ref and directory ref are not files
+sed 's|^UT\tna.*|UT\tcovered\tbash\t|' "$tmp/ok.tsv" > "$tmp/noref.tsv"
+expect empty-ref-fails 1 "$chk" --root "$tmp/r" "$tmp/noref.tsv"
+sed 's|^UT\tna.*|UT\tcovered\tbash\tt|' "$tmp/ok.tsv" > "$tmp/dirref.tsv"
+expect directory-ref-fails 1 "$chk" --root "$tmp/r" "$tmp/dirref.tsv"
 echo "check-coverage self-test: $pass passed, $fail failed"
-[ "$fail" -eq 0 ] && [ "$pass" -ge 15 ]
+[ "$fail" -eq 0 ] && [ "$pass" -ge 19 ]
