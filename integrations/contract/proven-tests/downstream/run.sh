@@ -25,14 +25,17 @@ contract="$(cd "$here/../.." && pwd)"
 out="${1:-$here/build/proven-run-report.json}"
 mkdir -p "$(dirname "$out")"
 
-for tool in python3; do
+for tool in cargo; do
   command -v "$tool" >/dev/null 2>&1 || {
     echo "run.sh: '$tool' is required but was not found" >&2
     exit 2
   }
 done
 
-python3 "$here/emit_report.py" "$here/example-tests.json" "$out"
-python3 "$contract/check_contract.py" validate-file "$out" proven-tests
+crate="$here/rust/proven-evidence/Cargo.toml"
+run_bin() { cargo run --locked --quiet --manifest-path "$crate" --bin "$@"; }
+
+run_bin emit-report -- "$here/example-tests.json" "$out"
+run_bin check-contract -- validate-file "$out" proven-tests
 
 echo "downstream fixture: $out conforms to the Proven-Tests integration contract"

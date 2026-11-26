@@ -3,7 +3,7 @@
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
 // The downstream Proven-Tests contract, asserted against the Rust reader. The
-// same assertions live in Python (integrations/contract/check_contract.py) and
+// same assertions live in the check-contract case runner (tests/checker.rs) and
 // in the bash fixture runner: the schema's rules — a test id, a provenance, a
 // result and a fixture obligation on every entry; coverage DERIVED from the
 // entries that ran and passed; no cell counted twice; no tier carried by
@@ -126,11 +126,10 @@ fn evidence_shape_is_checked_even_when_the_tier_does_not_use_it() {
         ] {
             let mut doc = baseline.clone();
             doc["entries"][0]["evidence"] = evidence.clone();
-            let violations = proven_evidence::validate(&doc).unwrap();
-            assert!(
-                violations.iter().any(|v| v.contains("evidence must be an object or null")),
-                "{tier} evidence={evidence:?}: {violations:?}"
-            );
+            // Normative checker: a wrong non-null type means NO CHECK was performed
+            // (exit 2), not a violation list.
+            let err = proven_evidence::validate(&doc).unwrap_err();
+            assert!(err.contains("evidence must be dict or null"), "{tier} evidence={evidence:?}: {err}");
         }
     }
 }
