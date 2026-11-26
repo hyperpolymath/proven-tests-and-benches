@@ -47,6 +47,7 @@ Rules, all enforced by `kit/check-coverage.sh`:
 
 . Every one of the 39 ids needs at least one row. A missing id is a violation, not a pass.
 . `covered` needs a language and a `ref` that is an existing, non-empty file relative to the repo root.
+. `planned` (ref `s1`..`s4`) states honest progress: the id is not covered yet and a later sweep will cover it. It is never a pass for a sweep already due: `--through-sweep N` fails any planned row with sweep <= N, and the default (4) fails them all. A repo on sweep 1 gates with `--through-sweep 1`; absent rows still fail.
 . `na` needs a written reason of at least 20 characters. Placeholders (`n/a`, `tbd`, `todo`) fail.
 . Exit codes: `0` pass, `1` violation, `2` no check performed (manifest missing, empty, unreadable). `2` must fail the gate (A3 G3, ER-A8).
 
@@ -72,3 +73,7 @@ every other repo; reconciling the two is on `LATER.adoc`.
 * Rust, Bash and Agda are verified here, positive and negative controls. Idris2, Julia, Zig, Elixir and Gleam are
   written but not executed: no toolchain in the foundation container. A consumer's first CI run is their test.
 * Sweeps 2 to 4 are planned, not shipped: see `taxonomy-coverage/COVERAGE-MATRIX.adoc`.
+
+== What is not a valid SMK or BLD test
+
+A "smoke" test that skips, passes or returns early when the tool, binary or prover it exercises is missing is not SMK: it turns absence into a pass (DOG-01). A valid SMK test runs the real built binary (in Rust, `env!("CARGO_BIN_EXE_<name>")`, as `kit/templates/rust/tests/smoke.rs` does) and fails when it cannot. Keep any skip-when-missing test, but cover SMK with a separate one that fails closed.

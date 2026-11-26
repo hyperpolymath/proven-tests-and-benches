@@ -45,5 +45,13 @@ expect bad-status-fails 1 "$chk" --root "$tmp/r" "$tmp/st.tsv"
 expect missing-manifest-is-2 2 "$chk" --root "$tmp/r" "$tmp/nope.tsv"
 printf '# only a comment\n' > "$tmp/comment.tsv"
 expect comment-only-manifest-is-2 2 "$chk" --root "$tmp/r" "$tmp/comment.tsv"
+# planned: due sweeps fail, later sweeps pass, default is strict, bad ref fails
+sed 's|^FUZ\tna.*|FUZ\tplanned\t-\ts3 fuzz harness|' "$tmp/ok.tsv" > "$tmp/pl.tsv"
+expect planned-later-sweep-passes 0 "$chk" --root "$tmp/r" --through-sweep 2 "$tmp/pl.tsv"
+expect planned-due-sweep-fails 1 "$chk" --root "$tmp/r" --through-sweep 3 "$tmp/pl.tsv"
+expect planned-default-is-strict 1 "$chk" --root "$tmp/r" "$tmp/pl.tsv"
+sed 's|^FUZ\tna.*|FUZ\tplanned\t-\tsoon|' "$tmp/ok.tsv" > "$tmp/plbad.tsv"
+expect planned-without-sweep-fails 1 "$chk" --root "$tmp/r" --through-sweep 1 "$tmp/plbad.tsv"
+expect bad-through-sweep-is-2 2 "$chk" --root "$tmp/r" --through-sweep 9 "$tmp/ok.tsv"
 echo "check-coverage self-test: $pass passed, $fail failed"
-[ "$fail" -eq 0 ] && [ "$pass" -ge 10 ]
+[ "$fail" -eq 0 ] && [ "$pass" -ge 15 ]
