@@ -33,7 +33,13 @@ for tool in cargo; do
 done
 
 crate="$here/rust/proven-evidence/Cargo.toml"
-run_bin() { cargo run --locked --quiet --manifest-path "$crate" --bin "$@"; }
+# Preserve the tool's own statuses 0, 1 and 2; any other status means the
+# launcher failed (e.g. cargo exit 101): NO CHECK was performed, so exit 2.
+run_bin() {
+  local rc=0
+  cargo run --locked --quiet --manifest-path "$crate" --bin "$@" || rc=$?
+  case "$rc" in 0|1|2) return "$rc" ;; *) return 2 ;; esac
+}
 
 run_bin emit-report -- "$here/example-tests.json" "$out"
 run_bin check-contract -- validate-file "$out" proven-tests

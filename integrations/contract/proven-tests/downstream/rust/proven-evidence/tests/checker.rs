@@ -172,3 +172,37 @@ fn the_shipped_cases_hold() {
         assert_eq!(run_surface(&contract_root(), s, &mut sink).unwrap(), 0, "{}", String::from_utf8_lossy(&sink));
     }
 }
+
+#[test]
+fn null_proof_ladder_and_null_category_are_accepted_and_cover_nothing() {
+    let mut doc = clean();
+    doc["entries"][0]["proof_ladder"] = Value::Null;
+    assert_eq!(status(&doc, Surface::ProvenTests), 0, "null ladder is an empty ladder");
+    let (v, cells) = proven_evidence::validate_with_cells(&clean()).unwrap();
+    assert!(v.is_empty());
+    let mut d = clean();
+    d["entries"][0]["category"] = Value::Null;
+    let (_, cells2) = proven_evidence::validate_with_cells(&d).unwrap();
+    assert!(cells2 <= cells, "an entry with no category covers no cell");
+    let mut e = clean();
+    e["entries"][0]["category"] = json!("");
+    assert_eq!(proven_evidence::validate_with_cells(&e).unwrap().1, cells2);
+}
+
+#[test]
+fn emitter_rejects_non_string_category() {
+    use proven_evidence::emit::{emit, EmitError};
+    let doc = json!({"tests": [{"module": "m", "name": "n", "category": 12, "aspect": "a",
+        "tier": "Unproven", "outcome": "passed", "fixture_obligation": "CannotFailByDesign"}]});
+    assert!(matches!(emit(&doc), Err(EmitError::Dishonest(_))));
+}
+
+#[test]
+fn unloadable_fixture_means_no_check_performed() {
+    let dir = tempdir("nofix");
+    let s = dir.join("proven-tests");
+    std::fs::create_dir_all(&s).unwrap();
+    std::fs::write(s.join("cases.json"), r#"{"cases":[{"id":"x","fixture":"gone.json","expect":{"valid":true}}]}"#).unwrap();
+    let mut sink = Vec::new();
+    assert_eq!(run_surface(&dir, Surface::ProvenTests, &mut sink).unwrap(), 2);
+}

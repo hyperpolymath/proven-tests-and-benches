@@ -72,7 +72,7 @@ pub fn run_surface(root: &Path, surface: Surface, out: &mut impl std::io::Write)
         .get("cases")
         .and_then(Value::as_array)
         .ok_or("cases.json has no 'cases' array")?;
-    let (mut failures, mut ran) = (0usize, 0usize);
+    let (mut failures, mut ran, mut unrun) = (0usize, 0usize, 0usize);
     let w = |e: std::io::Error| format!("write failed: {e}");
     for case in cases {
         let id = case.get("id").and_then(Value::as_str).unwrap_or("?");
@@ -83,6 +83,7 @@ pub fn run_surface(root: &Path, surface: Surface, out: &mut impl std::io::Write)
             Err(e) => {
                 writeln!(out, "  FAIL {id}: no check performed — {e}").map_err(w)?;
                 failures += 1;
+                unrun += 1;
                 continue;
             }
         };
@@ -113,7 +114,9 @@ pub fn run_surface(root: &Path, surface: Surface, out: &mut impl std::io::Write)
         }
     }
     writeln!(out, "{}: {}/{ran} case(s) passed", surface.dir(), ran.saturating_sub(failures)).map_err(w)?;
-    Ok(if failures > 0 { 1 } else { 0 })
+    // A case whose fixture could not be loaded means NO CHECK was performed (2),
+    // never a verdict (1) and never a pass.
+    Ok(if unrun > 0 { 2 } else if failures > 0 { 1 } else { 0 })
 }
 
 /// Validate one file against a surface; returns the exit status.

@@ -102,9 +102,9 @@ cannot drift.
 cd integrations/contract/proven-tests/downstream/rust/proven-evidence
 cargo test
 # derive the summary from a report and write it
-cargo run -- emit ../build/proven-run-report.json /tmp/summary.json
+cargo run --bin proven-evidence -- emit ../build/proven-run-report.json /tmp/summary.json
 # refuse a summary that disagrees with the entries
-cargo run -- check ../build/proven-run-report.json /tmp/summary.json
+cargo run --bin proven-evidence -- check ../build/proven-run-report.json /tmp/summary.json
 ----
 
 Both commands exit `0` on conformance, `1` when the contract is not met, and `2`

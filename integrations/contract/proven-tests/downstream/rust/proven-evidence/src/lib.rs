@@ -88,14 +88,16 @@ pub struct TestResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Entry {
     pub test_id: TestId,
+    #[serde(default, deserialize_with = "null_as_default")]
     pub category: String,
+    #[serde(default, deserialize_with = "null_as_default")]
     pub aspect: String,
     #[serde(default)]
     pub typesafe_category: Option<String>,
     pub provenance: String,
     #[serde(default)]
     pub evidence: Value,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     pub proof_ladder: Vec<Rung>,
     pub result: TestResult,
     pub fixture_obligation: String,
@@ -107,10 +109,24 @@ pub struct Entry {
     pub fixture_debt_ref: Option<String>,
 }
 
+/// A JSON null (as the normative checker accepts) reads as the type's default.
+fn null_as_default<'de, D, T>(d: D) -> Result<T, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Default + Deserialize<'de>,
+{
+    Ok(Option::<T>::deserialize(d)?.unwrap_or_default())
+}
+
 impl Entry {
-    /// The (category, aspect) cell this entry maps onto.
-    pub fn cell(&self) -> (String, String) {
-        (self.category.clone(), self.aspect.clone())
+    /// The (category, aspect) cell this entry maps onto, or None when either
+    /// value is empty: such an entry covers no cell.
+    pub fn cell(&self) -> Option<(String, String)> {
+        if self.category.is_empty() || self.aspect.is_empty() {
+            None
+        } else {
+            Some((self.category.clone(), self.aspect.clone()))
+        }
     }
 }
 
@@ -306,7 +322,9 @@ pub fn validate_with_cells(doc: &Value) -> Result<(Vec<String>, i64), String> {
         match outcome {
             "passed" => {
                 passed += 1;
-                passed_cells.insert(entry.cell());
+                if let Some(c) = entry.cell() {
+                    passed_cells.insert(c);
+                }
             }
             "failed" => failed += 1,
             "error" => errored += 1,
@@ -416,7 +434,9 @@ pub fn summarise(entries: &[Entry], lattice_cells: i64) -> Summary {
         match e.result.outcome.as_str() {
             "passed" => {
                 passed += 1;
-                cells.insert(e.cell());
+                if let Some(c) = e.cell() {
+                    cells.insert(c);
+                }
             }
             "failed" => failed += 1,
             "error" => errored += 1,

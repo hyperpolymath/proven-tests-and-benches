@@ -9,6 +9,7 @@
 # tests/contract.rs pin the shared semantics.
 
 [package]
+default-run = "proven-evidence"
 name = "proven-evidence"
 version = "0.1.0"
 edition = "2021"

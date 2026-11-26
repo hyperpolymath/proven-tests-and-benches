@@ -558,8 +558,8 @@ A downstream can validate a single submitted document:
 
 [source,bash]
 ----
-check-contract --root <pinned>/integrations/contract validate-file proven-run-report.json proven-tests
-check-contract --root <pinned>/integrations/contract validate-file gate.json cicd-squabbler
+cargo run --locked -q --manifest-path <pinned>/integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin check-contract -- --root <pinned>/integrations/contract validate-file proven-run-report.json proven-tests
+cargo run --locked -q --manifest-path <pinned>/integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin check-contract -- --root <pinned>/integrations/contract validate-file gate.json cicd-squabbler
 ----
 
 == Part IV — What this contract does not allow

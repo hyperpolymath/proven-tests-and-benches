@@ -104,6 +104,11 @@ pub fn emit(input: &Value) -> Result<Value, EmitError> {
         }
 
         let mut entry = Map::new();
+        for field in ["category", "aspect"] {
+            if t.get(field).is_some_and(|v| !v.is_string() && !v.is_null()) {
+                return bad(format!("{w}.{field} must be a string or null"));
+            }
+        }
         entry.insert(
             "test_id".into(),
             json!({
