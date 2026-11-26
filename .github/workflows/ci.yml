@@ -113,7 +113,7 @@ jobs:
       # copyright/licence info) fails hard.
       - name: REUSE compliance (tolerating only the documented L-1 item)
         run: |
-          pipx install reuse >/dev/null 2>&1 || pip install --quiet reuse
+          pipx install --pip-args='--only-binary=:all:' 'reuse==6.3.0' >/dev/null 2>&1 || pip install --quiet --only-binary :all: 'reuse==6.3.0'
           reuse lint --json > /tmp/reuse.json || true
           python3 - <<'PY'
           import json, sys
@@ -219,7 +219,7 @@ jobs:
           set -euo pipefail
           dir=$(mktemp -d)
           mkdir -p "$dir/Assurance"
-          curl -fsSL https://raw.githubusercontent.com/hyperpolymath/cicd-suite/de35c57b3f21659d7fc1d42757e20e9e7345d268/src/Assurance/Cabal.idr -o "$dir/Assurance/Cabal.idr"
+          curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/hyperpolymath/cicd-suite/de35c57b3f21659d7fc1d42757e20e9e7345d268/src/Assurance/Cabal.idr -o "$dir/Assurance/Cabal.idr"
           { printf 'module Cases\nimport Assurance.Cabal\n%%default total\n'
             jq -ers '
               if (map(.index) | sort) != ["available","missing","unknown"] then error("invalid fixture coverage") else . end
