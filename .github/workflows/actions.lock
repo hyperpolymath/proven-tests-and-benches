@@ -20,7 +20,7 @@ workflows:
     '.github/workflows/label-triage.yml': []
     '.github/workflows/labels.yml': []
     '.github/workflows/mirror.yml':
-        - 'metadatastician/standards@bd0df9ead7faf0cdfe0e13e7966d91e28d0101d4'
+        - 'metadatastician/standards@75bd5994470661a099df562d6d5ad2fe744dbd66'
     '.github/workflows/push-email-notify.yml':
         - 'hyperpolymath/smtp-notify-action@v0.5.1'
     '.github/workflows/scorecard.yml':
@@ -63,9 +63,9 @@ dependencies:
         commit: 'sha1-22d081ff2d3a40755e97629de92e3bcbfa7cf2ed'
         owner_id: 42048915
         repo_id: 356423100
-    'dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c':
-        ref: 'master'
-        commit: 'sha1-2c7215f132e9ebf062739d9130488b56d53c060c'
+    'dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f':
+        ref: 'v1'
+        commit: 'sha1-e2a55d2ffb04f378e9626c28d38b36d230d1e12f'
         owner_id: 1940490
         repo_id: 260749683
     'editorconfig-checker/action-editorconfig-checker@51f63319f592f97930c73d9c46184d20bd206393':
@@ -103,19 +103,12 @@ dependencies:
             - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
             - 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9'
             - 'denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed'
+            - 'dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f'
             - 'editorconfig-checker/action-editorconfig-checker@51f63319f592f97930c73d9c46184d20bd206393'
             - 'erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124'
             - 'github/codeql-action@b96794f015dfd88f77b49b1c93e0fa7110f94c63'
             - 'ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc'
             - 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6'
-    'metadatastician/standards@bd0df9ead7faf0cdfe0e13e7966d91e28d0101d4':
-        ref: 'bd0df9ead7faf0cdfe0e13e7966d91e28d0101d4'
-        commit: 'sha1-bd0df9ead7faf0cdfe0e13e7966d91e28d0101d4'
-        owner_id: 297579217
-        repo_id: 1116521501
-        uses:
-            - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
-            - 'dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c'
             - 'webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555'
     'ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc':
         ref: 'v2.4.4'
