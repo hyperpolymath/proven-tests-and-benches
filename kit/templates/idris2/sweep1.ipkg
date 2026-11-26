@@ -1,7 +1,0 @@
--- SPDX-License-Identifier: MPL-2.0
-package sweep1
-version = 0.1.0
-depends = base
-modules = Sweep1
-main = Sweep1
-executable = sweep1

@@ -204,7 +204,7 @@ SPDX-License-Identifier = "CC-BY-SA-4.0"
 path = [
   "kit/**/*.sh", "kit/**/*.tsv", "kit/**/*.rs", "kit/**/*.toml", "kit/**/Cargo.lock",
   "kit/**/.gitignore", "kit/**/*.jl", "kit/**/*.zig", "kit/**/*.exs", "kit/**/*.gleam",
-  "kit/**/*.idr", "kit/**/*.ipkg", "kit/**/*.agda",
+  "kit/**/*.idr", "kit/**/*.ipkg.template", "kit/**/*.agda",
   "agda/fixtures/**/*.agda",
   "benchmarks/sixsigma/*.sh",
   "taxonomy-coverage/*.sh", "taxonomy-coverage/*.tsv",

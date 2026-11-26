@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: MPL-2.0
 -- Sweep-1 template for Idris2 (0.7.0): UT, SMK, BLD, P2P. ADAPT: replace parseKv.
--- Build+run: idris2 --build sweep1.ipkg && ./build/exec/sweep1   (exit 1 on any failure)
+-- Build+run: cp sweep1.ipkg.template sweep1.ipkg && idris2 --build sweep1.ipkg && ./build/exec/sweep1   (exit 1 on any failure)
 -- NOT EXECUTED in the foundation container (no idris2).
 module Sweep1
 

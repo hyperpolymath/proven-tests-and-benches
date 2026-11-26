@@ -1,0 +1,8 @@
+-- SPDX-License-Identifier: MPL-2.0
+-- TEMPLATE: copy to sweep1.ipkg in the consuming repo (kept as .template here so the doc-facts gate does not count it as a package).
+package sweep1
+version = 0.1.0
+depends = base
+modules = Sweep1
+main = Sweep1
+executable = sweep1
