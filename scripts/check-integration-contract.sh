@@ -21,8 +21,8 @@ cd "$(dirname "$0")/.." || {
   exit 2
 }
 
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "check-integration-contract: python3 is required but was not found" >&2
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "check-integration-contract: cargo is required but was not found" >&2
   exit 2
 fi
 
@@ -30,7 +30,8 @@ status=0
 
 echo "== proven-tests submission contract =="
 rc=0
-python3 integrations/contract/check_contract.py proven-tests || rc=$?
+cargo run --locked --quiet --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin check-contract -- --root integrations/contract proven-tests || rc=$?
+case "$rc" in 0|1|2) ;; *) rc=2 ;; esac
 if [ "$rc" -eq 2 ]; then
   echo "check-integration-contract: NO CHECK WAS PERFORMED (proven-tests, exit 2)" >&2
   exit 2
@@ -42,7 +43,8 @@ fi
 echo
 echo "== cicd-squabbler legitimate-green contract =="
 rc=0
-python3 integrations/contract/check_contract.py cicd-squabbler || rc=$?
+cargo run --locked --quiet --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin check-contract -- --root integrations/contract cicd-squabbler || rc=$?
+case "$rc" in 0|1|2) ;; *) rc=2 ;; esac
 if [ "$rc" -eq 2 ]; then
   echo "check-integration-contract: NO CHECK WAS PERFORMED (cicd-squabbler, exit 2)" >&2
   exit 2
@@ -55,6 +57,7 @@ echo
 echo "== minimal downstream fixture (emit + validate) =="
 rc=0
 bash integrations/contract/proven-tests/downstream/run.sh || rc=$?
+case "$rc" in 0|1|2) ;; *) rc=2 ;; esac
 if [ "$rc" -eq 2 ]; then
   echo "check-integration-contract: NO CHECK WAS PERFORMED (downstream fixture, exit 2)" >&2
   exit 2

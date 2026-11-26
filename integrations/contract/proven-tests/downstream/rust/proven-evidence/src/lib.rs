@@ -5,8 +5,8 @@
 // Rust twin of the downstream Proven-Tests integration contract.
 //
 // It reads and validates the SAME schema_version-2 run report that
-// integrations/contract/check_contract.py validates (and that
-// integrations/contract/proven-tests/downstream/emit_report.py writes), so the
+// integrations/contract check-contract (src/bin/check_contract.rs) validates (and that
+// emit-report (src/bin/emit_report.rs) writes), so the
 // contract's four rules hold in two independent implementations:
 //
 //   * every entry carries a test id, a provenance, a result outcome and a
@@ -24,8 +24,11 @@
 // contribute to the tier tally, because the report states what the test's
 // intended tier IS even while it is not counted as a test.
 
+pub mod emit;
 pub mod execution_truth;
+pub mod gate;
 pub mod parser_contract;
+pub mod runner;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -39,7 +42,7 @@ pub const FIXTURE_OBLIGATIONS: [&str; 3] = ["Fixtures", "CannotFailByDesign", "F
 pub const LATTICE_CELLS: i64 = 238;
 
 /// Python truthiness for JSON values, used by the normative checker.
-fn is_truthy(value: &Value) -> bool {
+pub(crate) fn is_truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(value) => *value,
@@ -85,14 +88,16 @@ pub struct TestResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Entry {
     pub test_id: TestId,
+    #[serde(default, deserialize_with = "null_as_default")]
     pub category: String,
+    #[serde(default, deserialize_with = "null_as_default")]
     pub aspect: String,
     #[serde(default)]
     pub typesafe_category: Option<String>,
     pub provenance: String,
     #[serde(default)]
     pub evidence: Value,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     pub proof_ladder: Vec<Rung>,
     pub result: TestResult,
     pub fixture_obligation: String,
@@ -104,10 +109,24 @@ pub struct Entry {
     pub fixture_debt_ref: Option<String>,
 }
 
+/// A JSON null (as the normative checker accepts) reads as the type's default.
+fn null_as_default<'de, D, T>(d: D) -> Result<T, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Default + Deserialize<'de>,
+{
+    Ok(Option::<T>::deserialize(d)?.unwrap_or_default())
+}
+
 impl Entry {
-    /// The (category, aspect) cell this entry maps onto.
-    pub fn cell(&self) -> (String, String) {
-        (self.category.clone(), self.aspect.clone())
+    /// The (category, aspect) cell this entry maps onto, or None when either
+    /// value is empty: such an entry covers no cell.
+    pub fn cell(&self) -> Option<(String, String)> {
+        if self.category.is_empty() || self.aspect.is_empty() {
+            None
+        } else {
+            Some((self.category.clone(), self.aspect.clone()))
+        }
     }
 }
 
@@ -166,6 +185,11 @@ pub fn parse(doc: &Value) -> Result<Report, String> {
 /// # Errors
 /// Returns Err if the report is not an object or has no `entries` array.
 pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
+    validate_with_cells(doc).map(|(v, _)| v)
+}
+
+/// Like [`validate`], also returning the cell count derived from the entries.
+pub fn validate_with_cells(doc: &Value) -> Result<(Vec<String>, i64), String> {
     let mut v: Vec<String> = Vec::new();
     if !doc.is_object() {
         return Err("report is not a JSON object".to_string());
@@ -188,6 +212,22 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
 
     for (i, e) in entries.iter().enumerate() {
         let where_ = format!("entries[{i}]");
+        // A wrong non-null type here means no check could be performed (exit 2),
+        // matching the normative checker's ContractError.
+        if let Some(obj) = e.as_object() {
+            for (field, want, ok) in [
+                ("evidence", "dict", Value::is_object as fn(&Value) -> bool),
+                ("proof_ladder", "list", Value::is_array),
+                ("category", "str", Value::is_string),
+                ("aspect", "str", Value::is_string),
+            ] {
+                if let Some(val) = obj.get(field) {
+                    if !val.is_null() && !ok(val) {
+                        return Err(format!("{where_}.{field} must be {want} or null"));
+                    }
+                }
+            }
+        }
         let entry: Entry = match serde_json::from_value(e.clone()) {
             Ok(entry) => entry,
             Err(err) => {
@@ -282,7 +322,9 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
         match outcome {
             "passed" => {
                 passed += 1;
-                passed_cells.insert(entry.cell());
+                if let Some(c) = entry.cell() {
+                    passed_cells.insert(c);
+                }
             }
             "failed" => failed += 1,
             "error" => errored += 1,
@@ -294,10 +336,16 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
         Some(s) if s.is_object() => s,
         _ => {
             v.push("report has no summary object".to_string());
-            return Ok(v);
+            return Ok((v, passed_cells.len() as i64));
         }
     };
     let get = |key: &str| summary.get(key).and_then(Value::as_i64);
+    let shown = |key: &str| match summary.get(key) {
+        None | Some(Value::Null) => "None".to_string(),
+        Some(Value::Bool(b)) => (if *b { "True" } else { "False" }).to_string(),
+        Some(Value::String(s)) => format!("'{s}'"),
+        Some(other) => other.to_string(),
+    };
 
     for key in ["covered_cells", "passed", "failed", "errors", "skipped",
                 "total", "lattice_covered", "cat_aspect_cells", "actually_proven",
@@ -310,45 +358,52 @@ pub fn validate(doc: &Value) -> Result<Vec<String>, String> {
     let derived = passed_cells.len() as i64;
     if get("covered_cells") != Some(derived) {
         v.push(format!(
-            "summary.covered_cells={:?} but only {derived} (category x aspect) cell(s) are \
+            "summary.covered_cells={} but only {derived} (category x aspect) cell(s) are \
              backed by an entry that ran and passed",
-            get("covered_cells")
+            shown("covered_cells")
         ));
     }
     if get("passed") != Some(passed) {
         v.push(format!(
-            "summary.passed={:?} but {passed} passed",
-            get("passed")
+            "summary.passed={} but {passed} passed",
+            shown("passed")
         ));
     }
     if get("failed") != Some(failed) {
-        v.push(format!("summary.failed={:?} but {failed} failed", get("failed")));
+        v.push(format!("summary.failed={} but {failed} failed", shown("failed")));
     }
     if get("errors") != Some(errored) {
-        v.push(format!("summary.errors={:?} but {errored} errored", get("errors")));
+        v.push(format!("summary.errors={} but {errored} errored", shown("errors")));
     }
     if get("skipped") != Some(skipped) {
-        v.push(format!("summary.skipped={:?} but {skipped} skipped", get("skipped")));
+        v.push(format!("summary.skipped={} but {skipped} skipped", shown("skipped")));
     }
     if get("total") != Some(entries.len() as i64 - debt) {
         v.push(format!(
-            "summary.total={:?} but {} non-debt entries (debt-marked entries are not counted)",
-            get("total"),
+            "summary.total={} but {} non-debt entries (debt-marked entries are not counted)",
+            shown("total"),
             entries.len() as i64 - debt
         ));
     }
     for (pos, tier) in TIERS.iter().enumerate() {
         if get(summary_key(tier)) != Some(tier_counts[pos]) {
             v.push(format!(
-                "summary.{}={:?} but {}",
+                "summary.{}={} but {}",
                 summary_key(tier),
-                get(summary_key(tier)),
+                shown(summary_key(tier)),
                 tier_counts[pos]
             ));
         }
     }
 
-    Ok(v)
+    if get("lattice_covered") != Some(derived) {
+        v.push(format!(
+            "summary.lattice_covered={} but only {derived} cell(s) are backed by an entry that ran and passed",
+            shown("lattice_covered")
+        ));
+    }
+
+    Ok((v, derived))
 }
 
 /// Derive the summary from the entries alone. Nothing is read out of the
@@ -379,7 +434,9 @@ pub fn summarise(entries: &[Entry], lattice_cells: i64) -> Summary {
         match e.result.outcome.as_str() {
             "passed" => {
                 passed += 1;
-                cells.insert(e.cell());
+                if let Some(c) = e.cell() {
+                    cells.insert(c);
+                }
             }
             "failed" => failed += 1,
             "error" => errored += 1,

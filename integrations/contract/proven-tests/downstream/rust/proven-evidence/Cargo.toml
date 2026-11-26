@@ -4,11 +4,12 @@
 # Minimal downstream fixture: emit and validate a Proven-Tests schema_version-2
 # run report with no Python or Idris2 dependency on the runner.
 #
-# This is the Rust-native twin of emit_report.py / check_contract.py. Both
+# This is the Rust implementation of the contract tools (emit-report, check-contract). Both
 # implement the contract in docs/INTEGRATION-CONTRACT.adoc; the unit tests in
 # tests/contract.rs pin the shared semantics.
 
 [package]
+default-run = "proven-evidence"
 name = "proven-evidence"
 version = "0.1.0"
 edition = "2021"
@@ -21,3 +22,23 @@ serde_json = "1"
 
 [dev-dependencies]
 serde_json = "1"
+
+[[bin]]
+name = "proven-evidence"
+path = "src/main.rs"
+
+[[bin]]
+name = "check-contract"
+path = "src/bin/check_contract.rs"
+
+[[bin]]
+name = "emit-report"
+path = "src/bin/emit_report.rs"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(creusot)'] }
+
+# Creusot is only needed to discharge the Pearlite contracts (--cfg creusot);
+# a normal build never fetches it.
+[target.'cfg(creusot)'.dependencies]
+creusot-contracts = "0.7"
