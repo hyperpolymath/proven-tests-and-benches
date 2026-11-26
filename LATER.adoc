@@ -44,3 +44,16 @@ Idris2, Julia, Zig, Elixir, Gleam templates: written, never executed here (no to
 * Merging this repo's 13 open PRs: SR-005 requires the stamped `proven-lock-gate` workflow, which this repo does not have. Draft/green handoff to the owner until F2 lands the gate here.
 * `main` is red on `Build, test and benchmark` (REUSE: two docs lack copyright info). PR #114 is the fix. Everything else is blocked behind it.
 * Reconcile `sixsigma.sh` (taxonomy-literal) with `scripts/check-bench-regression.sh` (ratio gate, 2.0x override).
+
+== Requests from other threads (hub, 26 Nov)
+
+[cols="1,4,2",options="header"]
+|===
+| Ask | State | Where it lands
+| Runners for Agda, Lean, Rocq, Idris2, TLA+, Ada, Julia | Agda exists (`scripts/agda-prove.sh`). Idris2 and Julia templates exist, unverified. Lean, Rocq, TLA+, Ada: none; each needs a toolchain to verify. | Sweep 2 (proof-regression) per language, one verified runner per toolchain F2 provisions.
+| Zero-test parser for Zig and shell | None. A runner that parses `zig test` and bats/shell test output and fails on zero tests (DOG-01) is the right shape. | Sweep 2, `kit/lib`.
+| Provision just, ijson-jcs, nickel, asciidoctor | Not F1's: tool installation belongs in F2's umbrella workflow. F1 will make each kit check exit 2 (no check performed) when its tool is missing, never skip. | F2.
+| Subdirectory-crate support; AffineScript runner | None yet. `smoke.sh` and `build-check.sh` take a command, so a crate path works via `cd`; a `--manifest-path` Rust template variant is planned. AffineScript: no template. | Sweep 2.
+| Proof-language keys for `.proven.toml` | The schema is F2's. F1 supplies only the category ids in `kit/ids.tsv`. | F2.
+| Template gaps: Just, Nickel, shell, YAML | Shell is covered (Bash template). Just, Nickel, YAML: none. | Sweep 2.
+|===
