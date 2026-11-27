@@ -55,6 +55,16 @@ fi
 if want B-STA; then
   emit kit-bench-wrapper-startup-ms "$(ms_of "$root/kit/lib/bench.sh" --kind B-LAT --baseline-dir "$tmp/b" -- bash -c "printf 'lat\t100\tlower\n'")" lower 5000
   emit kit-ptb-source-startup-ms "$(ms_of "$root/kit/lib/ptb.sh")" lower 5000
+  # cold versus warm start of one lib: first call in a clean environment, then the best of 5 repeats.
+  # Cold is "first call in a fresh process tree" (the page cache is not dropped; that needs root).
+  cold="$(ms_of env -i PATH="$PATH" bash "$root/kit/lib/contract.sh" --require hello -- echo hello)"
+  warm=""
+  for _ in 1 2 3 4 5; do
+    w="$(ms_of env -i PATH="$PATH" bash "$root/kit/lib/contract.sh" --require hello -- echo hello)"
+    [[ -n "$w" ]] && { [[ -z "$warm" ]] || [[ "$w" -lt "$warm" ]]; } && warm="$w"
+  done
+  emit kit-cold-start-ms "$cold" lower 5000
+  emit kit-warm-start-ms "$warm" lower 5000
 fi
 if want B-BLD; then
   emit kit-lib-syntax-build-ms "$(ms_of bash -c 'for f in "$0"/kit/lib/*.sh; do bash -n "$f" || exit 1; done' "$root")" lower 10000
