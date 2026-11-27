@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+# Manifest for the proven umbrella gate (schema proven/manifest/v1).
+# Release 0.1.0 provisions neither just nor Idris2, so the Idris2 corpus is not
+# run here: it is accounted for below with a reason and is still checked by the
+# repo's own CI (Idris2) workflow. Only the Rust crate is enforced (DOG-01:
+# nothing is silently skipped).
+schema = "proven/manifest/v1"
+
+[categories.unit.rust]
+command = "cargo test --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml"
+
+[categories.smoke.rust]
+command = "cargo test --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --test contract"
+
+[categories.build.rust]
+command = "cargo build --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml"
+
+[categories.p2p]
+na = "this repository is a test corpus and bench harness; its seams are exercised by the integrations/contract checks, not a peer-to-peer pair"
+
+[languages.ignore.idris2]
+reason = "the umbrella 0.1.0 has no Idris2 or just toolchain; the Idris2 corpus is built and tested by this repo's CI (Idris2) workflow until the umbrella provisions it"
+
+[languages.ignore.shell]
+reason = "shell here is repo tooling (scripts/, run.sh); the repo Justfile test/build recipes need Idris2, which the umbrella 0.1.x does not provision, and the scripts are exercised by this repo's own CI (contract check, Idris2 workflows)"
+
+[languages.ignore.python]
+reason = "the few Python helpers are being ported to Rust (PR #126, proven-evidence); until that merges they run in this repo's own CI, and the Justfile recipes the umbrella would call need Idris2"
