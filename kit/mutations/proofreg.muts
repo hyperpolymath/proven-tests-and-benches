@@ -1,0 +1,4 @@
+s/grep -qFx/grep -qF/
+s/bad=1; }/bad=0; }/
+s/-n "\$claims"/-z "$claims"/
+s/|| { echo "PROOFREG FAIL: prover run failed: \${cmd\[\*\]}" >&2; exit 1; }/|| true/

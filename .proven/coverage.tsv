@@ -7,15 +7,15 @@ E2E	covered	bash	kit/test/sweep2.test.sh
 BLD	covered	bash	kit/test/lib.test.sh
 EXE	planned	-	s4 sweep 4 target
 REF	covered	bash	kit/test/sweep2.test.sh
-LCY	planned	-	s3 sweep 3 target
+LCY	covered	bash	kit/test/sweep3.test.sh
 SMK	covered	bash	kit/test/lib.test.sh
-PBT	planned	-	s3 sweep 3 target
-MUT	planned	-	s3 sweep 3 target
-FUZ	planned	-	s3 sweep 3 target
+PBT	covered	bash	kit/test/sweep3.test.sh
+MUT	covered	bash	kit/test/sweep3.test.sh
+FUZ	covered	bash	kit/test/sweep3.test.sh
 CTR	covered	bash	kit/test/sweep2b.test.sh
 REG	covered	bash	kit/test/sweep2.test.sh
 CHS	planned	-	s4 sweep 4 target
-CMP	planned	-	s3 sweep 3 target
+CMP	covered	bash	kit/test/sweep3.test.sh
 PRF	covered	bash	kit/test/sweep2b.test.sh
 TSF	covered	bash	kit/test/sweep2b.test.sh
 CDF	covered	bash	kit/test/sweep2.test.sh
@@ -33,10 +33,10 @@ PRI	planned	-	s4 sweep 4 target
 OBS	planned	-	s4 sweep 4 target
 RPR	planned	-	s4 sweep 4 target
 PRT	planned	-	s4 sweep 4 target
-B-LAT	covered	bash	kit/test/sweep2c.test.sh
-B-THR	covered	bash	kit/test/sweep2c.test.sh
-B-MEM	covered	bash	kit/test/sweep2c.test.sh
-B-STA	covered	bash	kit/test/sweep2c.test.sh
-B-BLD	covered	bash	kit/test/sweep2c.test.sh
-B-ENG	covered	bash	kit/test/sweep2c.test.sh
-B-FFI	covered	bash	kit/test/sweep2c.test.sh
+B-LAT	covered	bash	kit/test/sweep3b.test.sh
+B-THR	covered	bash	kit/test/sweep3b.test.sh
+B-MEM	covered	bash	kit/test/sweep3b.test.sh
+B-STA	covered	bash	kit/test/sweep3b.test.sh
+B-BLD	covered	bash	kit/test/sweep3b.test.sh
+B-ENG	na	-	the kit has no energy counter to read on CI runners; a shell test kit has no measurable energy surface of its own
+B-FFI	na	-	the kit has no foreign function interface; its libs are shell scripts that call other processes
