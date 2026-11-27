@@ -23,6 +23,11 @@ workflow calls it. Pin by tag once one is cut (`kit-v0.x`); until then pin a ful
 | `kit/lib/proofreg.sh` | Proof regression (PRF): every claim in a claims file must still be proved by the prover run.
 | `kit/lib/aspect.sh` | The 14 quality aspects: runs the mapped command per aspect id, or an `na:<reason>`.
 | `kit/lib/bench.sh` | Baselined benchmark (B-LAT..B-FFI): runs a bench command, classifies its TSV via sixsigma against the last 10 runs.
+| `kit/lib/prop.sh` | Property-based (PBT): seeded generator, property over N runs, replayable failing seed.
+| `kit/lib/fuzz.sh` | Fuzz (FUZ): seeded random bytes to stdin; crash/hang/unexpected exit is a finding.
+| `kit/lib/mutate.sh` | Mutation (MUT): sed mutants of a target must be killed by the tests; score >= 80% by default.
+| `kit/lib/lifecycle.sh` | Lifecycle (LCY): setup, uses, teardown (teardown always runs).
+| `kit/lib/compat.sh` | Compatibility (CMP): the same command across an environment matrix.
 | `kit/lib/reflexive.sh` | Reflexive (REF): deterministic across two runs; `--idempotent` checks f(f(x)) = f(x).
 | `kit/lib/e2e.sh` | End-to-end (E2E): real entry point, real stdin, checks exit code and stdout.
 | `kit/templates/<lang>/` | UT, SMK, BLD, P2P starting points: rust, bash, agda (verified); idris2, julia, zig, elixir, gleam (written, unverified).
