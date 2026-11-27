@@ -31,6 +31,7 @@ workflow calls it. Pin by tag once one is cut (`kit-v0.x`); until then pin a ful
 | `benchmarks/kit/bench-kit.sh` | 8 bench targets for the kit itself (B-LAT, B-THR, B-MEM, B-STA, B-BLD) as sixsigma TSV; B-ENG and B-FFI are N/A with reasons.
 | `.proven/aspects.tsv` | The 14 aspects mapped to real checks for this repo (none N/A); run with `kit/lib/aspect.sh --map .proven/aspects.tsv DEP SEC ...`. Static ones have planted-violation negative controls in kit/test/sweep4.test.sh.
 | `kit/test/sweep4b.test.sh` | EXE (clean env, other cwd) and CHS (no TMPDIR, SIGTERM mid-mutation, odd paths, big input, parallel runs): hostile conditions fail closed.
+| `kit/mutations/{dogfood,enum-drift,roundtrip,corpus,schema-diff,decay}.muts` | Mutants for the DOG/CR libs, scored by `scripts/mutation-selfcheck.sh` (all >= 80%).
 | `kit/test/sweep4c.test.sh` | Negative controls for the DOG and CR libs and the extras manifest (61 assertions).
 | `kit/lib/dogfood.sh` | DOG-01/02/06/07/08: non-empty output, findings carry file and line, no template placeholders, workflow copy current, consumer field contract.
 | `kit/lib/enum-drift.sh` | CR-1: two enums list the same variants.

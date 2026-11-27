@@ -1,0 +1,6 @@
+s/\[\[ "\$removed" -gt 0 \]\] \&\& cls=major/true/
+s/\[\[ "\$added" -gt 0 \]\] \&\& cls=minor/true/
+s/-le "\$(rank "\$allow")"/-le 9/
+s/comm -23/comm -13/
+s/patch) echo 0/patch) echo 5/
+s/\[\[ -s "\$old" \&\& -s "\$new" \]\]/true/
