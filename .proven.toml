@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: MPL-2.0
+# Manifest for the proven umbrella gate (schema proven/manifest/v1).
+# Honest first adoption: every category is either run by a real command or
+# declared N/A with a written reason. Nothing here is a silent skip (DOG-01).
+schema = "proven/manifest/v1"
+
+[categories.unit]
+command = "just test"
+
+[categories.smoke]
+command = "just test-spec"
+
+[categories.build]
+command = "just build"
+
+[categories.p2p]
+na = "this repository is a test corpus and bench harness; its seams are exercised by the integrations/contract checks, not a peer-to-peer pair"
+
+[languages.ignore.idris2]
+reason = "Idris2 sources are built and checked by just build; the umbrella has no idris2 toolchain in release 0.1.0"

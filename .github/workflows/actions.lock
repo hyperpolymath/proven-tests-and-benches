@@ -18,6 +18,9 @@ workflows:
     '.github/workflows/label-triage.yml': []
     '.github/workflows/labels.yml': []
     '.github/workflows/mirror.yml': []
+    '.github/workflows/proven-lock-gate.yml':
+        - 'actions/checkout@v7.0.1'
+    '.github/workflows/proven.yml': []
     '.github/workflows/push-email-notify.yml':
         - 'hyperpolymath/smtp-notify-action@v0.5.1'
     '.github/workflows/scorecard.yml': []
