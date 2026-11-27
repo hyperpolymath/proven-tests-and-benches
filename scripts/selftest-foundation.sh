@@ -9,7 +9,7 @@ set -u
 root="$(cd "$(dirname "$0")/.." && pwd)"; cd "$root" || exit 2
 fail=0
 run() { echo "== $1"; shift; "$@" || { echo "FAILED: $*" >&2; fail=1; }; }
-for t in kit/test/check-coverage.test.sh kit/test/lib.test.sh kit/test/sweep2.test.sh kit/test/sweep2b.test.sh benchmarks/sixsigma/test-sixsigma.sh \
+for t in kit/test/check-coverage.test.sh kit/test/lib.test.sh kit/test/sweep2.test.sh kit/test/sweep2b.test.sh kit/test/sweep2c.test.sh benchmarks/sixsigma/test-sixsigma.sh \
          scripts/test/agda-prove.test.sh kit/templates/bash/sweep1.test.sh; do
   [ -x "$t" ] || { echo "MISSING self-test: $t" >&2; fail=1; continue; }
   run "$t" "$t"
