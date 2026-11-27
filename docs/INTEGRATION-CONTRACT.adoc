@@ -265,8 +265,8 @@ bash integrations/contract/proven-tests/downstream/run.sh
 # writes build/proven-run-report.json; exits 0 only if it conforms
 ----
 
-The producer (`emit_report.py`) maps a repository's own runner output onto the
-submission schema and **derives** coverage. The validator (`check_contract.py`)
+The producer (`emit-report`) maps a repository's own runner output onto the
+submission schema and **derives** coverage. The validator (`contract-check`)
 recomputes it independently. A report that claims a cell it did not run fails at
 the second step. The Rust twin reads and validates the report itself:
 `proven-evidence emit` derives the summary from the entries, and
@@ -300,10 +300,8 @@ mechanical mapping:
 | `duration_ms`
 |===
 
-Then call `emit_report.py` to produce the document. If the repository carries
-no Python, build
-`integrations/contract/proven-tests/downstream/rust/proven-evidence` instead —
-it reads and validates the same `schema_version`-2 report:
+Then call `emit-report` (built from
+`integrations/contract/proven-tests/downstream/rust/proven-evidence`) to produce the document. The same crate reads and validates the `schema_version`-2 report:
 
 [source,bash]
 ----
@@ -534,20 +532,20 @@ and fails on any disagreement.
 
 These fixtures are the contract's proof that missing, skipped, cancelled and
 failing required checks cannot produce a legitimate-green result. Run them with
-`python3 integrations/contract/check_contract.py cicd-squabbler`.
+`cargo run --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin contract-check -- cicd-squabbler`.
 
 == Part III — Conformance
 
 The normative, executable statement of both surfaces is
-`integrations/contract/check_contract.py` (stdlib Python 3 only, so it runs
+`contract-check` in `integrations/contract/proven-tests/downstream/rust/proven-evidence` (Rust only, so it runs
 before any toolchain exists). It is the portable floor: the Idris2 types and the
 SPARK proof are the authoritative semantics, but a downstream repository cannot
 compile either without adopting the whole toolchain.
 
 [source,bash]
 ----
-python3 integrations/contract/check_contract.py proven-tests
-python3 integrations/contract/check_contract.py cicd-squabbler
+cargo run --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin contract-check -- proven-tests
+cargo run --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin contract-check -- cicd-squabbler
 bash scripts/check-integration-contract.sh     # both, and the downstream fixture
 ----
 
@@ -559,8 +557,8 @@ A downstream can validate a single submitted document:
 
 [source,bash]
 ----
-python3 <pinned>/check_contract.py validate-file proven-run-report.json proven-tests
-python3 <pinned>/check_contract.py validate-file gate.json cicd-squabbler
+<pinned>/contract-check validate-file proven-run-report.json proven-tests
+<pinned>/contract-check validate-file gate.json cicd-squabbler
 ----
 
 == Part IV — What this contract does not allow

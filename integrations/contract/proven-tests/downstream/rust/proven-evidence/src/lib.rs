@@ -2,11 +2,11 @@
 //
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 //
-// Rust twin of the downstream Proven-Tests integration contract.
+// Rust implementation of the downstream Proven-Tests integration contract.
 //
 // It reads and validates the SAME schema_version-2 run report that
-// integrations/contract/check_contract.py validates (and that
-// integrations/contract/proven-tests/downstream/emit_report.py writes), so the
+// src/contract.rs validates (and that
+// src/emit.rs writes), so the
 // contract's four rules hold in two independent implementations:
 //
 //   * every entry carries a test id, a provenance, a result outcome and a
@@ -24,6 +24,8 @@
 // contribute to the tier tally, because the report states what the test's
 // intended tier IS even while it is not counted as a test.
 
+pub mod contract;
+pub mod emit;
 pub mod execution_truth;
 pub mod parser_contract;
 

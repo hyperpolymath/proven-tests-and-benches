@@ -21,8 +21,8 @@ cd "$(dirname "$0")/.." || {
   exit 2
 }
 
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "check-integration-contract: python3 is required but was not found" >&2
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "check-integration-contract: cargo is required but was not found" >&2
   exit 2
 fi
 
@@ -30,7 +30,7 @@ status=0
 
 echo "== proven-tests submission contract =="
 rc=0
-python3 integrations/contract/check_contract.py proven-tests || rc=$?
+cargo run --quiet --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin contract-check -- proven-tests || rc=$?
 if [ "$rc" -eq 2 ]; then
   echo "check-integration-contract: NO CHECK WAS PERFORMED (proven-tests, exit 2)" >&2
   exit 2
@@ -42,7 +42,7 @@ fi
 echo
 echo "== cicd-squabbler legitimate-green contract =="
 rc=0
-python3 integrations/contract/check_contract.py cicd-squabbler || rc=$?
+cargo run --quiet --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin contract-check -- cicd-squabbler || rc=$?
 if [ "$rc" -eq 2 ]; then
   echo "check-integration-contract: NO CHECK WAS PERFORMED (cicd-squabbler, exit 2)" >&2
   exit 2
