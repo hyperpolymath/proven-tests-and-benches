@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+# Self-test for the DOG and CR kit libs (dogfood, enum-drift, roundtrip, corpus, schema-diff, decay).
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+. "$root/kit/lib/ptb.sh"
+L="$root/kit/lib"
+tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+code() { "$@" >/dev/null 2>&1; echo $?; }
+# ---- DOG-01
+ptb_eq dog01-pass        0 "$(code bash "$L/dogfood.sh" nonempty-output -- echo '[{"a":1}]')"
+ptb_eq dog01-empty-array 1 "$(code bash "$L/dogfood.sh" nonempty-output -- echo '[]')"
+ptb_eq dog01-silent      1 "$(code bash "$L/dogfood.sh" nonempty-output -- true)"
+ptb_eq dog01-no-cmd      2 "$(code bash "$L/dogfood.sh" nonempty-output --)"
+ptb_eq dog01-not-found   2 "$(code bash "$L/dogfood.sh" nonempty-output -- /nonexistent-cmd-xyz)"
+ptb_eq dog-unknown-sub   2 "$(code bash "$L/dogfood.sh" bogus)"
+ptb_eq dog-no-sub        2 "$(code bash "$L/dogfood.sh")"
+# ---- DOG-02
+echo '[{"file":"a.rs","line":3}]' > "$tmp/ok.json"
+echo '[{"file":"a.rs","line":null}]' > "$tmp/noline.json"
+echo '[{"line":3}]' > "$tmp/nofile.json"
+echo '{"file":"a","line":1}' > "$tmp/obj.json"
+ptb_eq dog02-pass      0 "$(code bash "$L/dogfood.sh" findings-have-location "$tmp/ok.json")"
+ptb_eq dog02-null-line 1 "$(code bash "$L/dogfood.sh" findings-have-location "$tmp/noline.json")"
+ptb_eq dog02-no-file   1 "$(code bash "$L/dogfood.sh" findings-have-location "$tmp/nofile.json")"
+ptb_eq dog02-not-array 1 "$(code bash "$L/dogfood.sh" findings-have-location "$tmp/obj.json")"
+ptb_eq dog02-missing   2 "$(code bash "$L/dogfood.sh" findings-have-location "$tmp/none.json")"
+# ---- DOG-06
+echo 'name = real' > "$tmp/clean.txt"
+printf 'owner = {{%s}}\n' OWNER > "$tmp/ph1.txt"
+printf 'repo = [YOUR-%s]\n' REPO-NAME > "$tmp/ph2.txt"
+ptb_eq dog06-pass    0 "$(code bash "$L/dogfood.sh" no-placeholders "$tmp/clean.txt")"
+ptb_eq dog06-braces  1 "$(code bash "$L/dogfood.sh" no-placeholders "$tmp/ph1.txt")"
+ptb_eq dog06-bracket 1 "$(code bash "$L/dogfood.sh" no-placeholders "$tmp/clean.txt" "$tmp/ph2.txt")"
+ptb_eq dog06-missing 2 "$(code bash "$L/dogfood.sh" no-placeholders "$tmp/none")"
+ptb_eq dog06-none    2 "$(code bash "$L/dogfood.sh" no-placeholders)"
+# ---- DOG-07
+echo v1 > "$tmp/ref"; cp "$tmp/ref" "$tmp/copy"
+ptb_eq dog07-pass  0 "$(code bash "$L/dogfood.sh" current "$tmp/ref" "$tmp/copy")"
+echo v2 > "$tmp/copy"
+ptb_eq dog07-stale 1 "$(code bash "$L/dogfood.sh" current "$tmp/ref" "$tmp/copy")"
+ptb_eq dog07-missing 2 "$(code bash "$L/dogfood.sh" current "$tmp/ref" "$tmp/none")"
+# ---- DOG-08
+echo '{"a":{"b":1},"c":"x"}' > "$tmp/out.json"
+ptb_eq dog08-pass    0 "$(code bash "$L/dogfood.sh" field-contract "$tmp/out.json" .a.b .c)"
+ptb_eq dog08-renamed 1 "$(code bash "$L/dogfood.sh" field-contract "$tmp/out.json" .a.b .d)"
+ptb_eq dog08-nofield 2 "$(code bash "$L/dogfood.sh" field-contract "$tmp/out.json")"
+# ---- CR-1
+printf 'enum A { Foo, Bar, Baz }\n' > "$tmp/a.rs"
+printf 'type B = "Foo" | "Bar" | "Baz"\n' > "$tmp/b.ts"
+printf 'type B = "Foo" | "Bar"\n' > "$tmp/b2.ts"
+V='[A-Z][a-z]+'
+ptb_eq cr1-agree   0 "$(code bash "$L/enum-drift.sh" --a "$tmp/a.rs" --a-re "$V" --b "$tmp/b.ts" --b-re "$V")"
+ptb_eq cr1-drift   1 "$(code bash "$L/enum-drift.sh" --a "$tmp/a.rs" --a-re "$V" --b "$tmp/b2.ts" --b-re "$V")"
+ptb_eq cr1-empty   2 "$(code bash "$L/enum-drift.sh" --a "$tmp/a.rs" --a-re 'ZZZ[0-9]+' --b "$tmp/b.ts" --b-re "$V")"
+ptb_eq cr1-missing 2 "$(code bash "$L/enum-drift.sh" --a "$tmp/none" --a-re "$V" --b "$tmp/b.ts" --b-re "$V")"
+ptb_eq cr1-badarg  2 "$(code bash "$L/enum-drift.sh" --zzz 1)"
+# ---- CR-3 / CR-8
+printf 'hello\nworld\n' > "$tmp/in1"; printf 'x' > "$tmp/in2"
+ptb_eq cr3-pass     0 "$(code bash "$L/roundtrip.sh" --encode 'base64' --decode 'base64 -d' -- "$tmp/in1" "$tmp/in2")"
+ptb_eq cr3-lossy    1 "$(code bash "$L/roundtrip.sh" --encode 'tr a-z A-Z' --decode 'cat' -- "$tmp/in1")"
+ptb_eq cr3-noncanon 1 "$(code bash "$L/roundtrip.sh" --encode 'cat; echo $RANDOM' --decode 'head -n -1' -- "$tmp/in1")"
+ptb_eq cr3-encfail  1 "$(code bash "$L/roundtrip.sh" --encode 'false' --decode 'cat' -- "$tmp/in1")"
+ptb_eq cr3-nofiles  2 "$(code bash "$L/roundtrip.sh" --encode cat --decode cat --)"
+ptb_eq cr3-missing  2 "$(code bash "$L/roundtrip.sh" --encode cat --decode cat -- "$tmp/none")"
+# ---- CR-4
+mkdir -p "$tmp/fx" "$tmp/empty"; echo a > "$tmp/fx/1.txt"; echo b > "$tmp/fx/2.txt"
+ptb_eq cr4-pass     0 "$(code bash "$L/corpus.sh" --dir "$tmp/fx" --min 2 -- test -s)"
+ptb_eq cr4-too-few  1 "$(code bash "$L/corpus.sh" --dir "$tmp/fx" --min 3 -- test -s)"
+ptb_eq cr4-no-files 1 "$(code bash "$L/corpus.sh" --dir "$tmp/empty" -- test -s)"
+ptb_eq cr4-consumer-fails 1 "$(code bash "$L/corpus.sh" --dir "$tmp/fx" -- false)"
+: > "$tmp/fx/3.txt"
+ptb_eq cr4-empty-fixture 1 "$(code bash "$L/corpus.sh" --dir "$tmp/fx" -- true)"
+ptb_eq cr4-no-dir   2 "$(code bash "$L/corpus.sh" --dir "$tmp/none" -- true)"
+ptb_eq cr4-bad-min  2 "$(code bash "$L/corpus.sh" --dir "$tmp/fx" --min x -- true)"
+# ---- CR-9
+printf 'a\nb\n' > "$tmp/s1"; printf 'a\nb\n' > "$tmp/s_same"; printf 'a\nb\nc\n' > "$tmp/s_add"; printf 'a\n' > "$tmp/s_rm"
+ptb_eq cr9-patch-ok      0 "$(code bash "$L/schema-diff.sh" --old "$tmp/s1" --new "$tmp/s_same")"
+ptb_eq cr9-minor-blocked 1 "$(code bash "$L/schema-diff.sh" --old "$tmp/s1" --new "$tmp/s_add")"
+ptb_eq cr9-minor-allowed 0 "$(code bash "$L/schema-diff.sh" --old "$tmp/s1" --new "$tmp/s_add" --allow minor)"
+ptb_eq cr9-major-blocked 1 "$(code bash "$L/schema-diff.sh" --old "$tmp/s1" --new "$tmp/s_rm" --allow minor)"
+ptb_eq cr9-major-allowed 0 "$(code bash "$L/schema-diff.sh" --old "$tmp/s1" --new "$tmp/s_rm" --allow major)"
+ptb_eq cr9-class-printed "class: major (removed 1, added 0)" "$(bash "$L/schema-diff.sh" --old "$tmp/s1" --new "$tmp/s_rm" --allow major 2>&1)"
+ptb_eq cr9-bad-allow     2 "$(code bash "$L/schema-diff.sh" --old "$tmp/s1" --new "$tmp/s1" --allow huge)"
+ptb_eq cr9-missing       2 "$(code bash "$L/schema-diff.sh" --old "$tmp/none" --new "$tmp/s1")"
+# ---- CR-10
+mkdir -p "$tmp/dc"; echo x > "$tmp/dc/f"; now="$(date +%s)"
+ptb_eq cr10-fresh   0 "$(code bash "$L/decay.sh" "$tmp/dc")"
+ptb_eq cr10-stale   1 "$(code bash "$L/decay.sh" --now $((now + 91 * 86400)) "$tmp/dc")"
+ptb_eq cr10-bench30 1 "$(code bash "$L/decay.sh" --max-days 30 --now $((now + 31 * 86400)) "$tmp/dc")"
+ptb_eq cr10-edge    0 "$(code bash "$L/decay.sh" --max-days 30 --now $((now + 30 * 86400)) "$tmp/dc")"
+ptb_eq cr10-missing 2 "$(code bash "$L/decay.sh" "$tmp/none")"
+ptb_eq cr10-nopaths 2 "$(code bash "$L/decay.sh")"
+ptb_eq cr10-nofiles 2 "$(code bash "$L/decay.sh" "$tmp/empty")"
+ptb_eq cr10-badnum  2 "$(code bash "$L/decay.sh" --max-days x "$tmp/dc")"
+# ---- extras manifest and --ids
+ptb_eq ids-extra-count 18 "$(grep -vc '^#' "$root/kit/ids-extra.tsv")"
+ptb_eq extras-manifest 0 "$(code bash "$root/kit/check-coverage.sh" --root "$root" --ids "$root/kit/ids-extra.tsv" "$root/.proven/extras.tsv")"
+ptb_eq ids-missing     2 "$(code bash "$root/kit/check-coverage.sh" --root "$root" --ids "$tmp/none" "$root/.proven/extras.tsv")"
+ptb_eq extras-vs-base-ids 1 "$(code bash "$root/kit/check-coverage.sh" --root "$root" "$root/.proven/extras.tsv")"
+ptb_done

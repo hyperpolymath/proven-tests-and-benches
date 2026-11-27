@@ -4,7 +4,8 @@
 #
 # check-coverage.sh — fail-closed check of a repo's coverage manifest.
 #
-# Usage: kit/check-coverage.sh [--root DIR] [--through-sweep N] [MANIFEST]
+# Usage: kit/check-coverage.sh [--root DIR] [--through-sweep N] [--ids IDS.tsv] [MANIFEST]
+#   --ids selects another id list (default kit/ids.tsv); kit/ids-extra.tsv lists DOG-01..08 and CR-1..10.
 #   MANIFEST defaults to <root>/.proven/coverage.tsv
 #
 # Manifest: tab-separated, '#' comments, columns:
@@ -27,16 +28,18 @@ here="$(cd "$(dirname "$0")" && pwd)"
 root="."
 through=4
 manifest=""
+idsarg=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --root) root="$2"; shift 2 ;;
     --through-sweep) through="$2"; shift 2 ;;
+    --ids) idsarg="$2"; shift 2 ;;
     *) manifest="$1"; shift ;;
   esac
 done
 case "$through" in 1|2|3|4) ;; *) echo "NO CHECK PERFORMED: --through-sweep must be 1-4" >&2; exit 2 ;; esac
 [ -n "$manifest" ] || manifest="$root/.proven/coverage.tsv"
-ids="$here/ids.tsv"
+ids="${idsarg:-$here/ids.tsv}"
 [ -r "$ids" ] || { echo "NO CHECK PERFORMED: $ids unreadable" >&2; exit 2; }
 [ -r "$manifest" ] || { echo "NO CHECK PERFORMED: manifest $manifest missing or unreadable" >&2; exit 2; }
 rows=$(grep -vc -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$manifest")

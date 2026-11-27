@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: MPL-2.0
+# Extra ids from TESTING-TAXONOMY.adoc Part VI (CR) and Part VII (DOG). Use with: check-coverage.sh --ids kit/ids-extra.tsv .proven/extras.tsv
+# kind	id	name
+dogfood	DOG-01	CI gate fires
+dogfood	DOG-02	Annotation pipeline works
+dogfood	DOG-03	Groove manifest conformant
+dogfood	DOG-04	K9 contracts enforced
+dogfood	DOG-05	VeriSimDB wired
+dogfood	DOG-06	Template placeholders resolved
+dogfood	DOG-07	Tool version currency
+dogfood	DOG-08	Consumer field contract
+crossrepo	CR-1	Mirror-enum drift
+crossrepo	CR-2	Foreign-enum exhaustive-match lint
+crossrepo	CR-3	FFI roundtrip bijection
+crossrepo	CR-4	Shared-fixture corpus contract
+crossrepo	CR-5	Claim-grounder adversarial cross-test
+crossrepo	CR-6	Upstream-HEAD sentinel
+crossrepo	CR-7	Workspace-aware blitz matrix
+crossrepo	CR-8	Cross-prover proof-exchange roundtrip
+crossrepo	CR-9	Schema-surface drift detector
+crossrepo	CR-10	Stale-fixture decay alarm
