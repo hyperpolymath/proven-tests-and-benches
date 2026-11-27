@@ -16,6 +16,15 @@ workflow calls it. Pin by tag once one is cut (`kit-v0.x`); until then pin a ful
 | `kit/lib/ptb.sh` | Bash assertion helpers. Zero assertions is a failure.
 | `kit/lib/smoke.sh` | Language-agnostic smoke (SMK).
 | `kit/lib/build-check.sh` | Language-agnostic build test (BLD) and build-time bench row (B-BLD).
+| `kit/lib/regression.sh` | Golden-output regression (REG). No update flag: goldens change by reviewed commit only.
+| `kit/lib/drift.sh` | Coupling/drift-freedom (CDF): regenerated output must equal the committed file.
+| `kit/lib/contract.sh` | Contract/invariant (CTR): `--require`/`--forbid` regexes over a command's output.
+| `kit/lib/typesafe.sh` | Type-safe (TSF): strict check passes and no escape hatch (e.g. `believe_me`) in the given paths.
+| `kit/lib/proofreg.sh` | Proof regression (PRF): every claim in a claims file must still be proved by the prover run.
+| `kit/lib/aspect.sh` | The 14 quality aspects: runs the mapped command per aspect id, or an `na:<reason>`.
+| `kit/lib/bench.sh` | Baselined benchmark (B-LAT..B-FFI): runs a bench command, classifies its TSV via sixsigma against the last 10 runs.
+| `kit/lib/reflexive.sh` | Reflexive (REF): deterministic across two runs; `--idempotent` checks f(f(x)) = f(x).
+| `kit/lib/e2e.sh` | End-to-end (E2E): real entry point, real stdin, checks exit code and stdout.
 | `kit/templates/<lang>/` | UT, SMK, BLD, P2P starting points: rust, bash, agda (verified); idris2, julia, zig, elixir, gleam (written, unverified).
 | `benchmarks/sixsigma/sixsigma.sh` | Six Sigma classifier against the mean of the last 10 main runs.
 | `benchmarks/sixsigma/fetch-baseline.sh` | Pulls those 10 runs from workflow artifacts.
