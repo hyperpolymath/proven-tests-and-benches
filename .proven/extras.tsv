@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: MPL-2.0
+# Extras (DOG-01..08, CR-1..10). Check: kit/check-coverage.sh --ids kit/ids-extra.tsv .proven/extras.tsv
+DOG-01	covered	bash	kit/test/sweep4c.test.sh
+DOG-02	covered	bash	kit/test/sweep4c.test.sh
+DOG-06	covered	bash	kit/test/sweep4c.test.sh
+DOG-07	covered	bash	kit/test/sweep4c.test.sh
+DOG-08	covered	bash	kit/test/sweep4c.test.sh
+CR-1	covered	bash	kit/test/sweep4c.test.sh
+CR-3	covered	bash	kit/test/sweep4c.test.sh
+CR-4	covered	bash	kit/test/sweep4c.test.sh
+CR-8	covered	bash	kit/test/sweep4c.test.sh
+CR-9	covered	bash	kit/test/sweep4c.test.sh
+CR-10	covered	bash	kit/test/sweep4c.test.sh
+DOG-03	na	-	no HTTP interface here; the kit is shell libraries with no Groove endpoint
+DOG-04	na	-	no K9 config in this repo; no contract file to enforce
+DOG-05	na	-	stateless: no database or VeriSimDB state in the kit
+CR-2	na	-	no foreign enums matched on; the kit has no Rust or ReScript consumer of upstream enums
+CR-5	na	-	no claim-grounder in this repo; belongs to the tool repo that owns the grounder
+CR-6	na	-	kit pins no upstream HEAD; no sibling repo is consumed at head
+CR-7	na	-	no workspace or monorepo matrix; single-repo kit
