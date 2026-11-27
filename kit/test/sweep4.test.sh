@@ -16,9 +16,10 @@ done
 (cd "$root" && "$A" --map "$MAP" SEC USA ACC MNT PRI OBS PRT >/dev/null 2>&1); ptb_eq static-aspects-real-tree 0 "$?"
 # scratch copy with one planted violation per aspect
 plant() { # NAME ASPECT mutate-command
-  local d="$tmp/$1"; mkdir -p "$d/benchmarks"; cp -r "$root/kit" "$d/kit"; rm -rf "$d/kit/templates"; cp -r "$root/benchmarks/kit" "$d/benchmarks/kit"; cp -r "$root/scripts" "$d/scripts"; cp -r "$root/.proven" "$d/.proven"
-  (cd "$d" && eval "$3") >/dev/null 2>&1
-  (cd "$d" && "$A" --map .proven/aspects.tsv "$2" >/dev/null 2>&1); echo $?
+  local name="$1" aspect="$2" mutation="$3"
+  local d="$tmp/$name"; mkdir -p "$d/benchmarks"; cp -r "$root/kit" "$d/kit"; rm -rf "$d/kit/templates"; cp -r "$root/benchmarks/kit" "$d/benchmarks/kit"; cp -r "$root/scripts" "$d/scripts"; cp -r "$root/.proven" "$d/.proven"
+  (cd "$d" && eval "$mutation") >/dev/null 2>&1
+  (cd "$d" && "$A" --map .proven/aspects.tsv "$aspect" >/dev/null 2>&1); echo $?
 }
 ptb_eq neg-SEC 1 "$(plant sec SEC "echo 'k=AKI''AABCDEFGHIJKLMNOP' >> kit/lib/e2e.sh")"
 ptb_eq neg-ACC 1 "$(plant acc ACC "printf 'echo \\033[31mred\\033[0m\n' >> kit/lib/e2e.sh")"
