@@ -1,0 +1,14 @@
+DEP	bash kit/check-coverage.sh --through-sweep 3
+SEC	! grep -rEn 'ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY' kit benchmarks/kit scripts
+USA	for f in kit/lib/*.sh; do [[ "$f" == *ptb.sh ]] && continue; out=$(bash "$f" 2>&1 </dev/null); rc=$?; [[ $rc -eq 2 ]] && grep -q 'usage' <<<"$out" || { echo "$f"; exit 1; }; done
+IOP	bash kit/test/sweep3b.test.sh
+SAF	bash scripts/mutation-selfcheck.sh
+PER	bash benchmarks/kit/bench-kit.sh
+FUN	for t in kit/test/lib.test.sh kit/test/sweep2.test.sh kit/test/sweep2b.test.sh kit/test/sweep2c.test.sh kit/test/sweep3.test.sh; do bash "$t" || exit 1; done
+VER	kit/lib/compat.sh --matrix .proven/compat-locales.tsv -- bash kit/test/sweep2.test.sh
+ACC	! grep -rl $'\033' kit/lib benchmarks/kit
+MNT	for f in kit/lib/*.sh benchmarks/kit/*.sh; do bash -n "$f" && grep -q 'SPDX-License-Identifier' "$f" || { echo "$f"; exit 1; }; done
+PRI	! grep -rEn '(^|[^A-Za-z])(curl|wget|nc|ssh|scp) ' kit/lib benchmarks/kit
+OBS	for f in kit/lib/*.sh; do [[ "$f" == *ptb.sh ]] && continue; grep -q 'NO CHECK PERFORMED' "$f" || { echo "$f"; exit 1; }; done
+RPR	kit/lib/reflexive.sh -- bash kit/check-coverage.sh --through-sweep 3
+PRT	for f in kit/lib/*.sh benchmarks/kit/*.sh; do head -1 "$f" | grep -qx '#!/usr/bin/env bash' || { echo "$f"; exit 1; }; done

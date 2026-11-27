@@ -5,7 +5,7 @@ UT	covered	bash	kit/test/lib.test.sh
 P2P	covered	bash	kit/templates/bash/sweep1.test.sh
 E2E	covered	bash	kit/test/sweep2.test.sh
 BLD	covered	bash	kit/test/lib.test.sh
-EXE	planned	-	s4 sweep 4 target
+EXE	covered	bash	kit/test/sweep4b.test.sh
 REF	covered	bash	kit/test/sweep2.test.sh
 LCY	covered	bash	kit/test/sweep3.test.sh
 SMK	covered	bash	kit/test/lib.test.sh
@@ -14,25 +14,25 @@ MUT	covered	bash	kit/test/sweep3.test.sh
 FUZ	covered	bash	kit/test/sweep3.test.sh
 CTR	covered	bash	kit/test/sweep2b.test.sh
 REG	covered	bash	kit/test/sweep2.test.sh
-CHS	planned	-	s4 sweep 4 target
+CHS	covered	bash	kit/test/sweep4b.test.sh
 CMP	covered	bash	kit/test/sweep3.test.sh
 PRF	covered	bash	kit/test/sweep2b.test.sh
 TSF	covered	bash	kit/test/sweep2b.test.sh
 CDF	covered	bash	kit/test/sweep2.test.sh
-DEP	planned	-	s4 sweep 4 target
-SEC	planned	-	s4 sweep 4 target
-USA	planned	-	s4 sweep 4 target
-IOP	planned	-	s4 sweep 4 target
-SAF	planned	-	s4 sweep 4 target
-PER	planned	-	s4 sweep 4 target
-FUN	planned	-	s4 sweep 4 target
-VER	planned	-	s4 sweep 4 target
-ACC	planned	-	s4 sweep 4 target
-MNT	planned	-	s4 sweep 4 target
-PRI	planned	-	s4 sweep 4 target
-OBS	planned	-	s4 sweep 4 target
-RPR	planned	-	s4 sweep 4 target
-PRT	planned	-	s4 sweep 4 target
+DEP	covered	bash	.proven/aspects.tsv
+SEC	covered	bash	.proven/aspects.tsv
+USA	covered	bash	.proven/aspects.tsv
+IOP	covered	bash	.proven/aspects.tsv
+SAF	covered	bash	.proven/aspects.tsv
+PER	covered	bash	.proven/aspects.tsv
+FUN	covered	bash	.proven/aspects.tsv
+VER	covered	bash	.proven/aspects.tsv
+ACC	covered	bash	.proven/aspects.tsv
+MNT	covered	bash	.proven/aspects.tsv
+PRI	covered	bash	.proven/aspects.tsv
+OBS	covered	bash	.proven/aspects.tsv
+RPR	covered	bash	.proven/aspects.tsv
+PRT	covered	bash	.proven/aspects.tsv
 B-LAT	covered	bash	kit/test/sweep3b.test.sh
 B-THR	covered	bash	kit/test/sweep3b.test.sh
 B-MEM	covered	bash	kit/test/sweep3b.test.sh
