@@ -112,4 +112,12 @@ ptb_eq ids-extra-count 18 "$(grep -vc '^#' "$root/kit/ids-extra.tsv")"
 ptb_eq extras-manifest 0 "$(code bash "$root/kit/check-coverage.sh" --root "$root" --ids "$root/kit/ids-extra.tsv" "$root/.proven/extras.tsv")"
 ptb_eq ids-missing     2 "$(code bash "$root/kit/check-coverage.sh" --root "$root" --ids "$tmp/none" "$root/.proven/extras.tsv")"
 ptb_eq extras-vs-base-ids 1 "$(code bash "$root/kit/check-coverage.sh" --root "$root" "$root/.proven/extras.tsv")"
+# ---- pipeline-tail benches (stub tool on PATH; the real tools are absent here)
+BP="$root/benchmarks/kit/bench-pipeline.sh"
+mkdir -p "$tmp/bin"; printf '#!/usr/bin/env bash\nexit 0\n' > "$tmp/bin/hypatia"; printf '#!/usr/bin/env bash\nexit 1\n' > "$tmp/bin/echidna"; chmod +x "$tmp/bin/"*
+ptb_eq pipe-row      1 "$(PATH="$tmp/bin:$PATH" bash "$BP" hypatia 2>&1 | grep -c '^pipeline-hypatia-latency-ms'$'\t''[0-9]')"
+ptb_eq pipe-absent   2 "$(code bash "$BP" panic-attack)"
+ptb_eq pipe-fails    2 "$(PATH="$tmp/bin:$PATH" code bash "$BP" echidna)"
+ptb_eq pipe-no-args  2 "$(code bash "$BP")"
+ptb_eq pipe-bad-max  2 "$(PATH="$tmp/bin:$PATH" code bash "$BP" --abs-max x hypatia)"
 ptb_done
