@@ -2,11 +2,11 @@
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 #
 # Minimal downstream fixture: emit and validate a Proven-Tests schema_version-2
-# run report with no Python or Idris2 dependency on the runner.
+# run report with no Idris2 dependency on the runner.
 #
-# This is the Rust-native twin of emit_report.py / check_contract.py. Both
-# implement the contract in docs/INTEGRATION-CONTRACT.adoc; the unit tests in
-# tests/contract.rs pin the shared semantics.
+# The emitter and checker for docs/INTEGRATION-CONTRACT.adoc: `emit-report`
+# and `contract-check` binaries plus the proven-evidence library. The adversarial
+# controls in tests/adversarial.rs and tests/contract.rs pin the semantics.
 
 [package]
 name = "proven-evidence"

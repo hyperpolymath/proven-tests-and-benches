@@ -16,15 +16,13 @@ moving branch.
 ----
 integrations/contract/
 ├── contract-version.json        # machine-readable pins (the contract's anchor)
-├── check_contract.py            # normative conformance checker (stdlib only)
 ├── README.adoc                  # this file
 ├── proven-tests/
 │   ├── cases.json               # expected verdicts for the fixtures below
 │   ├── fixtures/                # schema_version-2 run reports (pure inputs)
-│   └── downstream/              # minimal runnable producer + Rust twin
-│       ├── emit_report.py       # runner output -> schema_version-2 report
+│   └── downstream/              # minimal runnable producer and the Rust checker
 │       ├── run.sh               # emit + validate, chained
-│       └── rust/proven-evidence/  # the same contract in Rust
+│       └── rust/proven-evidence/  # emit-report, contract-check, library, tests
 └── cicd-squabbler/
     ├── cases.json
     └── fixtures/                # (required-context set, realised runs) gate pairs
@@ -39,10 +37,10 @@ a fixture, so a fixture cannot assert its own verdict.
 ----
 bash scripts/check-integration-contract.sh
 # or one surface at a time:
-python3 integrations/contract/check_contract.py proven-tests
-python3 integrations/contract/check_contract.py cicd-squabbler
+cargo run --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin contract-check -- proven-tests
+cargo run --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin contract-check -- cicd-squabbler
 # or validate a single submitted document:
-python3 integrations/contract/check_contract.py validate-file <report.json> proven-tests
+cargo run --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --bin contract-check -- validate-file <report.json> proven-tests
 ----
 
 Exit `0` every case ran and held; `1` a wrong verdict; `2` a missing or
