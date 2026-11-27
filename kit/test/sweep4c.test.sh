@@ -112,6 +112,9 @@ ptb_eq ids-extra-count 18 "$(grep -vc '^#' "$root/kit/ids-extra.tsv")"
 ptb_eq extras-manifest 0 "$(code bash "$root/kit/check-coverage.sh" --root "$root" --ids "$root/kit/ids-extra.tsv" "$root/.proven/extras.tsv")"
 ptb_eq ids-missing     2 "$(code bash "$root/kit/check-coverage.sh" --root "$root" --ids "$tmp/none" "$root/.proven/extras.tsv")"
 ptb_eq extras-vs-base-ids 1 "$(code bash "$root/kit/check-coverage.sh" --root "$root" "$root/.proven/extras.tsv")"
+# ---- shared fixtures exist and are non-empty
+for f in claims.txt findings-ok.json findings-noline.json bench-row.tsv README.adoc; do ptb_ok "fixture-$f" test -s "$root/kit/fixtures/$f"; done
+ptb_eq fixture-claims-xprover 0 "$(code bash "$L/xprover.sh" --claims "$root/kit/fixtures/claims.txt" --prover "$PA" --prover 'b=printf "c2\nc1\n"')"
 # ---- pipeline-tail benches (stub tool on PATH; the real tools are absent here)
 BP="$root/benchmarks/kit/bench-pipeline.sh"
 mkdir -p "$tmp/bin"; printf '#!/usr/bin/env bash\nexit 0\n' > "$tmp/bin/hypatia"; printf '#!/usr/bin/env bash\nexit 1\n' > "$tmp/bin/echidna"; chmod +x "$tmp/bin/"*
