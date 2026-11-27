@@ -158,7 +158,7 @@ injected failure, **51/52, exit 1**.
 | `Bridge` | cross-representation bridging
 |===
 
-=== `proven-spec-suite` — Proven + AffineScript + HigherOrder + SetTheory (110 tests)
+=== `proven-spec-suite` — Proven + AffineScript + HigherOrder + SetTheory (113 tests)
 
 ==== Actually-Proven laws (12 theorems)
 
@@ -404,10 +404,28 @@ observation, not arbitrary composition with other observations. None certifies
 external receipt authenticity or the general converse that a Candidate must
 represent a real-world execution.
 
-The specification suite additionally runs 18 *Unproven* execution-truth
-meta-checks (15 denial classes and 3 void/replay controls) using committed
+The specification suite additionally runs 21 *Unproven* execution-truth
+meta-checks (15 denial classes and 6 void/replay/independence controls) using committed
 clean, firing and no-observation cases. These raise the spec-suite count
-from 92 to 110 but **do not** change its 29 Actually-Proven historical
+from 92 to 113 but **do not** change its 29 Actually-Proven historical
 properties, the taxonomy's 40/238 cells, or the CRG readiness grade.
 Source-of-truth: `tests/ExecutionTruthTests/Checks.idr`,
 `src/ProvenTests/ExecutionTruth.idr` and current-head CI receipts.
+
+== 2026-11-15 independently counted confirmation controls
+
+The `crossed-confirmations-no-matching-pair` and
+`non-greedy-independent-pair` tests exercise the total Idris2 subset
+selection algorithm against committed three-way-overlap and adversarial-order
+fixtures. Rust runs matching tests with a bounded exact search; exhausting
+its search budget returns NotRun, never an assumed Candidate or Denied.
+These are *Unproven* executable counterexample controls, not a proof of
+soundness, and do not authenticate external receipts. The measured
+specification suite reached 112/112 on the branch build:
+https://github.com/hyperpolymath/proven-tests-and-benches/actions/runs/43763352504[CI receipt].
+
+The new unattainable-forty-one-of-forty adversarial fixture validates a
+cardinality guard preventing exponential exploration when required independent
+confirmations exceed the size of the remaining population. This check is
+Unproven executable evidence, not a general formal soundness theorem. The
+updated 113-test total must be verified against the latest-head CI run.

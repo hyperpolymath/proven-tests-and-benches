@@ -52,6 +52,32 @@ expectVoid specimen =
       pure (Failed ("void-control violation: " ++ show clean ++ " / "
                     ++ show firing ++ " / " ++ show missing))
 
+expectCrossedDenied : IO TestResult
+expectCrossedDenied =
+  case (adjudicate silence, adjudicate crossedConfirmations, adjudicate voidControl) of
+    (Candidate, Denied DuplicateDelivery, Void _) => pure Passed
+    (clean, firing, noRun) =>
+      pure (Failed ("crossed-independent-subset mutation undetected: "
+                    ++ show clean ++ " / " ++ show firing ++ " / " ++ show noRun))
+
+expectNonGreedyAccepted : IO TestResult
+expectNonGreedyAccepted =
+  case (adjudicate silence, adjudicate independentAfterConflict,
+        adjudicate voidControl) of
+    (Candidate, Candidate, Void _) => pure Passed
+    (clean, specimen, noRun) =>
+      pure (Failed ("order-sensitive independence check: "
+                    ++ show clean ++ " / " ++ show specimen ++ " / " ++ show noRun))
+
+expectUnattainableDenied : IO TestResult
+expectUnattainableDenied =
+  case (adjudicate silence, adjudicate unattainableFortyOne,
+        adjudicate voidControl) of
+    (Candidate, Denied DuplicateDelivery, Void _) => pure Passed
+    (clean, firing, noRun) =>
+      pure (Failed ("unattainable independent threshold not denied: "
+                    ++ show clean ++ " / " ++ show firing ++ " / " ++ show noRun))
+
 expectReplayDenied : IO TestResult
 expectReplayDenied =
   case (adjudicate silence, adjudicate deliveryReplayedWithNewAttempt,
@@ -79,4 +105,7 @@ allExecutionTruthTests =
     [ makeControl "partial-required-is-void" (expectVoid partialRequired)
     , makeControl "unavailable-checker-is-void" (expectVoid knownUnavailable)
     , makeControl "new-attempt-same-delivery-replay" expectReplayDenied
+    , makeControl "crossed-confirmations-no-matching-pair" expectCrossedDenied
+    , makeControl "non-greedy-independent-pair" expectNonGreedyAccepted
+    , makeControl "unattainable-forty-one-of-forty" expectUnattainableDenied
     ]
