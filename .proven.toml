@@ -1,21 +1,23 @@
 # SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
 # Manifest for the proven umbrella gate (schema proven/manifest/v1).
-# Honest first adoption: every category is either run by a real command or
-# declared N/A with a written reason. Nothing here is a silent skip (DOG-01).
+# Release 0.1.0 provisions neither just nor Idris2, so the Idris2 corpus is not
+# run here: it is accounted for below with a reason and is still checked by the
+# repo's own CI (Idris2) workflow. Only the Rust crate is enforced (DOG-01:
+# nothing is silently skipped).
 schema = "proven/manifest/v1"
 
-[categories.unit]
-command = "just test"
+[categories.unit.rust]
+command = "cargo test --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml"
 
-[categories.smoke]
-command = "just test-spec"
+[categories.smoke.rust]
+command = "cargo test --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml --test contract"
 
-[categories.build]
-command = "just build"
+[categories.build.rust]
+command = "cargo build --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml"
 
 [categories.p2p]
 na = "this repository is a test corpus and bench harness; its seams are exercised by the integrations/contract checks, not a peer-to-peer pair"
 
 [languages.ignore.idris2]
-reason = "Idris2 sources are built and checked by just build; the umbrella has no idris2 toolchain in release 0.1.0"
+reason = "the umbrella 0.1.0 has no Idris2 or just toolchain; the Idris2 corpus is built and tested by this repo's CI (Idris2) workflow until the umbrella provisions it"
