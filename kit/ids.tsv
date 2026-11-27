@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: MPL-2.0
+# Canonical ids from TESTING-TAXONOMY.adoc (Appendix A, Appendix B, Part IV).
+# kind	id	name
+category	UT	Unit
+category	P2P	Point-to-Point
+category	E2E	End-to-End
+category	BLD	Build
+category	EXE	Execution & Runtime
+category	REF	Reflexive
+category	LCY	Lifecycle
+category	SMK	Smoke
+category	PBT	Property-Based
+category	MUT	Mutation
+category	FUZ	Fuzz
+category	CTR	Contract/Invariant
+category	REG	Regression
+category	CHS	Chaos/Resilience
+category	CMP	Compatibility
+category	PRF	Proof Regression
+category	TSF	Type-Safe
+category	CDF	Coupling/Drift-freedom
+aspect	DEP	Dependability
+aspect	SEC	Security
+aspect	USA	Usability
+aspect	IOP	Interoperability
+aspect	SAF	Safety
+aspect	PER	Performance
+aspect	FUN	Functionality
+aspect	VER	Versability
+aspect	ACC	Accessibility
+aspect	MNT	Maintainability
+aspect	PRI	Privacy
+aspect	OBS	Observability
+aspect	RPR	Reproducibility
+aspect	PRT	Portability
+bench	B-LAT	Latency
+bench	B-THR	Throughput
+bench	B-MEM	Memory
+bench	B-STA	Startup
+bench	B-BLD	Build time
+bench	B-ENG	Energy
+bench	B-FFI	FFI overhead

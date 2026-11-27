@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: MPL-2.0
+# Coverage of this repo (the test kit itself). covered = a self-test exists; planned = due in the named sweep.
+# id	status	language	ref
+UT	covered	bash	kit/test/lib.test.sh
+P2P	covered	bash	kit/templates/bash/sweep1.test.sh
+E2E	covered	bash	kit/test/sweep2.test.sh
+BLD	covered	bash	kit/test/lib.test.sh
+EXE	planned	-	s4 sweep 4 target
+REF	covered	bash	kit/test/sweep2.test.sh
+LCY	planned	-	s3 sweep 3 target
+SMK	covered	bash	kit/test/lib.test.sh
+PBT	planned	-	s3 sweep 3 target
+MUT	planned	-	s3 sweep 3 target
+FUZ	planned	-	s3 sweep 3 target
+CTR	covered	bash	kit/test/sweep2b.test.sh
+REG	covered	bash	kit/test/sweep2.test.sh
+CHS	planned	-	s4 sweep 4 target
+CMP	planned	-	s3 sweep 3 target
+PRF	covered	bash	kit/test/sweep2b.test.sh
+TSF	covered	bash	kit/test/sweep2b.test.sh
+CDF	covered	bash	kit/test/sweep2.test.sh
+DEP	planned	-	s4 sweep 4 target
+SEC	planned	-	s4 sweep 4 target
+USA	planned	-	s4 sweep 4 target
+IOP	planned	-	s4 sweep 4 target
+SAF	planned	-	s4 sweep 4 target
+PER	planned	-	s4 sweep 4 target
+FUN	planned	-	s4 sweep 4 target
+VER	planned	-	s4 sweep 4 target
+ACC	planned	-	s4 sweep 4 target
+MNT	planned	-	s4 sweep 4 target
+PRI	planned	-	s4 sweep 4 target
+OBS	planned	-	s4 sweep 4 target
+RPR	planned	-	s4 sweep 4 target
+PRT	planned	-	s4 sweep 4 target
+B-LAT	covered	bash	kit/test/sweep2c.test.sh
+B-THR	covered	bash	kit/test/sweep2c.test.sh
+B-MEM	covered	bash	kit/test/sweep2c.test.sh
+B-STA	covered	bash	kit/test/sweep2c.test.sh
+B-BLD	covered	bash	kit/test/sweep2c.test.sh
+B-ENG	covered	bash	kit/test/sweep2c.test.sh
+B-FFI	covered	bash	kit/test/sweep2c.test.sh

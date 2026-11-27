@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+= The consumer kit (v0, sweep 1)
+:toc:
+
+What a repository takes from `proven-tests-and-benches` and how F2's umbrella
+workflow calls it. Pin by tag once one is cut (`kit-v0.x`); until then pin a full SHA.
+
+== Files to take
+
+[cols="2,3",options="header"]
+|===
+| Path | Use
+| `kit/ids.tsv` | The 39 canonical ids: 18 categories, 14 aspects, 7 bench kinds.
+| `kit/check-coverage.sh` | Fail-closed manifest check. The umbrella calls this.
+| `kit/lib/ptb.sh` | Bash assertion helpers. Zero assertions is a failure.
+| `kit/lib/smoke.sh` | Language-agnostic smoke (SMK).
+| `kit/lib/build-check.sh` | Language-agnostic build test (BLD) and build-time bench row (B-BLD).
+| `kit/lib/regression.sh` | Golden-output regression (REG). No update flag: goldens change by reviewed commit only.
+| `kit/lib/drift.sh` | Coupling/drift-freedom (CDF): regenerated output must equal the committed file.
+| `kit/lib/contract.sh` | Contract/invariant (CTR): `--require`/`--forbid` regexes over a command's output.
+| `kit/lib/typesafe.sh` | Type-safe (TSF): strict check passes and no escape hatch (e.g. `believe_me`) in the given paths.
+| `kit/lib/proofreg.sh` | Proof regression (PRF): every claim in a claims file must still be proved by the prover run.
+| `kit/lib/aspect.sh` | The 14 quality aspects: runs the mapped command per aspect id, or an `na:<reason>`.
+| `kit/lib/bench.sh` | Baselined benchmark (B-LAT..B-FFI): runs a bench command, classifies its TSV via sixsigma against the last 10 runs.
+| `kit/lib/reflexive.sh` | Reflexive (REF): deterministic across two runs; `--idempotent` checks f(f(x)) = f(x).
+| `kit/lib/e2e.sh` | End-to-end (E2E): real entry point, real stdin, checks exit code and stdout.
+| `kit/templates/<lang>/` | UT, SMK, BLD, P2P starting points: rust, bash, agda (verified); idris2, julia, zig, elixir, gleam (written, unverified).
+| `benchmarks/sixsigma/sixsigma.sh` | Six Sigma classifier against the mean of the last 10 main runs.
+| `benchmarks/sixsigma/fetch-baseline.sh` | Pulls those 10 runs from workflow artifacts.
+| `scripts/agda-prove.sh`, `scripts/agda-doubt-check.sh` | Agda `--safe --cubical-compatible` plus the doubt check.
+| `scripts/selftest-foundation.sh` | Runs every self-test above. Umbrella may call it on this repo's own CI.
+|===
+
+== Layout in a consuming repo
+
+----
+.proven/coverage.tsv          the manifest (below); the ONLY file the umbrella must find
+tests/unit|smoke|p2p/...      repo-local tests, copied from kit/templates/<lang> and adapted
+.proven/bench/results.tsv     this run's bench rows, written by the repo's bench job
+----
+
+== The manifest: `.proven/coverage.tsv`
+
+Tab-separated, `#` comments. One row per (id, language) the repo claims.
+
+----
+id    status    language   ref
+UT    covered   rust       tests/unit.rs
+SMK   covered   bash       tests/smoke.test.sh
+E2E   na        -          Library with no runnable entry point; exercised through P2P only
+B-ENG na        -          No platform power counter is available on CI runners
+----
+
+Rules, all enforced by `kit/check-coverage.sh`:
+
+. Every one of the 39 ids needs at least one row. A missing id is a violation, not a pass.
+. `covered` needs a language and a `ref` that is an existing, non-empty file relative to the repo root.
+. `planned` (ref `s1`..`s4`) states honest progress: the id is not covered yet and a later sweep will cover it. It is never a pass for a sweep already due: `--through-sweep N` fails any planned row with sweep <= N, and the default (4) fails them all. A repo on sweep 1 gates with `--through-sweep 1`; absent rows still fail.
+. `na` needs a written reason of at least 20 characters. Placeholders (`n/a`, `tbd`, `todo`) fail.
+. Exit codes: `0` pass, `1` violation, `2` no check performed (manifest missing, empty, unreadable). `2` must fail the gate (A3 G3, ER-A8).
+
+CRG applicability (for example "Property-Based applies from B+") is the umbrella's
+business: it decides which ids a repo's grade requires. The checker only guarantees that
+no id is silently absent.
+
+== Bench protocol
+
+A bench job writes `name<TAB>value<TAB>lower|higher[<TAB>abs_max]` rows, uploads them as
+artifact `proven-bench-<name>` on main, and PRs run `fetch-baseline.sh` then
+`sixsigma.sh --baseline-dir DIR results.tsv`. Exit `0` pass (Ordinary or Extraordinary), `3` soft fail
+(Acceptable: warn, reviewer approval), `1` hard fail (Unacceptable), `2` no check performed.
+Thresholds are the taxonomy's: more than 50 percent worse is Unacceptable, 20 to 50 percent Acceptable,
+within 20 percent Ordinary, more than 20 percent better Extraordinary.
+
+NOTE: this repo's own Idris2 gate (`scripts/check-bench-regression.sh`) uses a noise-tolerant
+leave-one-out ratio with a documented 2.0x override. `sixsigma.sh` is the taxonomy-literal classifier for
+every other repo; reconciling the two is on `LATER.adoc`.
+
+== Honest limits of v0
+
+* Rust, Bash and Agda are verified here, positive and negative controls. Idris2, Julia, Zig, Elixir and Gleam are
+  written but not executed: no toolchain in the foundation container. A consumer's first CI run is their test.
+* Sweeps 2 to 4 are planned, not shipped: see `taxonomy-coverage/COVERAGE-MATRIX.adoc`.
+
+== What is not a valid SMK or BLD test
+
+A "smoke" test that skips, passes or returns early when the tool, binary or prover it exercises is missing is not SMK: it turns absence into a pass (DOG-01). A valid SMK test runs the real built binary (in Rust, `env!("CARGO_BIN_EXE_<name>")`, as `kit/templates/rust/tests/smoke.rs` does) and fails when it cannot. Keep any skip-when-missing test, but cover SMK with a separate one that fails closed.

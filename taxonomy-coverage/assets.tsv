@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: MPL-2.0
+# Every reusable asset this repo ships, one row per (id, language).
+# status: verified   = run in the foundation container, positive AND negative controls pass
+#         unverified = written, toolchain absent in the container; first consumer CI run is the test
+#         existing-REAL / existing-THIN = pre-existing repo-local suite, graded in TEST-NEEDS.adoc
+# language `any` = language-agnostic (Bash driver around any toolchain).
+# id	language	status	path
+UT	rust	verified	kit/templates/rust/tests/unit.rs
+UT	bash	verified	kit/templates/bash/sweep1.test.sh
+UT	agda	verified	kit/templates/agda/Sweep1.agda
+UT	idris2	unverified	kit/templates/idris2/Sweep1.idr
+UT	julia	unverified	kit/templates/julia/runtests.jl
+UT	zig	unverified	kit/templates/zig/sweep1.zig
+UT	elixir	unverified	kit/templates/elixir/ptb_test.exs
+UT	gleam	unverified	kit/templates/gleam/ptb_test.gleam
+UT	idris2	existing-REAL	src/ProvenTests/Cells.idr
+SMK	rust	verified	kit/templates/rust/tests/smoke.rs
+SMK	bash	verified	kit/templates/bash/sweep1.test.sh
+SMK	any	verified	kit/lib/smoke.sh
+SMK	idris2	unverified	kit/templates/idris2/Sweep1.idr
+SMK	julia	unverified	kit/templates/julia/runtests.jl
+SMK	zig	unverified	kit/templates/zig/sweep1.zig
+SMK	elixir	unverified	kit/templates/elixir/ptb_test.exs
+SMK	gleam	unverified	kit/templates/gleam/ptb_test.gleam
+BLD	rust	verified	kit/templates/rust/tests/build.rs
+BLD	bash	verified	kit/templates/bash/sweep1.test.sh
+BLD	agda	verified	scripts/agda-prove.sh
+BLD	any	verified	kit/lib/build-check.sh
+BLD	idris2	existing-REAL	scripts/ci-build.sh
+BLD	julia	unverified	kit/templates/julia/runtests.jl
+BLD	zig	unverified	kit/templates/zig/sweep1.zig
+BLD	elixir	unverified	kit/templates/elixir/ptb_test.exs
+BLD	gleam	unverified	kit/templates/gleam/ptb_test.gleam
+P2P	rust	verified	kit/templates/rust/tests/p2p.rs
+P2P	bash	verified	kit/templates/bash/sweep1.test.sh
+P2P	agda	verified	kit/templates/agda/Sweep1.agda
+P2P	idris2	unverified	kit/templates/idris2/Sweep1.idr
+P2P	julia	unverified	kit/templates/julia/runtests.jl
+P2P	zig	unverified	kit/templates/zig/sweep1.zig
+P2P	elixir	unverified	kit/templates/elixir/ptb_test.exs
+P2P	gleam	unverified	kit/templates/gleam/ptb_test.gleam
+E2E	idris2	existing-REAL	src/ProvenTests/E2E.idr
+EXE	idris2	existing-REAL	src/ProvenTests/ExecutionTruth.idr
+REF	idris2	existing-REAL	src/ProvenTests/Meta.idr
+REF	any	existing-REAL	corpus/provenance/reflexive
+PRF	idris2	existing-REAL	src/ProvenTests/Tropical.idr
+PRF	agda	verified	scripts/agda-prove.sh
+TSF	idris2	existing-REAL	tests/TypeSafeTests/Main.idr
+CTR	rust	existing-THIN	integrations/contract/proven-tests/downstream/rust/proven-evidence/tests
+CDF	any	existing-REAL	scripts/check-doc-facts.sh
+CDF	any	verified	kit/check-coverage.sh
+B-LAT	idris2	existing-REAL	benchmarks/Benchmark.idr
+B-LAT	any	verified	benchmarks/sixsigma/sixsigma.sh
+B-THR	any	verified	benchmarks/sixsigma/sixsigma.sh
+B-MEM	any	verified	benchmarks/sixsigma/sixsigma.sh
+B-STA	any	verified	benchmarks/sixsigma/sixsigma.sh
+B-BLD	any	verified	kit/lib/build-check.sh
+B-ENG	any	verified	benchmarks/sixsigma/sixsigma.sh
+B-FFI	any	verified	benchmarks/sixsigma/sixsigma.sh

@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MPL-2.0
+# ADAPT: rename the package; replace src/lib.rs with your subject.
+[package]
+name = "ptb-rust-template"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "ptb-demo"
+path = "src/main.rs"

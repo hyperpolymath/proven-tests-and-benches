@@ -187,3 +187,28 @@ path = "fixtures/ci/cabal-index.jsonl"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 SPDX-License-Identifier = "MPL-2.0"
+
+# Two existing documentation files carry CC-BY-SA-4.0 declarations in-file.
+# Preserve their original bytes: record confirmed authorship here instead of
+# editing existing-file SPDX headers (the estate's no-header-sweep rule).
+[[annotations]]
+path = ["docs/PARSER-CONTRACT.adoc", "docs/TAXONOMY-VERSION-BOUNDARY.adoc"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+# F1 foundation kit (2026-11-26): new code and data files declared here rather than
+# repeating a header block in every template. Prose (*.adoc) carries its own
+# CC-BY-SA-4.0 header and is deliberately NOT matched.
+[[annotations]]
+path = [
+  "kit/**/*.sh", "kit/**/*.tsv", "kit/**/*.rs", "kit/**/*.toml", "kit/**/Cargo.lock",
+  "kit/**/.gitignore", "kit/**/*.jl", "kit/**/*.zig", "kit/**/*.exs", "kit/**/*.gleam",
+  "kit/**/*.idr", "kit/**/*.ipkg.template", "kit/**/*.agda",
+  "agda/fixtures/**/*.agda",
+  "benchmarks/sixsigma/*.sh",
+  "taxonomy-coverage/*.sh", "taxonomy-coverage/*.tsv",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
+SPDX-License-Identifier = "MPL-2.0"

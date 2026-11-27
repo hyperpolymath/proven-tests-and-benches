@@ -1,0 +1,5 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+= Estate master schedule
+
+The canonical schedule is `docs/ESTATE-MASTER-SCHEDULE.adoc` in `proven-cicd-and-workflows`. This repository keeps no copy; F1 status goes there, and the open items from this repo are in `LATER.adoc`.
