@@ -44,9 +44,9 @@ ptb_eq lcy-setup-fails 1 "$(code "$here/lifecycle.sh" --setup false --use true)"
 ptb_eq lcy-td-fails    1 "$(code "$here/lifecycle.sh" --use true --teardown false)"
 : > "$tmp/td-ran"; rm "$tmp/td-ran"
 code "$here/lifecycle.sh" --use false --teardown "touch $tmp/td-ran" >/dev/null
-ptb_eq lcy-td-always   0 "$([ -f "$tmp/td-ran" ]; echo $?)"
+ptb_eq lcy-td-always   0 "$([[ -f "$tmp/td-ran" ]]; echo $?)"
 code "$here/lifecycle.sh" --setup false --use "touch $tmp/skipped" >/dev/null
-ptb_eq lcy-setup-skips 1 "$([ -f "$tmp/skipped" ]; echo $?)"
+ptb_eq lcy-setup-skips 1 "$([[ -f "$tmp/skipped" ]]; echo $?)"
 ptb_eq lcy-no-use      2 "$(code "$here/lifecycle.sh" --setup true)"
 ptb_eq lcy-usage       2 "$(code "$here/lifecycle.sh" --bogus)"
 # CMP
