@@ -1,0 +1,5 @@
+s/bad=1; }/bad=0; }/g
+s/grep -Eq -- "\$r" <<<"\$out" ||/true ||/
+s/|| { echo "CONTRACT FAIL: command failed: \${cmd\[\*\]}" >&2; exit 1; }/|| true/
+s/-n "\$out" \]\] ||/-z "$out" ]] ||/
+s/-gt 0 \]\]; do case/-gt 1 ]]; do case/

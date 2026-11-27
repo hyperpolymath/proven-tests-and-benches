@@ -27,6 +27,7 @@ workflow calls it. Pin by tag once one is cut (`kit-v0.x`); until then pin a ful
 | `kit/lib/fuzz.sh` | Fuzz (FUZ): seeded random bytes to stdin; crash/hang/unexpected exit is a finding.
 | `kit/lib/mutate.sh` | Mutation (MUT): sed mutants of a target must be killed by the tests; score >= 80% by default.
 | `kit/lib/lifecycle.sh` | Lifecycle (LCY): setup, uses, teardown (teardown always runs).
+| `scripts/mutation-selfcheck.sh` | Mutation self-check: kit/mutations/*.muts must be killed >= 80% by the lib self-tests.
 | `kit/lib/compat.sh` | Compatibility (CMP): the same command across an environment matrix.
 | `kit/lib/reflexive.sh` | Reflexive (REF): deterministic across two runs; `--idempotent` checks f(f(x)) = f(x).
 | `kit/lib/e2e.sh` | End-to-end (E2E): real entry point, real stdin, checks exit code and stdout.

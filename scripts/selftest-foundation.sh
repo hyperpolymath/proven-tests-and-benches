@@ -14,6 +14,7 @@ for t in kit/test/check-coverage.test.sh kit/test/lib.test.sh kit/test/sweep2.te
   [ -x "$t" ] || { echo "MISSING self-test: $t" >&2; fail=1; continue; }
   run "$t" "$t"
 done
+run "kit mutation self-check (>= 80% per lib)" scripts/mutation-selfcheck.sh
 run "coverage matrix is current and every path exists" taxonomy-coverage/gen-matrix.sh --check
 if command -v cargo >/dev/null; then
   run "rust template" cargo test --offline --quiet --manifest-path kit/templates/rust/Cargo.toml

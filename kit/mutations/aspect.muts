@@ -1,0 +1,4 @@
+s/bad=1; fi/bad=0; fi/
+s/\[\[ "\$valid" == \*" \$a "\* \]\]/true/
+s/-n "\${line#na:}" \]\] \&\&/true ]] \&\&/
+s/-n "\$line" \]\] ||/true ]] ||/
