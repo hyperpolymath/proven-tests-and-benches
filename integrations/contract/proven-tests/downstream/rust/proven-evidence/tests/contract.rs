@@ -32,7 +32,10 @@ fn entry(provenance: &str, outcome: &str, category: &str, aspect: &str) -> Value
 }
 
 /// A report whose summary is computed from its entries — i.e. an honest one.
-fn conforming(entries: Vec<Value>) -> Value {
+fn conforming(mut entries: Vec<Value>) -> Value {
+    for (i, e) in entries.iter_mut().enumerate() {
+        e["test_id"]["test_name"] = json!(format!("t_{i}"));
+    }
     let parsed: Vec<Entry> = entries
         .iter()
         .map(|e| serde_json::from_value(e.clone()).unwrap())
@@ -53,10 +56,10 @@ fn entries_of(doc: &Value) -> Vec<Entry> {
 #[test]
 fn covered_cells_come_from_passed_entries_only() {
     let doc = conforming(vec![
-        entry("Unproven", "passed", "wiring", "boundary"),
-        entry("Unproven", "passed", "wiring", "typing"),
-        entry("Unproven", "failed", "semantics", "precision"),
-        entry("Unproven", "skipped", "semantics", "soundness"),
+        entry("Unproven", "passed", "Unit", "Functionality"),
+        entry("Unproven", "passed", "Unit", "Security"),
+        entry("Unproven", "failed", "Contract", "Maintainability"),
+        entry("Unproven", "skipped", "Contract", "Safety"),
     ]);
     assert!(proven_evidence::validate(&doc).unwrap().is_empty());
     let summary = summarise(&entries_of(&doc), LATTICE_CELLS);
@@ -73,8 +76,8 @@ fn covered_cells_come_from_passed_entries_only() {
 #[test]
 fn skipped_entry_contributes_nothing() {
     let doc = conforming(vec![
-        entry("Unproven", "passed", "wiring", "boundary"),
-        entry("Unproven", "skipped", "wiring", "typing"),
+        entry("Unproven", "passed", "Unit", "Functionality"),
+        entry("Unproven", "skipped", "Unit", "Security"),
     ]);
     assert!(proven_evidence::validate(&doc).unwrap().is_empty());
     let summary = summarise(&entries_of(&doc), LATTICE_CELLS);
@@ -85,8 +88,8 @@ fn skipped_entry_contributes_nothing() {
 #[test]
 fn two_entries_in_one_cell_count_once() {
     let doc = conforming(vec![
-        entry("Unproven", "passed", "wiring", "boundary"),
-        entry("Unproven", "passed", "wiring", "boundary"),
+        entry("Unproven", "passed", "Unit", "Functionality"),
+        entry("Unproven", "passed", "Unit", "Functionality"),
     ]);
     assert!(proven_evidence::validate(&doc).unwrap().is_empty());
     let summary = summarise(&entries_of(&doc), LATTICE_CELLS);
@@ -96,7 +99,7 @@ fn two_entries_in_one_cell_count_once() {
 
 #[test]
 fn actually_proven_without_a_ladder_is_refused() {
-    let doc = conforming(vec![entry("ActuallyProven", "passed", "wiring", "boundary")]);
+    let doc = conforming(vec![entry("ActuallyProven", "passed", "Unit", "Functionality")]);
     let violations = proven_evidence::validate(&doc).unwrap();
     assert!(
         violations.iter().any(|x| x.contains("empty proof ladder")),
@@ -137,7 +140,7 @@ fn evidence_shape_is_checked_even_when_the_tier_does_not_use_it() {
 
 #[test]
 fn rung_without_a_theorem_is_refused() {
-    let mut e = entry("ActuallyProven", "passed", "wiring", "boundary");
+    let mut e = entry("ActuallyProven", "passed", "Unit", "Functionality");
     e["proof_ladder"] = json!([{"statement": "boom", "theorem": null}]);
     let violations = proven_evidence::validate(&conforming(vec![e])).unwrap();
     assert!(violations.iter().any(|x| x.contains("no cited theorem")));
@@ -145,7 +148,7 @@ fn rung_without_a_theorem_is_refused() {
 
 #[test]
 fn provisional_without_certificates_is_refused() {
-    let mut e = entry("ProvisionallyProven", "passed", "wiring", "boundary");
+    let mut e = entry("ProvisionallyProven", "passed", "Unit", "Functionality");
     let violations = proven_evidence::validate(&conforming(vec![e.clone()])).unwrap();
     assert!(violations.iter().any(|x| x.contains("framework_safety")));
     e["evidence"] = json!({"framework_safety": {"x": 1}});
@@ -155,7 +158,7 @@ fn provisional_without_certificates_is_refused() {
 
 #[test]
 fn overclaimed_summary_is_refused() {
-    let mut doc = conforming(vec![entry("Unproven", "passed", "wiring", "boundary")]);
+    let mut doc = conforming(vec![entry("Unproven", "passed", "Unit", "Functionality")]);
     assert!(proven_evidence::validate(&doc).unwrap().is_empty());
     doc["summary"]["covered_cells"] = json!(40);
     doc["summary"]["lattice_covered"] = json!(40);
@@ -168,11 +171,11 @@ fn overclaimed_summary_is_refused() {
 
 #[test]
 fn fixture_debt_entries_are_excluded_from_the_ledger() {
-    let mut debt = entry("Unproven", "passed", "wiring", "boundary");
+    let mut debt = entry("Unproven", "passed", "Unit", "Functionality");
     debt["fixture_obligation"] = json!("FixtureDebt");
     debt["fixture_debt_ref"] = json!("DEBT-B2-LEGACY-SUITE");
     debt.as_object_mut().unwrap().remove("fixtures");
-    let doc = conforming(vec![entry("Unproven", "passed", "wiring", "typing"), debt]);
+    let doc = conforming(vec![entry("Unproven", "passed", "Unit", "Security"), debt]);
     assert!(proven_evidence::validate(&doc).unwrap().is_empty());
     let summary = summarise(&entries_of(&doc), LATTICE_CELLS);
     assert_eq!(summary.total, 1, "the debt entry is not a test");
@@ -181,7 +184,7 @@ fn fixture_debt_entries_are_excluded_from_the_ledger() {
 
 #[test]
 fn unknown_provenance_is_refused_not_defaulted() {
-    let doc = conforming(vec![entry("DefinitelyProven", "passed", "wiring", "boundary")]);
+    let doc = conforming(vec![entry("DefinitelyProven", "passed", "Unit", "Functionality")]);
     let violations = proven_evidence::validate(&doc).unwrap();
     assert!(
         violations.iter().any(|x| x.contains("provenance")),
@@ -192,8 +195,8 @@ fn unknown_provenance_is_refused_not_defaulted() {
 #[test]
 fn emitted_summary_must_match_the_entries() {
     let doc = conforming(vec![
-        entry("Unproven", "passed", "wiring", "boundary"),
-        entry("Unproven", "passed", "wiring", "typing"),
+        entry("Unproven", "passed", "Unit", "Functionality"),
+        entry("Unproven", "passed", "Unit", "Security"),
     ]);
     let report = parse(&doc).expect("the report parses");
     let computed = summarise(&report.entries, LATTICE_CELLS);
@@ -205,7 +208,7 @@ fn emitted_summary_must_match_the_entries() {
 
 #[test]
 fn malformed_entries_are_reported_not_skipped() {
-    let doc = conforming(vec![entry("Unproven", "passed", "wiring", "boundary")]);
+    let doc = conforming(vec![entry("Unproven", "passed", "Unit", "Functionality")]);
     let mut broken = doc.clone();
     broken["entries"] = json!([{"not_an_entry": true}]);
     let violations = proven_evidence::validate(&broken).unwrap();
@@ -230,7 +233,7 @@ fn evidence_presence_matches_python_truthiness() {
         ("fixtures", "silence", "silence/firing pair"),
         ("fixtures", "firing", "silence/firing pair"),
     ] {
-        let mut e = entry("ProvisionallyProven", "passed", "wiring", "boundary");
+        let mut e = entry("ProvisionallyProven", "passed", "Unit", "Functionality");
         e["evidence"] = json!({"framework_safety": "cert", "test_safety": "cert"});
         let baseline = conforming(vec![e]);
         assert!(proven_evidence::validate(&baseline).unwrap().is_empty());
@@ -265,7 +268,7 @@ fn evidence_presence_matches_python_truthiness() {
 #[test]
 fn theorem_and_debt_references_must_be_nonempty() {
     for field in ["theorem", "fixture_debt_ref"] {
-        let mut e = entry("ActuallyProven", "passed", "wiring", "boundary");
+        let mut e = entry("ActuallyProven", "passed", "Unit", "Functionality");
         e["proof_ladder"] = json!([{"statement": "law", "theorem": "proof"}]);
         if field == "fixture_debt_ref" {
             e["fixture_obligation"] = json!("FixtureDebt");
@@ -338,5 +341,37 @@ fn every_summary_counter_rejects_boolean_negative_and_noninteger_values() {
             assert!(violations.iter().any(|v| v.contains(&format!("summary.{key} must"))),
                     "{key}: {violations:?}");
         }
+    }
+}
+
+#[test]
+fn schema_v2_adversarial_membership_and_denominator_controls() {
+    for (category, aspect) in [
+        ("fabricated_category", "Security"),
+        ("Coupling", "Security"),
+        ("Unit", "fabricated_aspect"),
+    ] {
+        let doc = conforming(vec![entry("Unproven", "passed", category, aspect)]);
+        assert!(!proven_evidence::validate(&doc).unwrap().is_empty());
+        assert_eq!(summarise(&entries_of(&doc), 252).covered_cells, 0);
+    }
+    let mut doc = conforming(vec![entry("Unproven", "passed", "Unit", "Security")]);
+    doc["summary"]["cat_aspect_cells"] = json!(252);
+    assert!(proven_evidence::validate(&doc).unwrap().iter().any(|v| v.contains("cat_aspect_cells")));
+    let report = parse(&doc).unwrap();
+    assert!(assert_summary_matches(&report.entries, &report.summary).is_err());
+}
+
+#[test]
+fn invalid_coordinate_on_skipped_failed_error_or_debt_is_not_validated() {
+    for outcome in ["skipped", "failed", "error", "passed"] {
+        let mut e = entry("Unproven", outcome, "fabricated_category", "Security");
+        if outcome == "passed" {
+            e["fixture_obligation"] = json!("FixtureDebt");
+            e["fixture_debt_ref"] = json!("DEBT-CATEGORY");
+        }
+        let doc = conforming(vec![e]);
+        assert!(proven_evidence::validate(&doc).unwrap().iter().any(|v| v.contains("category")));
+        assert_eq!(summarise(&entries_of(&doc), 238).covered_cells, 0);
     }
 }

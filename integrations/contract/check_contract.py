@@ -35,7 +35,19 @@ from __future__ import annotations
 import json
 import os
 import sys
+from pathlib import Path
 from typing import Any
+
+# Historical v2 axes, shared with the Rust twin. Never load moving standards
+# to reinterpret signed or previously issued schema-v2 receipts.
+_AXES = json.loads((Path(__file__).resolve().parent / "proven-tests" /
+                    "taxonomy-v2.json").read_text(encoding="utf-8"))
+assert _AXES["schema_version"] == 2
+assert len(_AXES["categories"]) == 17 and len(set(_AXES["categories"])) == 17
+assert len(_AXES["aspects"]) == 14 and len(set(_AXES["aspects"])) == 14
+CATEGORIES_V2 = tuple(_AXES["categories"])
+ASPECTS_V2 = tuple(_AXES["aspects"])
+LATTICE_V2 = len(CATEGORIES_V2) * len(ASPECTS_V2)
 
 # ── proven-tests vocabulary ──────────────────────────────────────────────────
 TIERS = ("ActuallyProven", "ProvisionallyProven", "Unproven")
@@ -76,7 +88,7 @@ class ContractError(Exception):
 def _cell(entry: dict) -> tuple[str, str] | None:
     """Return the category/aspect pair, or None if either value is falsey."""
     cat, asp = entry.get("category"), entry.get("aspect")
-    if cat and asp:
+    if cat in CATEGORIES_V2 and asp in ASPECTS_V2:
         return (cat, asp)
     return None
 
@@ -107,6 +119,7 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
         raise ContractError("report has no 'entries' array")
 
     passed_cells: set[tuple[str, str]] = set()
+    seen_test_ids: set[tuple[str, str, int | None]] = set()
     tier_counts = dict.fromkeys(TIERS, 0)
     passed = failed = errored = skipped = debt = 0
 
@@ -123,8 +136,26 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
                 raise ContractError(f"{where}.{field} must be {expected.__name__} or null")
 
         tid = e.get("test_id")
-        if not isinstance(tid, dict) or not tid.get("module_path") or not tid.get("test_name"):
-            v.append(f"{where}.test_id must carry module_path and test_name")
+        if (not isinstance(tid, dict)
+                or not isinstance(tid.get("module_path"), str)
+                or not tid["module_path"].strip()
+                or not isinstance(tid.get("test_name"), str)
+                or not tid["test_name"].strip()
+                or (tid.get("line_number") is not None
+                    and type(tid["line_number"]) is not int)):
+            v.append(f"{where}.test_id must carry a valid module_path, test_name and line_number")
+            continue
+        key = (tid["module_path"], tid["test_name"], tid.get("line_number"))
+        if key in seen_test_ids:
+            v.append(f"{where}.test_id duplicates an earlier entry")
+            continue
+        seen_test_ids.add(key)
+        if e.get("category") not in CATEGORIES_V2:
+            v.append(f"{where}.category {e.get('category')!r} is not a schema-v2 category")
+            continue
+        if e.get("aspect") not in ASPECTS_V2:
+            v.append(f"{where}.aspect {e.get('aspect')!r} is not a schema-v2 aspect")
+            continue
 
         tier = e.get("provenance")
         if tier not in TIERS:
@@ -202,6 +233,8 @@ def validate_proven_report(doc: Any) -> tuple[list[str], int]:
             v.append(f"summary.{key} must be a non-negative integer")
 
     derived = len(passed_cells)
+    if summary.get("cat_aspect_cells") != LATTICE_V2:
+        v.append(f"summary.cat_aspect_cells must be {LATTICE_V2} for schema-v2")
     if summary.get("covered_cells") != derived:
         v.append(
             f"summary.covered_cells={summary.get('covered_cells')} but only {derived} "
