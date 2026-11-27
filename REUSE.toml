@@ -187,3 +187,14 @@ path = "fixtures/ci/cabal-index.jsonl"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
 SPDX-License-Identifier = "MPL-2.0"
+
+# Two documents carry their CC-BY-SA-4.0 licence in place but no copyright
+# line. Owner decision (2026-11-26): declare the copyright here rather than
+# editing the files. Copyright only; the licence stays the one in each file.
+[[annotations]]
+path = [
+  "docs/PARSER-CONTRACT.adoc",
+  "docs/TAXONOMY-VERSION-BOUNDARY.adoc",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>"
