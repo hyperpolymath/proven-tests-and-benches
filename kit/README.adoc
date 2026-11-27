@@ -39,6 +39,7 @@ workflow calls it. Pin by tag once one is cut (`kit-v0.x`); until then pin a ful
 | `kit/lib/corpus.sh` | CR-4: shared fixture corpus consumed by every consumer.
 | `kit/lib/schema-diff.sh` | CR-9: surface diff classified patch/minor/major and gated by an allowance.
 | `kit/lib/decay.sh` | CR-10: stale fixture/baseline alarm (90 days, 30 for benches).
+| `kit/lib/xprover.sh` | Cross-prover proof regression: several provers (Agda, Idris2, Lean...) must all still prove every recorded claim; fewer than two provers is no check.
 | `kit/ids-extra.tsv`, `.proven/extras.tsv` | The 18 extra ids (DOG-01..08, CR-1..10) and their status; check with `check-coverage.sh --ids kit/ids-extra.tsv .proven/extras.tsv`. DOG-03/04/05 and CR-2/5/6/7 are N/A here with written reasons.
 | `kit/lib/compat.sh` | Compatibility (CMP): the same command across an environment matrix.
 | `kit/lib/reflexive.sh` | Reflexive (REF): deterministic across two runs; `--idempotent` checks f(f(x)) = f(x).
