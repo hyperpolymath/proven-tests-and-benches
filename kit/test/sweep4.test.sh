@@ -23,7 +23,7 @@ plant() { # NAME ASPECT mutate-command
 ptb_eq neg-SEC 1 "$(plant sec SEC "echo 'k=AKI''AABCDEFGHIJKLMNOP' >> kit/lib/e2e.sh")"
 ptb_eq neg-ACC 1 "$(plant acc ACC "printf 'echo \\033[31mred\\033[0m\n' >> kit/lib/e2e.sh")"
 ptb_eq neg-MNT 1 "$(plant mnt MNT "sed -i '/SPDX-License-Identifier/d' kit/lib/e2e.sh")"
-ptb_eq neg-PRI 1 "$(plant pri PRI "echo 'curl http://example.invalid' >> kit/lib/e2e.sh")"
+ptb_eq neg-PRI 1 "$(plant pri PRI "echo 'curl example.invalid' >> kit/lib/e2e.sh")"
 ptb_eq neg-OBS 1 "$(plant obs OBS "sed -i 's/NO CHECK PERFORMED/NOCHK/g' kit/lib/e2e.sh")"
 ptb_eq neg-PRT 1 "$(plant prt PRT "sed -i '1s|.*|#!/bin/bash|' kit/lib/e2e.sh")"
 ptb_eq neg-USA 1 "$(plant usa USA "printf '#!/usr/bin/env bash\n# SPDX-License-Identifier: MPL-2.0\nexit 0\n' > kit/lib/e2e.sh")"
