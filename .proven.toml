@@ -21,3 +21,9 @@ na = "this repository is a test corpus and bench harness; its seams are exercise
 
 [languages.ignore.idris2]
 reason = "the umbrella 0.1.0 has no Idris2 or just toolchain; the Idris2 corpus is built and tested by this repo's CI (Idris2) workflow until the umbrella provisions it"
+
+[languages.ignore.shell]
+reason = "shell here is repo tooling (scripts/, run.sh); the repo Justfile test/build recipes need Idris2, which the umbrella 0.1.x does not provision, and the scripts are exercised by this repo's own CI (contract check, Idris2 workflows)"
+
+[languages.ignore.python]
+reason = "the few Python helpers are being ported to Rust (PR #126, proven-evidence); until that merges they run in this repo's own CI, and the Justfile recipes the umbrella would call need Idris2"
