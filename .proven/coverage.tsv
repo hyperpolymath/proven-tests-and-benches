@@ -33,10 +33,10 @@ PRI	planned	-	s4 sweep 4 target
 OBS	planned	-	s4 sweep 4 target
 RPR	planned	-	s4 sweep 4 target
 PRT	planned	-	s4 sweep 4 target
-B-LAT	covered	bash	kit/test/sweep2c.test.sh
-B-THR	covered	bash	kit/test/sweep2c.test.sh
-B-MEM	covered	bash	kit/test/sweep2c.test.sh
-B-STA	covered	bash	kit/test/sweep2c.test.sh
-B-BLD	covered	bash	kit/test/sweep2c.test.sh
-B-ENG	covered	bash	kit/test/sweep2c.test.sh
-B-FFI	covered	bash	kit/test/sweep2c.test.sh
+B-LAT	covered	bash	kit/test/sweep3b.test.sh
+B-THR	covered	bash	kit/test/sweep3b.test.sh
+B-MEM	covered	bash	kit/test/sweep3b.test.sh
+B-STA	covered	bash	kit/test/sweep3b.test.sh
+B-BLD	covered	bash	kit/test/sweep3b.test.sh
+B-ENG	na	-	the kit has no energy counter to read on CI runners; a shell test kit has no measurable energy surface of its own
+B-FFI	na	-	the kit has no foreign function interface; its libs are shell scripts that call other processes
