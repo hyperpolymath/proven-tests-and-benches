@@ -1,0 +1,5 @@
+s/cmp -s "\$f" "\$t\/d1" ||/true ||/
+s/cmp -s "\$t\/e1" "\$t\/e2"/true/
+s/encode failed on/encode ok on/
+s/exit 1/exit 0/
+s/\$# -gt 0 \]\] || { echo "NO CHECK PERFORMED: usage/$# -gt -1 ]] || { echo "NO CHECK PERFORMED: usage/

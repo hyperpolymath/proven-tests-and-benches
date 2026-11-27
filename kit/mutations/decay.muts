@@ -1,0 +1,6 @@
+s/\[\[ "\$age" -le "\$max" \]\]/true/
+s/-le "\$max"/-lt "$max"/
+s/86400/1/
+s/\[\[ "\$n" -gt 0 \]\] ||/true ||/
+s/\[\[ -e "\$p" \]\] ||/true ||/
+s/\[\[ "\$stale" -eq 0 \]\] || exit 1/true/

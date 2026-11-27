@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: MPL-2.0
+= Shared fixtures
+
+Small inputs shared by the kit self-tests, so a test never invents its own copy.
+Each file is tiny, non-empty and data only; tests read them and never write here.
+
+[cols="1,3"]
+|===
+| File | Use
+| `claims.txt` | two proof-claim ids (`c1`, `c2`) for proofreg and xprover
+| `findings-ok.json` | one finding with file and line (DOG-02 pass)
+| `findings-noline.json` | one finding with a null line (DOG-02 fail)
+| `bench-row.tsv` | one sixsigma row (`lat`, 100, lower)
+|===

@@ -1,0 +1,8 @@
+s/\[\[ -n "\$stripped" \&\& "\$stripped" != "\[\]"/[[ -n "$stripped" \&\& "$stripped" != "NEVER"/
+s/(\.file \/\/ null)==null or/false or/
+s/(\.line \/\/ null)==null)/false)/
+s/\[\[ "\$bad" == 0 \]\]/true/
+s/cmp -s "\$ref" "\$copy" ||/true ||/
+s/\\{\\{\[A-Z_\]+\\}\\}|//
+s/"\$f != null"/"true"/
+s/\[\[ "\$rc" -eq 127 \]\] \&\& {/false \&\& {/

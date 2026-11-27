@@ -31,6 +31,7 @@ workflow calls it. Pin by tag once one is cut (`kit-v0.x`); until then pin a ful
 | `benchmarks/kit/bench-kit.sh` | 8 bench targets for the kit itself (B-LAT, B-THR, B-MEM, B-STA, B-BLD) as sixsigma TSV; B-ENG and B-FFI are N/A with reasons.
 | `.proven/aspects.tsv` | The 14 aspects mapped to real checks for this repo (none N/A); run with `kit/lib/aspect.sh --map .proven/aspects.tsv DEP SEC ...`. Static ones have planted-violation negative controls in kit/test/sweep4.test.sh.
 | `kit/test/sweep4b.test.sh` | EXE (clean env, other cwd) and CHS (no TMPDIR, SIGTERM mid-mutation, odd paths, big input, parallel runs): hostile conditions fail closed.
+| `kit/mutations/{dogfood,enum-drift,roundtrip,corpus,schema-diff,decay}.muts` | Mutants for the DOG/CR libs, scored by `scripts/mutation-selfcheck.sh` (all >= 80%).
 | `kit/test/sweep4c.test.sh` | Negative controls for the DOG and CR libs and the extras manifest (61 assertions).
 | `kit/lib/dogfood.sh` | DOG-01/02/06/07/08: non-empty output, findings carry file and line, no template placeholders, workflow copy current, consumer field contract.
 | `kit/lib/enum-drift.sh` | CR-1: two enums list the same variants.
@@ -38,6 +39,7 @@ workflow calls it. Pin by tag once one is cut (`kit-v0.x`); until then pin a ful
 | `kit/lib/corpus.sh` | CR-4: shared fixture corpus consumed by every consumer.
 | `kit/lib/schema-diff.sh` | CR-9: surface diff classified patch/minor/major and gated by an allowance.
 | `kit/lib/decay.sh` | CR-10: stale fixture/baseline alarm (90 days, 30 for benches).
+| `kit/lib/xprover.sh` | Cross-prover proof regression: several provers (Agda, Idris2, Lean...) must all still prove every recorded claim; fewer than two provers is no check.
 | `kit/ids-extra.tsv`, `.proven/extras.tsv` | The 18 extra ids (DOG-01..08, CR-1..10) and their status; check with `check-coverage.sh --ids kit/ids-extra.tsv .proven/extras.tsv`. DOG-03/04/05 and CR-2/5/6/7 are N/A here with written reasons.
 | `kit/lib/compat.sh` | Compatibility (CMP): the same command across an environment matrix.
 | `kit/lib/reflexive.sh` | Reflexive (REF): deterministic across two runs; `--idempotent` checks f(f(x)) = f(x).

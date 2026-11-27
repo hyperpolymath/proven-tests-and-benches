@@ -1,0 +1,4 @@
+s/if diff "\$ta" "\$tb" >&2;/if true;/
+s/\[\[ -s "\$ta" \&\& -s "\$tb" \]\]/true/
+s/else echo "VIOLATION: enum drift/else exit 0; echo "VIOLATION: enum drift/
+s/grep -oE -- "\$are" "\$a" | sort -u/grep -oE -- "$are" "$a"/

@@ -14,6 +14,7 @@ ptb_eq bench-kit-unique-names 0 "$([[ "$(cut -f1 "$tmp/all.tsv" | sort -u | wc -
 for k in B-LAT B-THR B-MEM B-STA B-BLD; do ptb_eq "bench-kit-$k" 0 "$(code "$B" "$k")"; done
 ptb_eq bench-kit-bad-kind 2 "$(code "$B" B-XXX)"
 ptb_eq bench-kit-eng-unsupported 2 "$(code "$B" B-ENG)"
+ptb_eq bench-kit-cold-warm-targets 2 "$(grep -c "^kit-\(cold\|warm\)-start-ms" "$tmp/all.tsv")"
 # end to end: its own output as baseline classifies Ordinary (exit 0) through bench.sh
 mkdir "$tmp/base"; for i in 01 02 03; do cp "$tmp/all.tsv" "$tmp/base/000000$i-r.tsv"; done
 ptb_eq bench-kit-vs-self 0 "$(code "$root/kit/lib/bench.sh" --kind B-LAT --baseline-dir "$tmp/base" -- cat "$tmp/all.tsv")"

@@ -6,6 +6,7 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 . "$root/kit/lib/ptb.sh"
 L="$root/kit/lib"
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+PA='a=printf "c1\nc2\n"'
 code() { "$@" >/dev/null 2>&1; echo $?; }
 # ---- DOG-01
 ptb_eq dog01-pass        0 "$(code bash "$L/dogfood.sh" nonempty-output -- echo '[{"a":1}]')"
@@ -93,9 +94,33 @@ ptb_eq cr10-missing 2 "$(code bash "$L/decay.sh" "$tmp/none")"
 ptb_eq cr10-nopaths 2 "$(code bash "$L/decay.sh")"
 ptb_eq cr10-nofiles 2 "$(code bash "$L/decay.sh" "$tmp/empty")"
 ptb_eq cr10-badnum  2 "$(code bash "$L/decay.sh" --max-days x "$tmp/dc")"
+# ---- cross-prover proof regression
+printf 'c1\nc2\n' > "$tmp/claims"
+X="$L/xprover.sh"
+ptb_eq xp-agree      0 "$(code bash "$X" --claims "$tmp/claims" --prover "$PA" --prover 'b=printf "c2\nc1\n"')"
+ptb_eq xp-one-drops  1 "$(code bash "$X" --claims "$tmp/claims" --prover "$PA" --prover 'b=printf "c1\n"')"
+ptb_eq xp-one-fails  1 "$(code bash "$X" --claims "$tmp/claims" --prover "$PA" --prover 'b=false')"
+ptb_eq xp-single     2 "$(code bash "$X" --claims "$tmp/claims" --prover "$PA")"
+ptb_eq xp-single-min1 0 "$(code bash "$X" --claims "$tmp/claims" --min 1 --prover "$PA")"
+ptb_eq xp-no-claims  2 "$(code bash "$X" --claims "$tmp/none" --prover a=true --prover b=true)"
+ptb_eq xp-bad-spec   2 "$(code bash "$X" --claims "$tmp/claims" --prover "$PA" --prover nameonly)"
+ptb_eq xp-prints-but-fails 1 "$(code bash "$X" --claims "$tmp/claims" --prover "$PA" --prover 'b=printf "c1\nc2\n"; exit 3')"
+ptb_eq xp-bad-min    2 "$(code bash "$X" --claims "$tmp/claims" --min x --prover a=true --prover b=true)"
+ptb_eq xp-names-prover 1 "$(bash "$X" --claims "$tmp/claims" --prover "$PA" --prover 'lean=printf "c1\n"' 2>&1 | grep -c 'lean no longer proves: c2')"
 # ---- extras manifest and --ids
 ptb_eq ids-extra-count 18 "$(grep -vc '^#' "$root/kit/ids-extra.tsv")"
 ptb_eq extras-manifest 0 "$(code bash "$root/kit/check-coverage.sh" --root "$root" --ids "$root/kit/ids-extra.tsv" "$root/.proven/extras.tsv")"
 ptb_eq ids-missing     2 "$(code bash "$root/kit/check-coverage.sh" --root "$root" --ids "$tmp/none" "$root/.proven/extras.tsv")"
 ptb_eq extras-vs-base-ids 1 "$(code bash "$root/kit/check-coverage.sh" --root "$root" "$root/.proven/extras.tsv")"
+# ---- shared fixtures exist and are non-empty
+for f in claims.txt findings-ok.json findings-noline.json bench-row.tsv README.adoc; do ptb_ok "fixture-$f" test -s "$root/kit/fixtures/$f"; done
+ptb_eq fixture-claims-xprover 0 "$(code bash "$L/xprover.sh" --claims "$root/kit/fixtures/claims.txt" --prover "$PA" --prover 'b=printf "c2\nc1\n"')"
+# ---- pipeline-tail benches (stub tool on PATH; the real tools are absent here)
+BP="$root/benchmarks/kit/bench-pipeline.sh"
+mkdir -p "$tmp/bin"; printf '#!/usr/bin/env bash\nexit 0\n' > "$tmp/bin/hypatia"; printf '#!/usr/bin/env bash\nexit 1\n' > "$tmp/bin/echidna"; chmod +x "$tmp/bin/"*
+ptb_eq pipe-row      1 "$(PATH="$tmp/bin:$PATH" bash "$BP" hypatia 2>&1 | grep -c '^pipeline-hypatia-latency-ms'$'\t''[0-9]')"
+ptb_eq pipe-absent   2 "$(code bash "$BP" panic-attack)"
+ptb_eq pipe-fails    2 "$(PATH="$tmp/bin:$PATH" code bash "$BP" echidna)"
+ptb_eq pipe-no-args  2 "$(code bash "$BP")"
+ptb_eq pipe-bad-max  2 "$(PATH="$tmp/bin:$PATH" code bash "$BP" --abs-max x hypatia)"
 ptb_done
