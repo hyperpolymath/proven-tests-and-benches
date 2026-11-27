@@ -94,9 +94,12 @@ clean:
 # prohibited by the manifest and matched by neither. One copy now, in
 # scripts/check-escape-hatches.sh, called by both.
 #
-# Fail if any proof escape hatch appears in Idris2 sources (the honesty lint)
+# Fail if any proof escape hatch appears in Idris2 sources (the honesty lint),
+# or if the tree is not REUSE compliant (scripts/check-reuse.sh, shared with ci.yml;
+# needs reuse and jq, and exits 2 rather than passing when either is missing)
 lint:
     bash scripts/check-escape-hatches.sh
+    bash scripts/check-reuse.sh
 
 # Print the shields.io badge URL for the current CRG grade
 crg-badge:

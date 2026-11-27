@@ -104,39 +104,28 @@ jobs:
       - name: Test the Rust downstream twin
         run: cargo test --manifest-path integrations/contract/proven-tests/downstream/rust/proven-evidence/Cargo.toml
 
-      # REUSE compliance was claimed in REUSE.toml and gated nowhere (DEBT L-4).
-      # One tolerance, scoped and named: LICENSES/AGPL-3.0-or-later.txt is
-      # deliberately unused pending an owner-only licensing decision (DEBT L-1,
-      # REUSE.toml:27-37). Gating raw `reuse lint` would be permanently red on
-      # that item — a gate whose red is routinely overridden is a false-positive
-      # generator. Everything else (bad/missing licences, files without
-      # copyright/licence info) fails hard.
-      - name: REUSE compliance (tolerating only the documented L-1 item)
-        run: |
-          pipx install reuse >/dev/null 2>&1 || pip install --quiet reuse
-          reuse lint --json > /tmp/reuse.json || true
-          python3 - <<'PY'
-          import json, sys
-          d = json.load(open("/tmp/reuse.json"))
-          nc = d.get("non_compliant", {})
-          problems = []
-          for key, val in nc.items():
-              if key == "unused_licenses":
-                  extra = [u.get("license", u) if isinstance(u, dict) else u
-                           for u in val]
-                  extra = [e for e in extra if "AGPL-3.0-or-later" not in str(e)]
-                  if extra:
-                      problems.append(f"unused licences beyond the tolerated one: {extra}")
-              elif val:
-                  problems.append(f"{key}: {val}")
-          if problems:
-              print("REUSE non-compliance beyond the documented L-1 tolerance:")
-              [print("  -", p) for p in problems]
-              sys.exit(1)
-          files = d.get("summary", {}).get("files_total") or d.get("files_count") or "?"
-          print(f"OK: REUSE compliant across {files} files "
-                "(sole tolerated issue: unused AGPL-3.0-or-later, DEBT L-1)")
-          PY
+      # REUSE compliance (DEBT L-4, resolved). The judgement lives in
+      # scripts/check-reuse.sh, shared with `just lint`; it replaced an inline
+      # heredoc that passed a file carrying an unparseable second
+      # SPDX-License-Identifier line, because reuse records that only as
+      # `is_valid: false`, never under `non_compliant`. reuse is pinned: the
+      # gate reads reuse's JSON report, so a new reuse release changing that
+      # shape must arrive as a reviewed bump, not mid-run. The old L-1
+      # tolerance (an unused AGPL text) is gone: L-1 was resolved on
+      # 2026-08-29 when the text was removed.
+      - name: Install reuse
+        run: pipx install reuse==6.3.0
+
+      # The gate's planted controls first: a clean tree passes, the
+      # invalid-second-identifier hole fails naming the file, missing copyright,
+      # unused or missing licence texts fail, and missing tools or an unreadable
+      # report are exit 2. A gate is trusted only after it has shown it can fail
+      # for the right reason.
+      - name: Self-test the REUSE gate
+        run: bash scripts/test/check-reuse.test.sh
+
+      - name: REUSE compliance
+        run: bash scripts/check-reuse.sh
 
       - name: Shellcheck
         run: shellcheck -S warning scripts/*.sh scripts/test/*.sh
