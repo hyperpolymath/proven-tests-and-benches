@@ -1,0 +1,4 @@
+# locale matrix for the VER aspect
+c	LC_ALL=C
+posix	LC_ALL=POSIX
+utf8	LC_ALL=C.UTF-8
