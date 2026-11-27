@@ -17,10 +17,11 @@ now_ns() { date +%s%N; }
 # ms_of CMD... : wall-clock milliseconds, rounded up to at least 1; empty output on command failure
 ms_of() { local a b; a=$(now_ns); "$@" >/dev/null 2>&1 || { echo ""; return; }; b=$(now_ns); local d=$(( (b - a) / 1000000 )); [[ "$d" -ge 1 ]] || d=1; echo "$d"; }
 emit() { # name value dir absmax
-  [[ -n "$2" ]] && [[ "$2" =~ ^[0-9]+$ ]] && [[ "$2" -ge 1 ]] || { echo "NO CHECK PERFORMED: measurement failed for $1" >&2; exit 2; }
-  printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4"
+  local name="$1" value="$2" dir="$3" absmax="$4"
+  [[ -n "$value" ]] && [[ "$value" =~ ^[0-9]+$ ]] && [[ "$value" -ge 1 ]] || { echo "NO CHECK PERFORMED: measurement failed for $name" >&2; exit 2; }
+  printf '%s\t%s\t%s\t%s\n' "$name" "$value" "$dir" "$absmax"
 }
-want() { [[ "$kind" == all ]] || [[ "$kind" == "$1" ]]; }
+want() { local k="$1"; [[ "$kind" == all ]] || [[ "$kind" == "$k" ]]; }
 # fixtures
 mkdir -p "$tmp/b"
 for i in 01 02 03; do printf 'lat\t100\tlower\n' > "$tmp/b/000000$i-r.tsv"; done
